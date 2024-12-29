@@ -1,4 +1,4 @@
-import { Bot, Home, Settings, PieChart, Users } from "lucide-react";
+import { Bot, Home, Settings, PieChart, Users, User } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -15,6 +15,7 @@ const menuItems = [
   { title: "AI Agents", icon: Bot, url: "/dashboard/agents" },
   { title: "Analytics", icon: PieChart, url: "/dashboard/analytics" },
   { title: "Team", icon: Users, url: "/dashboard/team" },
+  { title: "Profile", icon: User, url: "/dashboard/profile" },
   { title: "Settings", icon: Settings, url: "/dashboard/settings" },
 ];
 
