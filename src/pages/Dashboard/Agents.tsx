@@ -1,14 +1,15 @@
 import { useQuery } from "@tanstack/react-query";
-import { Plus, Server } from "lucide-react";
+import { Plus, Server, Edit, CheckSquare, XSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { CreateAgentDialog } from "@/components/agents/CreateAgentDialog";
+import { EditAgentDialog } from "@/components/agents/EditAgentDialog";
 
 const Agents = () => {
   const { toast } = useToast();
 
-  const { data: agents, isLoading } = useQuery({
+  const { data: agents, isLoading, refetch } = useQuery({
     queryKey: ["agents"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -28,6 +29,29 @@ const Agents = () => {
       return data;
     },
   });
+
+  const toggleStatus = async (id: string, currentStatus: string) => {
+    const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+    const { error } = await supabase
+      .from('agent_configs')
+      .update({ status: newStatus })
+      .eq('id', id);
+
+    if (error) {
+      toast({
+        title: "Error updating status",
+        description: error.message,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    toast({
+      title: "Status updated",
+      description: `Agent is now ${newStatus}`,
+    });
+    refetch();
+  };
 
   if (isLoading) {
     return (
@@ -76,17 +100,21 @@ const Agents = () => {
             >
               <div className="flex items-center justify-between">
                 <h3 className="font-semibold">{agent.name}</h3>
-                <span
-                  className={`px-2 py-1 rounded-full text-xs ${
-                    agent.status === "active"
-                      ? "bg-green-100 text-green-700"
-                      : agent.status === "draft"
-                      ? "bg-yellow-100 text-yellow-700"
-                      : "bg-gray-100 text-gray-700"
-                  }`}
-                >
-                  {agent.status}
-                </span>
+                <div className="flex items-center gap-2">
+                  <EditAgentDialog agent={agent} onUpdate={refetch} />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => toggleStatus(agent.id, agent.status)}
+                    title={`Click to ${agent.status === 'active' ? 'deactivate' : 'activate'}`}
+                  >
+                    {agent.status === 'active' ? (
+                      <CheckSquare className="h-5 w-5 text-green-600" />
+                    ) : (
+                      <XSquare className="h-5 w-5 text-gray-400" />
+                    )}
+                  </Button>
+                </div>
               </div>
               <p className="text-sm text-muted-foreground line-clamp-2">
                 {agent.description || "No description provided"}
