@@ -64,7 +64,7 @@ export const CreateAgentDialog = ({ trigger }: { trigger: React.ReactNode }) => 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Create New AI Agent</DialogTitle>
         </DialogHeader>
@@ -155,7 +155,7 @@ export const CreateAgentDialog = ({ trigger }: { trigger: React.ReactNode }) => 
                 </FormItem>
               )}
             />
-            <div className="flex justify-end space-x-2">
+            <div className="flex justify-end space-x-2 sticky bottom-0 bg-background py-4 border-t">
               <Button variant="outline" onClick={() => setOpen(false)} type="button">
                 Cancel
               </Button>
