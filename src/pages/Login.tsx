@@ -10,18 +10,19 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        navigate("/dashboard");
+        navigate("/dashboard", { replace: true });
       }
       setIsLoading(false);
-    });
+    };
 
-    // Listen for auth changes
+    checkSession();
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session) {
-        navigate("/dashboard");
+        navigate("/dashboard", { replace: true });
       }
     });
 
