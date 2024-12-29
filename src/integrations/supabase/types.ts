@@ -25,6 +25,7 @@ export type Database = {
           total_minutes_used: number | null
           transfer_directory: Json | null
           updated_at: string | null
+          voice_id: string | null
         }
         Insert: {
           config?: Json | null
@@ -41,6 +42,7 @@ export type Database = {
           total_minutes_used?: number | null
           transfer_directory?: Json | null
           updated_at?: string | null
+          voice_id?: string | null
         }
         Update: {
           config?: Json | null
@@ -57,6 +59,7 @@ export type Database = {
           total_minutes_used?: number | null
           transfer_directory?: Json | null
           updated_at?: string | null
+          voice_id?: string | null
         }
         Relationships: []
       }
