@@ -9,6 +9,57 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      agent_configs: {
+        Row: {
+          config: Json | null
+          created_at: string | null
+          description: string | null
+          goodbye: string | null
+          greeting: string | null
+          id: string
+          minutes_used: number | null
+          name: string
+          organization_id: string | null
+          phone_number: string | null
+          status: string
+          total_minutes_used: number | null
+          transfer_directory: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          config?: Json | null
+          created_at?: string | null
+          description?: string | null
+          goodbye?: string | null
+          greeting?: string | null
+          id?: string
+          minutes_used?: number | null
+          name: string
+          organization_id?: string | null
+          phone_number?: string | null
+          status?: string
+          total_minutes_used?: number | null
+          transfer_directory?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          config?: Json | null
+          created_at?: string | null
+          description?: string | null
+          goodbye?: string | null
+          greeting?: string | null
+          id?: string
+          minutes_used?: number | null
+          name?: string
+          organization_id?: string | null
+          phone_number?: string | null
+          status?: string
+          total_minutes_used?: number | null
+          transfer_directory?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
