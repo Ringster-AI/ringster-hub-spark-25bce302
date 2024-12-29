@@ -14,7 +14,7 @@ export const Hero = () => {
             Ringster's AI agents work 24/7 to handle your tasks, communicate with customers, and scale your operations without human intervention.
           </p>
           <div className="mt-10 flex items-center justify-center gap-x-6">
-            <Button size="lg" className="group">
+            <Button size="lg" className="group" onClick={() => window.location.href = '/login'}>
               Get Started
               <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
             </Button>
