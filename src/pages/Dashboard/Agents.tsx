@@ -2,12 +2,11 @@ import { useQuery } from "@tanstack/react-query";
 import { Plus, Server } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
+import { CreateAgentDialog } from "@/components/agents/CreateAgentDialog";
 
 const Agents = () => {
   const { toast } = useToast();
-  const [isCreating, setIsCreating] = useState(false);
 
   const { data: agents, isLoading } = useQuery({
     queryKey: ["agents"],
@@ -38,6 +37,13 @@ const Agents = () => {
     );
   }
 
+  const createButton = (
+    <Button>
+      <Plus className="mr-2" />
+      Create Agent
+    </Button>
+  );
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -47,10 +53,7 @@ const Agents = () => {
             Manage your AI agents and their configurations
           </p>
         </div>
-        <Button onClick={() => setIsCreating(true)} disabled={isCreating}>
-          <Plus className="mr-2" />
-          Create Agent
-        </Button>
+        <CreateAgentDialog trigger={createButton} />
       </div>
 
       {agents?.length === 0 ? (
@@ -62,10 +65,7 @@ const Agents = () => {
               Create your first AI agent to get started
             </p>
           </div>
-          <Button onClick={() => setIsCreating(true)} disabled={isCreating}>
-            <Plus className="mr-2" />
-            Create Agent
-          </Button>
+          <CreateAgentDialog trigger={createButton} />
         </div>
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
