@@ -5,28 +5,42 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
+import { VoiceSelection } from "./VoiceSelection";
+import { TransferDirectory } from "./TransferDirectory";
 
 type FormData = {
   name: string;
   description: string;
   greeting: string;
   goodbye: string;
+  voice_id: string;
+  transfer_directory: Record<string, string>;
 };
 
 export const CreateAgentDialog = ({ trigger }: { trigger: React.ReactNode }) => {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const form = useForm<FormData>();
+  const form = useForm<FormData>({
+    defaultValues: {
+      voice_id: "9BWtsMINqrJLrRacOk9x", // Default to Aria
+      transfer_directory: {},
+    },
+  });
 
   const onSubmit = async (data: FormData) => {
     try {
       const { error } = await supabase
         .from("agent_configs")
-        .insert([{ ...data, status: "draft" }]);
+        .insert([{
+          ...data,
+          status: "draft",
+          config: { voice_id: data.voice_id },
+          transfer_directory: data.transfer_directory,
+        }]);
 
       if (error) throw error;
 
@@ -50,12 +64,12 @@ export const CreateAgentDialog = ({ trigger }: { trigger: React.ReactNode }) => 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>Create New AI Agent</DialogTitle>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <FormField
               control={form.control}
               name="name"
@@ -112,6 +126,30 @@ export const CreateAgentDialog = ({ trigger }: { trigger: React.ReactNode }) => 
                       placeholder="Thank you for chatting with me. Have a great day!"
                       {...field}
                     />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="voice_id"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <VoiceSelection value={field.value} onChange={field.onChange} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="transfer_directory"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <TransferDirectory value={field.value} onChange={field.onChange} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
