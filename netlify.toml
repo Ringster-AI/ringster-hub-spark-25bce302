@@ -1,10 +1,3 @@
-[build]
-  command = "npm ci && npm run build"
-  publish = ".next"
-
-[[plugins]]
-  package = "@netlify/plugin-nextjs"
-
 [build.environment]
   NEXT_USE_NETLIFY_EDGE = "true"
   SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ5bWNrcmhvdWxrbnBtZXBybnRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzE0MjkzNTgsImV4cCI6MjA0NzAwNTM1OH0.OmqvUjCAcvgSvaHIINPMKofs8R8oTxYweW6R8fS41UM"
