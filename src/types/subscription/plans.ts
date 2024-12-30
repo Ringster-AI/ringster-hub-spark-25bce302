@@ -3,10 +3,7 @@ export interface SubscriptionPlan {
   name: string;
   price: number;
   minutes_allowance: number;
-  features: {
-    features: string[];
-    max_agents: number;
-  };
+  features: Json;  // Changed from { features: string[]; max_agents: number }
   max_team_members: number;
   max_agents: number;
   billing_interval?: string;
@@ -16,13 +13,14 @@ export interface SubscriptionPlan {
 
 export interface UserSubscription {
   id: string;
-  plan_id: string;
+  user_id: string | null;
+  plan_id: string | null;
   status: string;
   plan: SubscriptionPlan;
-  current_period_start?: string;
-  current_period_end?: string;
-  stripe_subscription_id?: string;
-  stripe_customer_id?: string;
+  current_period_start?: string | null;
+  current_period_end?: string | null;
+  stripe_subscription_id?: string | null;
+  stripe_customer_id?: string | null;
 }
 
 export interface SubscriptionLimits {
@@ -41,3 +39,6 @@ export interface SubscriptionFeatures {
   willExpire: boolean;
   expiresAt?: Date;
 }
+
+// Import Json type from database types
+import { Json } from '../database/auth';
