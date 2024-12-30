@@ -6,9 +6,10 @@ import { AgentFormData } from "./CreateAgentDialog";
 
 interface BasicAgentInfoProps {
   form: UseFormReturn<AgentFormData>;
+  disabled?: boolean;
 }
 
-export const BasicAgentInfo = ({ form }: BasicAgentInfoProps) => {
+export const BasicAgentInfo = ({ form, disabled }: BasicAgentInfoProps) => {
   return (
     <div className="space-y-6">
       <FormField
@@ -18,7 +19,7 @@ export const BasicAgentInfo = ({ form }: BasicAgentInfoProps) => {
           <FormItem>
             <FormLabel>Name</FormLabel>
             <FormControl>
-              <Input placeholder="Customer Service Agent" {...field} />
+              <Input placeholder="Customer Service Agent" {...field} disabled={disabled} />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -34,6 +35,7 @@ export const BasicAgentInfo = ({ form }: BasicAgentInfoProps) => {
               <Textarea
                 placeholder="Describe what this agent does..."
                 {...field}
+                disabled={disabled}
               />
             </FormControl>
             <FormMessage />

@@ -5,9 +5,10 @@ import { AgentFormData } from "./CreateAgentDialog";
 
 interface AgentMessagesProps {
   form: UseFormReturn<AgentFormData>;
+  disabled?: boolean;
 }
 
-export const AgentMessages = ({ form }: AgentMessagesProps) => {
+export const AgentMessages = ({ form, disabled }: AgentMessagesProps) => {
   return (
     <div className="space-y-6">
       <FormField
@@ -20,6 +21,7 @@ export const AgentMessages = ({ form }: AgentMessagesProps) => {
               <Textarea
                 placeholder="Hello! How can I assist you today?"
                 {...field}
+                disabled={disabled}
               />
             </FormControl>
             <FormMessage />
@@ -36,6 +38,7 @@ export const AgentMessages = ({ form }: AgentMessagesProps) => {
               <Textarea
                 placeholder="Thank you for chatting with me. Have a great day!"
                 {...field}
+                disabled={disabled}
               />
             </FormControl>
             <FormMessage />

@@ -7,20 +7,22 @@ import { Plus, X } from "lucide-react";
 interface TransferDirectoryProps {
   value: Record<string, string>;
   onChange: (value: Record<string, string>) => void;
+  disabled?: boolean;
 }
 
-export const TransferDirectory = ({ value, onChange }: TransferDirectoryProps) => {
+export const TransferDirectory = ({ value, onChange, disabled }: TransferDirectoryProps) => {
   const [newName, setNewName] = useState("");
   const [newNumber, setNewNumber] = useState("");
 
   const handleAdd = () => {
-    if (!newName || !newNumber) return;
+    if (!newName || !newNumber || disabled) return;
     onChange({ ...value, [newName]: newNumber });
     setNewName("");
     setNewNumber("");
   };
 
   const handleRemove = (name: string) => {
+    if (disabled) return;
     const newDirectory = { ...value };
     delete newDirectory[name];
     onChange(newDirectory);
@@ -39,6 +41,7 @@ export const TransferDirectory = ({ value, onChange }: TransferDirectoryProps) =
               size="icon"
               onClick={() => handleRemove(name)}
               className="shrink-0"
+              disabled={disabled}
             >
               <X className="h-4 w-4" />
             </Button>
@@ -50,14 +53,16 @@ export const TransferDirectory = ({ value, onChange }: TransferDirectoryProps) =
           placeholder="Name"
           value={newName}
           onChange={(e) => setNewName(e.target.value)}
+          disabled={disabled}
         />
         <Input
           placeholder="Phone Number"
           value={newNumber}
           onChange={(e) => setNewNumber(e.target.value)}
+          disabled={disabled}
         />
-        <Button onClick={handleAdd} className="shrink-0">
-          <Plus className="h-4 w-4" />
+        <Button onClick={handleAdd} className="shrink-0" disabled={disabled}>
+          <Plus className="h-4 w-4 mr-2" />
           Add
         </Button>
       </div>
