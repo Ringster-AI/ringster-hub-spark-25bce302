@@ -7,14 +7,19 @@ import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 
 interface PricingPlan {
+  id: string;
   name: string;
-  price: string;
+  price: number;
   billing_interval: string | null;
   features: {
     features: string[];
     max_agents: number;
   };
   stripe_price_id: string | null;
+  max_agents: number;
+  max_team_members: number;
+  minutes_allowance: number;
+  is_active: boolean;
 }
 
 export const PricingPlans = () => {
@@ -69,11 +74,11 @@ export const PricingPlans = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {plans?.map((plan) => (
-          <Card key={plan.name} className="flex flex-col">
+          <Card key={plan.id} className="flex flex-col">
             <CardHeader>
               <CardTitle>{plan.name}</CardTitle>
               <CardDescription>
-                ${plan.price}/{plan.billing_interval || 'month'}
+                ${plan.price.toFixed(2)}/{plan.billing_interval || 'month'}
               </CardDescription>
             </CardHeader>
             <CardContent className="flex-grow">
