@@ -51,13 +51,13 @@ export const useSubscription = () => {
     },
   });
 
-  const canCreateAgent = () => {
+  const canCreateAgent = async () => {
     if (!subscription) return false;
-    const { data: agentCount } = await supabase
+    const { count } = await supabase
       .from("agent_configs")
-      .select("id", { count: true });
+      .select("*", { count: "exact", head: true });
     
-    return (agentCount || 0) < subscription.plan.max_agents;
+    return (count || 0) < subscription.plan.max_agents;
   };
 
   const canCustomizeVoice = () => {
@@ -65,13 +65,13 @@ export const useSubscription = () => {
     return subscription.plan.price > 0; // Only paid plans can customize voices
   };
 
-  const canAddTeamMembers = () => {
+  const canAddTeamMembers = async () => {
     if (!subscription) return false;
-    const { data: teamCount } = await supabase
+    const { count } = await supabase
       .from("team_members")
-      .select("id", { count: true });
+      .select("*", { count: "exact", head: true });
     
-    return (teamCount || 0) < subscription.plan.max_team_members;
+    return (count || 0) < subscription.plan.max_team_members;
   };
 
   const getRemainingMinutes = () => {

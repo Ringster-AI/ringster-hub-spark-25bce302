@@ -36,7 +36,8 @@ export const CreateAgentDialog = ({ trigger }: { trigger: React.ReactNode }) => 
 
   const onSubmit = async (data: AgentFormData) => {
     try {
-      if (!await canCreateAgent()) {
+      const canCreate = await canCreateAgent();
+      if (!canCreate) {
         toast({
           title: "Subscription limit reached",
           description: "Please upgrade your plan to create more agents.",
@@ -81,7 +82,7 @@ export const CreateAgentDialog = ({ trigger }: { trigger: React.ReactNode }) => 
           <DialogTitle>Create New AI Agent</DialogTitle>
           {subscription && (
             <div className="text-sm text-muted-foreground">
-              {subscription.plan.max_agents - (agentCount || 0)} agents remaining on your {subscription.plan.name} plan
+              Agents allowed: {subscription.plan.max_agents} on your {subscription.plan.name} plan
             </div>
           )}
         </DialogHeader>
