@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import Profile from "./Dashboard/Profile";
 import Agents from "./Dashboard/Agents";
@@ -9,7 +9,7 @@ const Dashboard = () => {
   return (
     <DashboardLayout>
       <Routes>
-        <Route path="/" element={<div>Dashboard Overview</div>} />
+        <Route path="/" element={<Navigate to="/dashboard/agents" replace />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/agents" element={<Agents />} />
         <Route path="/team" element={<Team />} />
