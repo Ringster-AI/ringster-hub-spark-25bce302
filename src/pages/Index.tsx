@@ -1,10 +1,12 @@
-import { CustomVoicesList } from "@/components/voices/CustomVoicesList";
+import { Hero } from "@/components/landing/Hero";
+import { Features } from "@/components/landing/Features";
 
 const Index = () => {
   return (
-    <div className="container mx-auto py-8">
-      <CustomVoicesList />
-    </div>
+    <main>
+      <Hero />
+      <Features />
+    </main>
   );
 };
 
