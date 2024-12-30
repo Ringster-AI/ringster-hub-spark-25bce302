@@ -310,7 +310,23 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      handle_subscription_update: {
+        Args: {
+          user_id: string
+          new_plan_id: string
+          new_status: string
+          new_period_start: string
+          new_period_end: string
+        }
+        Returns: undefined
+      }
+      update_minutes_used: {
+        Args: {
+          p_user_id: string
+          p_minutes: number
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       team_member_role: "owner" | "admin" | "member"
