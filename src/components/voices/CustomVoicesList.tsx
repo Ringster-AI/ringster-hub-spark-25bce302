@@ -5,10 +5,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { CreateCustomVoiceDialog } from "./CreateCustomVoiceDialog";
 
+interface CustomVoice {
+  id: string;
+  name: string;
+  voice_id: string;
+  created_at?: string;
+}
+
 export const CustomVoicesList = () => {
   const { toast } = useToast();
 
-  const { data: customVoices = [], isLoading, refetch } = useQuery({
+  const { data: customVoices = [], isLoading, error, refetch } = useQuery({
     queryKey: ["custom-voices"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -17,12 +24,13 @@ export const CustomVoicesList = () => {
         .order("created_at", { ascending: false });
 
       if (error) {
+        console.error("Error fetching custom voices:", error);
         toast({
           title: "Error loading custom voices",
           description: error.message,
           variant: "destructive",
         });
-        throw error;
+        return [];
       }
 
       return data || [];
@@ -30,31 +38,40 @@ export const CustomVoicesList = () => {
   });
 
   const deleteVoice = async (id: string) => {
-    const { error } = await supabase
-      .from("custom_voices")
-      .delete()
-      .eq("id", id);
+    try {
+      const { error } = await supabase
+        .from("custom_voices")
+        .delete()
+        .eq("id", id);
 
-    if (error) {
+      if (error) throw error;
+
+      toast({
+        title: "Voice deleted",
+        description: "Custom voice has been deleted successfully",
+      });
+      refetch();
+    } catch (error: any) {
       toast({
         title: "Error deleting voice",
         description: error.message,
         variant: "destructive",
       });
-      return;
     }
-
-    toast({
-      title: "Voice deleted",
-      description: "Custom voice has been deleted successfully",
-    });
-    refetch();
   };
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-96">
         <div className="animate-pulse">Loading custom voices...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="text-red-500">Error loading custom voices. Please try again.</div>
       </div>
     );
   }
@@ -90,7 +107,7 @@ export const CustomVoicesList = () => {
         </div>
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {customVoices.map((voice) => (
+          {customVoices.map((voice: CustomVoice) => (
             <div
               key={voice.id}
               className="border rounded-lg p-6 space-y-4 hover:shadow-md transition-shadow"
