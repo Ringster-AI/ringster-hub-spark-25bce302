@@ -63,6 +63,72 @@ export type Database = {
         }
         Relationships: []
       }
+      custom_voices: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          id: string
+          name: string
+          organization_id: string | null
+          updated_at: string | null
+          voice_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          name: string
+          organization_id?: string | null
+          updated_at?: string | null
+          voice_id: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          name?: string
+          organization_id?: string | null
+          updated_at?: string | null
+          voice_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "custom_voices_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "custom_voices_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organizations: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null

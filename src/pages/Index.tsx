@@ -1,13 +1,9 @@
-import { Hero } from "@/components/landing/Hero";
-import { Features } from "@/components/landing/Features";
-import { PricingPlans } from "@/components/subscription/PricingPlans";
+import { CustomVoicesList } from "@/components/voices/CustomVoicesList";
 
 const Index = () => {
   return (
-    <div className="min-h-screen">
-      <Hero />
-      <Features />
-      <PricingPlans />
+    <div className="container mx-auto py-8">
+      <CustomVoicesList />
     </div>
   );
 };
