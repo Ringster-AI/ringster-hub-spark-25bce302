@@ -1,4 +1,4 @@
-import { Bot, Home, Settings, PieChart, Users, User, CreditCard } from "lucide-react";
+import { Bot, Home, Settings, PieChart, Users, User, CreditCard, LogOut } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -8,7 +8,11 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarFooter,
 } from "@/components/ui/sidebar";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
+import { useToast } from "@/components/ui/use-toast";
 
 const menuItems = [
   { title: "Overview", icon: Home, url: "/dashboard" },
@@ -21,6 +25,26 @@ const menuItems = [
 ];
 
 export const DashboardSidebar = () => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      navigate("/login");
+      toast({
+        title: "Logged out successfully",
+        description: "You have been logged out of your account",
+      });
+    } catch (error) {
+      toast({
+        title: "Error logging out",
+        description: "There was a problem logging out. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <Sidebar>
       <SidebarContent>
@@ -45,6 +69,15 @@ export const DashboardSidebar = () => {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+      <SidebarFooter className="p-4">
+        <SidebarMenuButton 
+          onClick={handleLogout}
+          className="w-full flex items-center gap-2 text-destructive hover:text-destructive"
+        >
+          <LogOut className="h-5 w-5" />
+          <span>Logout</span>
+        </SidebarMenuButton>
+      </SidebarFooter>
     </Sidebar>
   );
 };
