@@ -1,16 +1,12 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Form, FormField } from "@/components/ui/form";
-import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
-import { VoiceSelection } from "./VoiceSelection";
-import { TransferDirectory } from "./TransferDirectory";
-import { BasicAgentInfo } from "./BasicAgentInfo";
-import { AgentMessages } from "./AgentMessages";
 import { useSubscription } from "@/hooks/useSubscription";
+import { DialogHeader } from "./DialogHeader";
+import { AgentForm } from "./AgentForm";
 
 export type AgentFormData = {
   name: string;
@@ -78,45 +74,13 @@ export const CreateAgentDialog = ({ trigger }: { trigger: React.ReactNode }) => 
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Create New AI Agent</DialogTitle>
-          {subscription && (
-            <div className="text-sm text-muted-foreground">
-              Agents allowed: {subscription.plan.max_agents} on your {subscription.plan.name} plan
-            </div>
-          )}
-        </DialogHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <BasicAgentInfo form={form} />
-            <AgentMessages form={form} />
-            <FormField
-              control={form.control}
-              name="voice_id"
-              render={({ field }) => (
-                <VoiceSelection 
-                  value={field.value} 
-                  onChange={field.onChange}
-                  disabled={!canCustomizeVoice()}
-                  disabledMessage="Upgrade your plan to customize agent voices"
-                />
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="transfer_directory"
-              render={({ field }) => (
-                <TransferDirectory value={field.value} onChange={field.onChange} />
-              )}
-            />
-            <div className="flex justify-end space-x-2 sticky bottom-0 bg-background py-4 border-t">
-              <Button variant="outline" onClick={() => setOpen(false)} type="button">
-                Cancel
-              </Button>
-              <Button type="submit">Create Agent</Button>
-            </div>
-          </form>
-        </Form>
+        <DialogHeader subscription={subscription} />
+        <AgentForm 
+          form={form} 
+          onSubmit={onSubmit} 
+          onCancel={() => setOpen(false)}
+          canCustomizeVoice={canCustomizeVoice}
+        />
       </DialogContent>
     </Dialog>
   );
