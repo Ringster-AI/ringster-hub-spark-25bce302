@@ -105,4 +105,4 @@ export const PricingPlans = () => {
       </div>
     </div>
   );
-});
+};
