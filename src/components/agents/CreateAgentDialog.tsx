@@ -4,10 +4,11 @@ import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
-import { useSubscription } from "@/hooks/useSubscription";
+import { useSubscriptionFeatures } from "@/hooks/useSubscriptionFeatures";
 import { DialogHeader } from "./DialogHeader";
 import { AgentForm } from "./AgentForm";
 import { useQuery } from "@tanstack/react-query";
+import { SubscriptionGate } from "../subscription/SubscriptionGate";
 
 export type AgentFormData = {
   name: string;
@@ -22,7 +23,7 @@ export const CreateAgentDialog = ({ trigger }: { trigger: React.ReactNode }) => 
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { subscription, canCreateAgent, canCustomizeVoice } = useSubscription();
+  const { features } = useSubscriptionFeatures();
 
   // Get current agent count
   const { data: agentCount = 0 } = useQuery({
@@ -46,10 +47,9 @@ export const CreateAgentDialog = ({ trigger }: { trigger: React.ReactNode }) => 
 
   const onSubmit = async (data: AgentFormData) => {
     try {
-      const canCreate = await canCreateAgent();
-      if (!canCreate) {
+      if (agentCount >= features.limits.maxAgents) {
         toast({
-          title: "Subscription limit reached",
+          title: "Agent limit reached",
           description: "Please upgrade your plan to create more agents.",
           variant: "destructive",
         });
@@ -89,14 +89,19 @@ export const CreateAgentDialog = ({ trigger }: { trigger: React.ReactNode }) => 
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader subscription={subscription} currentAgentCount={agentCount} />
-        <AgentForm 
-          form={form} 
-          onSubmit={onSubmit} 
-          onCancel={() => setOpen(false)}
-          canCustomizeVoice={canCustomizeVoice}
-          disabled={agentCount >= (subscription?.plan.max_agents || 0)}
-        />
+        <SubscriptionGate requirement={{ type: "agents", value: agentCount + 1 }}>
+          <DialogHeader 
+            subscription={features} 
+            currentAgentCount={agentCount} 
+          />
+          <AgentForm 
+            form={form} 
+            onSubmit={onSubmit} 
+            onCancel={() => setOpen(false)}
+            canCustomizeVoice={() => features.limits.canCustomizeVoices}
+            disabled={agentCount >= features.limits.maxAgents}
+          />
+        </SubscriptionGate>
       </DialogContent>
     </Dialog>
   );
