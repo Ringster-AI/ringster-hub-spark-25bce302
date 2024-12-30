@@ -10,6 +10,7 @@ export const useSubscriptionFeatures = () => {
         .from("user_subscriptions")
         .select(`
           id,
+          user_id,
           plan_id,
           status,
           current_period_start,
@@ -29,13 +30,13 @@ export const useSubscriptionFeatures = () => {
             is_active
           )
         `)
-        .single();
+        .maybeSingle();
 
       if (subscriptionError) {
         throw subscriptionError;
       }
 
-      return subscriptionData as UserSubscription;
+      return subscriptionData as UserSubscription | null;
     },
   });
 
@@ -61,14 +62,14 @@ export const useSubscriptionFeatures = () => {
 
     return {
       limits: {
-        maxAgents: subscription.plan.max_agents,
-        maxTeamMembers: subscription.plan.max_team_members,
-        minutesAllowance: subscription.plan.minutes_allowance,
-        canCustomizeVoices: subscription.plan.price > 0,
-        remainingMinutes: subscription.plan.minutes_allowance, // TODO: Implement actual usage tracking
+        maxAgents: subscription.plan?.max_agents ?? 0,
+        maxTeamMembers: subscription.plan?.max_team_members ?? 0,
+        minutesAllowance: subscription.plan?.minutes_allowance ?? 0,
+        canCustomizeVoices: (subscription.plan?.price ?? 0) > 0,
+        remainingMinutes: subscription.plan?.minutes_allowance ?? 0, // TODO: Implement actual usage tracking
       },
       isActive: subscription.status === 'active',
-      isPaid: subscription.plan.price > 0,
+      isPaid: (subscription.plan?.price ?? 0) > 0,
       isTrialing: subscription.status === 'trialing',
       willExpire: !!periodEnd && periodEnd > now,
       expiresAt: periodEnd,
