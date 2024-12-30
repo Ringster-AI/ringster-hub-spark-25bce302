@@ -10,6 +10,7 @@ import { VoiceSelection } from "./VoiceSelection";
 import { TransferDirectory } from "./TransferDirectory";
 import { BasicAgentInfo } from "./BasicAgentInfo";
 import { AgentMessages } from "./AgentMessages";
+import { useSubscription } from "@/hooks/useSubscription";
 
 export type AgentFormData = {
   name: string;
@@ -24,6 +25,8 @@ export const CreateAgentDialog = ({ trigger }: { trigger: React.ReactNode }) => 
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { subscription, canCreateAgent, canCustomizeVoice } = useSubscription();
+
   const form = useForm<AgentFormData>({
     defaultValues: {
       voice_id: "9BWtsMINqrJLrRacOk9x", // Default to Aria
@@ -33,6 +36,15 @@ export const CreateAgentDialog = ({ trigger }: { trigger: React.ReactNode }) => 
 
   const onSubmit = async (data: AgentFormData) => {
     try {
+      if (!await canCreateAgent()) {
+        toast({
+          title: "Subscription limit reached",
+          description: "Please upgrade your plan to create more agents.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const { error } = await supabase
         .from("agent_configs")
         .insert([{
@@ -67,6 +79,11 @@ export const CreateAgentDialog = ({ trigger }: { trigger: React.ReactNode }) => 
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Create New AI Agent</DialogTitle>
+          {subscription && (
+            <div className="text-sm text-muted-foreground">
+              {subscription.plan.max_agents - (agentCount || 0)} agents remaining on your {subscription.plan.name} plan
+            </div>
+          )}
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -76,7 +93,12 @@ export const CreateAgentDialog = ({ trigger }: { trigger: React.ReactNode }) => 
               control={form.control}
               name="voice_id"
               render={({ field }) => (
-                <VoiceSelection value={field.value} onChange={field.onChange} />
+                <VoiceSelection 
+                  value={field.value} 
+                  onChange={field.onChange}
+                  disabled={!canCustomizeVoice()}
+                  disabledMessage="Upgrade your plan to customize agent voices"
+                />
               )}
             />
             <FormField

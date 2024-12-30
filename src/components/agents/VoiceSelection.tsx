@@ -2,21 +2,38 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { PlayCircle } from "lucide-react";
+import { PlayCircle, Lock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { VOICE_OPTIONS } from "@/types/voice";
 
 interface VoiceSelectionProps {
   value: string;
   onChange: (value: string) => void;
+  disabled?: boolean;
+  disabledMessage?: string;
 }
 
-export const VoiceSelection = ({ value, onChange }: VoiceSelectionProps) => {
+export const VoiceSelection = ({ 
+  value, 
+  onChange, 
+  disabled = false,
+  disabledMessage = "This feature is not available"
+}: VoiceSelectionProps) => {
   const [playing, setPlaying] = useState<string | null>(null);
   const { toast } = useToast();
 
   const playVoiceSample = async (voiceId: string) => {
-    if (playing) return;
+    if (playing || disabled) return;
+    
+    if (disabled) {
+      toast({
+        title: "Feature not available",
+        description: disabledMessage,
+        variant: "destructive",
+      });
+      return;
+    }
+
     setPlaying(voiceId);
     try {
       // TODO: Implement voice testing API call
@@ -38,12 +55,22 @@ export const VoiceSelection = ({ value, onChange }: VoiceSelectionProps) => {
 
   return (
     <div className="space-y-4">
-      <Label>Select a Voice</Label>
-      <RadioGroup value={value} onValueChange={onChange}>
+      <div className="flex items-center justify-between">
+        <Label>Select a Voice</Label>
+        {disabled && (
+          <div className="flex items-center text-sm text-muted-foreground">
+            <Lock className="w-4 h-4 mr-1" />
+            {disabledMessage}
+          </div>
+        )}
+      </div>
+      <RadioGroup value={disabled ? "9BWtsMINqrJLrRacOk9x" : value} onValueChange={onChange} disabled={disabled}>
         {VOICE_OPTIONS.map((voice) => (
           <div
             key={voice.id}
-            className="flex items-center justify-between mb-4 p-4 border rounded-lg"
+            className={`flex items-center justify-between mb-4 p-4 border rounded-lg ${
+              disabled ? "opacity-50" : ""
+            }`}
           >
             <div className="flex items-center space-x-2">
               <RadioGroupItem value={voice.id} id={voice.id} />
@@ -60,7 +87,7 @@ export const VoiceSelection = ({ value, onChange }: VoiceSelectionProps) => {
               variant="ghost"
               size="sm"
               onClick={() => playVoiceSample(voice.id)}
-              disabled={playing !== null}
+              disabled={playing !== null || disabled}
             >
               <PlayCircle
                 className={`h-5 w-5 ${

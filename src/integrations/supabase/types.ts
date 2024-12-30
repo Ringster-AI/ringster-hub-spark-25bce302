@@ -102,6 +102,54 @@ export type Database = {
         }
         Relationships: []
       }
+      subscription_plans: {
+        Row: {
+          billing_interval: string | null
+          created_at: string | null
+          features: Json
+          id: string
+          is_active: boolean | null
+          max_agents: number
+          max_team_members: number
+          minutes_allowance: number
+          name: string
+          price: number
+          prod_id: string | null
+          stripe_price_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          billing_interval?: string | null
+          created_at?: string | null
+          features?: Json
+          id?: string
+          is_active?: boolean | null
+          max_agents: number
+          max_team_members: number
+          minutes_allowance: number
+          name: string
+          price: number
+          prod_id?: string | null
+          stripe_price_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          billing_interval?: string | null
+          created_at?: string | null
+          features?: Json
+          id?: string
+          is_active?: boolean | null
+          max_agents?: number
+          max_team_members?: number
+          minutes_allowance?: number
+          name?: string
+          price?: number
+          prod_id?: string | null
+          stripe_price_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       team_members: {
         Row: {
           created_at: string
@@ -132,6 +180,60 @@ export type Database = {
             foreignKeyName: "team_members_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_subscriptions: {
+        Row: {
+          created_at: string | null
+          current_period_end: string | null
+          current_period_start: string | null
+          id: string
+          plan_id: string | null
+          status: string
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          plan_id?: string | null
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          plan_id?: string | null
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
