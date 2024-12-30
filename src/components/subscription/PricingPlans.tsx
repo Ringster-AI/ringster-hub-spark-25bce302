@@ -20,6 +20,9 @@ interface PricingPlan {
   max_team_members: number;
   minutes_allowance: number;
   is_active: boolean;
+  created_at?: string;
+  updated_at?: string;
+  prod_id?: string;
 }
 
 export const PricingPlans = () => {
@@ -35,7 +38,12 @@ export const PricingPlans = () => {
         .order("price");
 
       if (error) throw error;
-      return data as PricingPlan[];
+      
+      // Transform the data to match our PricingPlan interface
+      return data?.map(plan => ({
+        ...plan,
+        features: plan.features as PricingPlan['features'] // Type assertion for the features object
+      })) as PricingPlan[];
     },
   });
 
