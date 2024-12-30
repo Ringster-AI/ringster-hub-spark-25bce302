@@ -25,7 +25,6 @@ export const CreateAgentDialog = ({ trigger }: { trigger: React.ReactNode }) => 
   const queryClient = useQueryClient();
   const { features } = useSubscriptionFeatures();
 
-  // Get current agent count
   const { data: agentCount = 0 } = useQuery({
     queryKey: ["agents-count"],
     queryFn: async () => {
@@ -91,7 +90,7 @@ export const CreateAgentDialog = ({ trigger }: { trigger: React.ReactNode }) => 
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <SubscriptionGate requirement={{ type: "agents", value: agentCount + 1 }}>
           <DialogHeader 
-            subscription={features} 
+            features={features}
             currentAgentCount={agentCount} 
           />
           <AgentForm 

@@ -8,7 +8,7 @@ import { CreateCustomVoiceDialog } from "./CreateCustomVoiceDialog";
 export const CustomVoicesList = () => {
   const { toast } = useToast();
 
-  const { data: customVoices, isLoading, refetch } = useQuery({
+  const { data: customVoices = [], isLoading, refetch } = useQuery({
     queryKey: ["custom-voices"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -25,7 +25,7 @@ export const CustomVoicesList = () => {
         throw error;
       }
 
-      return data;
+      return data || [];
     },
   });
 
@@ -78,7 +78,7 @@ export const CustomVoicesList = () => {
         <CreateCustomVoiceDialog trigger={createButton} onSuccess={refetch} />
       </div>
 
-      {customVoices?.length === 0 ? (
+      {customVoices.length === 0 ? (
         <div className="flex flex-col items-center justify-center h-96 space-y-4 border-2 border-dashed rounded-lg p-8">
           <div className="text-center">
             <h3 className="text-lg font-semibold">No custom voices yet</h3>
