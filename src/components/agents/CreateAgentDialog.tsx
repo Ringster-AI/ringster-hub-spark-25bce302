@@ -26,6 +26,20 @@ export const CreateAgentDialog = ({ trigger }: { trigger: React.ReactNode }) => 
   const { features } = useSubscriptionFeatures();
   const [isLoading, setIsLoading] = useState(false);
 
+  // Get user's organization
+  const { data: userOrg } = useQuery({
+    queryKey: ["user-organization"],
+    queryFn: async () => {
+      const { data: teamMember, error } = await supabase
+        .from("team_members")
+        .select("organization_id")
+        .single();
+      
+      if (error) throw error;
+      return teamMember;
+    },
+  });
+
   const { data: agentCount = 0 } = useQuery({
     queryKey: ["agents-count"],
     queryFn: async () => {
@@ -46,6 +60,15 @@ export const CreateAgentDialog = ({ trigger }: { trigger: React.ReactNode }) => 
   });
 
   const onSubmit = async (data: AgentFormData) => {
+    if (!userOrg?.organization_id) {
+      toast({
+        title: "Error",
+        description: "No organization found. Please contact support.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       setIsLoading(true);
 
@@ -58,7 +81,7 @@ export const CreateAgentDialog = ({ trigger }: { trigger: React.ReactNode }) => 
         return;
       }
 
-      // 1. Create the agent
+      // Create the agent with organization_id
       const { data: newAgent, error } = await supabase
         .from("agent_configs")
         .insert([{
@@ -66,13 +89,14 @@ export const CreateAgentDialog = ({ trigger }: { trigger: React.ReactNode }) => 
           status: "draft",
           config: { voice_id: data.voice_id },
           transfer_directory: data.transfer_directory,
+          organization_id: userOrg.organization_id,
         }])
         .select()
         .single();
 
       if (error) throw error;
 
-      // 2. Purchase and assign Twilio number
+      // Purchase and assign Twilio number
       try {
         const response = await fetch('/.netlify/functions/manage-twilio-number', {
           method: 'POST',

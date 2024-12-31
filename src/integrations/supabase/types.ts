@@ -19,7 +19,7 @@ export type Database = {
           id: string
           minutes_used: number | null
           name: string
-          organization_id: string | null
+          organization_id: string
           phone_number: string | null
           status: string
           total_minutes_used: number | null
@@ -37,7 +37,7 @@ export type Database = {
           id?: string
           minutes_used?: number | null
           name: string
-          organization_id?: string | null
+          organization_id: string
           phone_number?: string | null
           status?: string
           total_minutes_used?: number | null
@@ -55,7 +55,7 @@ export type Database = {
           id?: string
           minutes_used?: number | null
           name?: string
-          organization_id?: string | null
+          organization_id?: string
           phone_number?: string | null
           status?: string
           total_minutes_used?: number | null
