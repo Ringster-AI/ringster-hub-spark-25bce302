@@ -24,11 +24,13 @@ export const VoiceSelection = ({
   const { toast } = useToast();
 
   const playVoiceSample = async (voiceId: string) => {
-    if (playing || disabled) return;
+    if (playing) return;
     
     setPlaying(voiceId);
     
     try {
+      console.log('Attempting to play voice sample for:', voiceId);
+      
       const { data, error } = await supabase.functions.invoke('text-to-speech', {
         body: {
           text: "Hello, this is a sample of my voice.",
@@ -36,7 +38,15 @@ export const VoiceSelection = ({
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw error;
+      }
+
+      if (!data?.audioContent) {
+        console.error('No audio content received');
+        throw new Error('No audio content received from the server');
+      }
 
       // Convert base64 to blob
       const audioData = atob(data.audioContent);
@@ -56,13 +66,23 @@ export const VoiceSelection = ({
         setPlaying(null);
       };
 
+      audio.onerror = (e) => {
+        console.error('Audio playback error:', e);
+        setPlaying(null);
+        toast({
+          title: "Error playing audio",
+          description: "There was an error playing the voice sample.",
+          variant: "destructive",
+        });
+      };
+
       await audio.play();
       
     } catch (error) {
       console.error('Error playing voice sample:', error);
       toast({
         title: "Error playing voice sample",
-        description: "Failed to play the voice sample.",
+        description: error instanceof Error ? error.message : "Failed to play the voice sample.",
         variant: "destructive",
       });
       setPlaying(null);
@@ -108,7 +128,8 @@ export const VoiceSelection = ({
               variant="ghost"
               size="sm"
               onClick={() => playVoiceSample(voice.id)}
-              disabled={playing !== null || disabled}
+              disabled={playing !== null}
+              className="hover:bg-gray-100"
             >
               <PlayCircle
                 className={`h-5 w-5 ${
