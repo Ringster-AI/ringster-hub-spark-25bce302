@@ -65,15 +65,6 @@ export const useSubscription = () => {
     return subscription.plan.price > 0; // Only paid plans can customize voices
   };
 
-  const canAddTeamMembers = async () => {
-    if (!subscription) return false;
-    const { count } = await supabase
-      .from("team_members")
-      .select("*", { count: "exact", head: true });
-    
-    return (count || 0) < subscription.plan.max_team_members;
-  };
-
   const getRemainingMinutes = () => {
     if (!subscription) return 0;
     return subscription.plan.minutes_allowance;
@@ -84,7 +75,6 @@ export const useSubscription = () => {
     isLoading,
     canCreateAgent,
     canCustomizeVoice,
-    canAddTeamMembers,
     getRemainingMinutes,
   };
 };
