@@ -29,6 +29,7 @@ export const useCreateAgent = (onSuccess: () => void) => {
         throw new Error("User not authenticated");
       }
 
+      console.log("Creating new agent in database...");
       const { data: newAgent, error } = await supabase
         .from("agent_configs")
         .insert([{
@@ -36,46 +37,47 @@ export const useCreateAgent = (onSuccess: () => void) => {
           status: "draft",
           config: { voice_id: data.voice_id },
           transfer_directory: data.transfer_directory,
-          user_id: user.id // Set the user_id here
+          user_id: user.id
         }])
         .select()
         .single();
 
       if (error) throw error;
+      console.log("Agent created successfully:", newAgent);
 
-      try {
-        const response = await fetch('/.netlify/functions/manage-twilio-number', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ agentId: newAgent.id })
-        });
+      console.log("Requesting Twilio number assignment...");
+      const response = await fetch('/.netlify/functions/manage-twilio-number', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ agentId: newAgent.id })
+      });
 
-        if (!response.ok) {
-          throw new Error('Failed to assign phone number');
-        }
+      console.log("Twilio number assignment response status:", response.status);
+      const responseData = await response.json();
+      console.log("Twilio number assignment response:", responseData);
 
-        const twilioData = await response.json();
-        console.log('Twilio number assigned:', twilioData);
-      } catch (twilioError: any) {
-        console.error('Error assigning Twilio number:', twilioError);
+      if (!response.ok) {
+        console.error('Failed to assign phone number:', responseData);
         toast({
           title: "Warning",
           description: "Agent created but failed to assign phone number. Please try again later.",
           variant: "destructive",
         });
+      } else {
+        console.log('Twilio number assigned:', responseData);
+        toast({
+          title: "Agent created",
+          description: "Your new AI agent has been created successfully.",
+        });
       }
-
-      toast({
-        title: "Agent created",
-        description: "Your new AI agent has been created successfully.",
-      });
 
       queryClient.invalidateQueries({ queryKey: ["agents"] });
       queryClient.invalidateQueries({ queryKey: ["agents-count"] });
       onSuccess();
     } catch (error: any) {
+      console.error("Error in createAgent:", error);
       toast({
         title: "Error creating agent",
         description: error.message,
