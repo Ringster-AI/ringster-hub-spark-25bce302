@@ -24,6 +24,7 @@ export type Database = {
           status: string
           total_minutes_used: number | null
           transfer_directory: Json | null
+          twilio_sid: string | null
           updated_at: string | null
           voice_id: string | null
         }
@@ -41,6 +42,7 @@ export type Database = {
           status?: string
           total_minutes_used?: number | null
           transfer_directory?: Json | null
+          twilio_sid?: string | null
           updated_at?: string | null
           voice_id?: string | null
         }
@@ -58,6 +60,7 @@ export type Database = {
           status?: string
           total_minutes_used?: number | null
           transfer_directory?: Json | null
+          twilio_sid?: string | null
           updated_at?: string | null
           voice_id?: string | null
         }

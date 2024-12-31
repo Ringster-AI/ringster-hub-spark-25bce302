@@ -24,6 +24,7 @@ export const CreateAgentDialog = ({ trigger }: { trigger: React.ReactNode }) => 
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { features } = useSubscriptionFeatures();
+  const [isLoading, setIsLoading] = useState(false);
 
   const { data: agentCount = 0 } = useQuery({
     queryKey: ["agents-count"],
@@ -46,6 +47,8 @@ export const CreateAgentDialog = ({ trigger }: { trigger: React.ReactNode }) => 
 
   const onSubmit = async (data: AgentFormData) => {
     try {
+      setIsLoading(true);
+
       if (agentCount >= features.limits.maxAgents) {
         toast({
           title: "Agent limit reached",
@@ -55,16 +58,44 @@ export const CreateAgentDialog = ({ trigger }: { trigger: React.ReactNode }) => 
         return;
       }
 
-      const { error } = await supabase
+      // 1. Create the agent
+      const { data: newAgent, error } = await supabase
         .from("agent_configs")
         .insert([{
           ...data,
           status: "draft",
           config: { voice_id: data.voice_id },
           transfer_directory: data.transfer_directory,
-        }]);
+        }])
+        .select()
+        .single();
 
       if (error) throw error;
+
+      // 2. Purchase and assign Twilio number
+      try {
+        const response = await fetch('/.netlify/functions/manage-twilio-number', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ agentId: newAgent.id })
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to assign phone number');
+        }
+
+        const twilioData = await response.json();
+        console.log('Twilio number assigned:', twilioData);
+      } catch (twilioError: any) {
+        console.error('Error assigning Twilio number:', twilioError);
+        toast({
+          title: "Warning",
+          description: "Agent created but failed to assign phone number. Please try again later.",
+          variant: "destructive",
+        });
+      }
 
       toast({
         title: "Agent created",
@@ -81,6 +112,8 @@ export const CreateAgentDialog = ({ trigger }: { trigger: React.ReactNode }) => 
         description: error.message,
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -98,7 +131,7 @@ export const CreateAgentDialog = ({ trigger }: { trigger: React.ReactNode }) => 
             onSubmit={onSubmit} 
             onCancel={() => setOpen(false)}
             canCustomizeVoice={() => features.limits.canCustomizeVoices}
-            disabled={agentCount >= features.limits.maxAgents}
+            disabled={agentCount >= features.limits.maxAgents || isLoading}
           />
         </SubscriptionGate>
       </DialogContent>
