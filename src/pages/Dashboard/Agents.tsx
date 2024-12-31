@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { Plus, Server, Edit, CheckSquare, XSquare } from "lucide-react";
+import { Plus, Server, Edit, CheckSquare, XSquare, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -119,6 +119,12 @@ const Agents = () => {
               <p className="text-sm text-muted-foreground line-clamp-2">
                 {agent.description || "No description provided"}
               </p>
+              {agent.phone_number && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Phone className="h-4 w-4" />
+                  <span>{agent.phone_number}</span>
+                </div>
+              )}
               <div className="text-sm text-muted-foreground">
                 <p>Minutes used: {agent.minutes_used || 0}</p>
                 <p>Total minutes: {agent.total_minutes_used || 0}</p>
