@@ -22,6 +22,13 @@ export const useCreateAgent = (onSuccess: () => void) => {
         return;
       }
 
+      // Get the current user's ID
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error("User not authenticated");
+      }
+
       const { data: newAgent, error } = await supabase
         .from("agent_configs")
         .insert([{
@@ -29,6 +36,7 @@ export const useCreateAgent = (onSuccess: () => void) => {
           status: "draft",
           config: { voice_id: data.voice_id },
           transfer_directory: data.transfer_directory,
+          user_id: user.id // Set the user_id here
         }])
         .select()
         .single();

@@ -34,12 +34,20 @@ export const EditAgentDialog = ({ agent, onUpdate }: EditAgentDialogProps) => {
 
   const onSubmit = async (data: AgentFormData) => {
     try {
+      // Get the current user's ID
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error("User not authenticated");
+      }
+
       const { error } = await supabase
         .from("agent_configs")
         .update({
           ...data,
           config: { voice_id: data.voice_id },
           transfer_directory: data.transfer_directory,
+          user_id: user.id // Set the user_id here
         })
         .eq('id', agent.id);
 
