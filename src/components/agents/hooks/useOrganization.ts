@@ -8,7 +8,7 @@ export const useOrganization = (enabled: boolean) => {
       const { data: teamMember, error } = await supabase
         .from("team_members")
         .select("organization_id")
-        .single();
+        .maybeSingle();
       
       if (error) {
         console.error("Error fetching organization:", error);
@@ -22,5 +22,8 @@ export const useOrganization = (enabled: boolean) => {
       return teamMember;
     },
     enabled,
+    retry: 1,
+    staleTime: 30000, // Cache for 30 seconds
+    cacheTime: 60000, // Keep in cache for 1 minute
   });
 };

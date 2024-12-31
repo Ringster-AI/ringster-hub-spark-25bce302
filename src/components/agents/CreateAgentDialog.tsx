@@ -39,18 +39,36 @@ export const CreateAgentDialog = ({ trigger }: { trigger: React.ReactNode }) => 
   });
 
   const onSubmit = async (data: AgentFormData) => {
-    if (userOrg?.organization_id) {
+    if (!userOrg?.organization_id) {
+      toast({
+        title: "Error",
+        description: "Organization data not available. Please try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
       await createAgent(data, userOrg.organization_id, features.limits.maxAgents, agentCount);
+    } catch (error) {
+      console.error("Error creating agent:", error);
+      toast({
+        title: "Error",
+        description: "Failed to create agent. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
-  // Show error state if organization fetch failed
-  if (isOrgError) {
-    toast({
-      title: "Error",
-      description: orgError?.message || "Failed to load organization data. Please try logging out and back in.",
-      variant: "destructive",
-    });
+  // Handle organization fetch error outside of render
+  if (isOrgError && open) {
+    setTimeout(() => {
+      toast({
+        title: "Error",
+        description: orgError?.message || "Failed to load organization data. Please try logging out and back in.",
+        variant: "destructive",
+      });
+    }, 0);
   }
 
   return (
