@@ -5,6 +5,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { PlayCircle, Lock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { VOICE_OPTIONS } from "@/types/voice";
+import { supabase } from "@/integrations/supabase/client";
 
 interface VoiceSelectionProps {
   value: string;
@@ -27,32 +28,43 @@ export const VoiceSelection = ({
     
     setPlaying(voiceId);
     try {
-      const response = await fetch('/.netlify/functions/text-to-speech', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      const { data, error } = await supabase.functions.invoke('text-to-speech', {
+        body: {
           text: "Hello, this is a sample of my voice.",
           voiceId: voiceId
-        })
+        }
       });
 
-      if (!response.ok) throw new Error('Failed to fetch audio');
+      if (error) throw error;
 
-      const arrayBuffer = await response.arrayBuffer();
+      // Convert base64 to blob
+      const audioData = atob(data.audioContent);
+      const arrayBuffer = new ArrayBuffer(audioData.length);
+      const uintArray = new Uint8Array(arrayBuffer);
+      
+      for (let i = 0; i < audioData.length; i++) {
+        uintArray[i] = audioData.charCodeAt(i);
+      }
+      
       const audioBlob = new Blob([arrayBuffer], { type: 'audio/mpeg' });
       const audioUrl = URL.createObjectURL(audioBlob);
       const audio = new Audio(audioUrl);
+      
       await audio.play();
       
+      // Clean up the URL after playing
+      audio.onended = () => {
+        URL.revokeObjectURL(audioUrl);
+        setPlaying(null);
+      };
+      
     } catch (error) {
+      console.error('Error playing voice sample:', error);
       toast({
         title: "Error playing voice sample",
         description: "Failed to play the voice sample.",
         variant: "destructive",
       });
-    } finally {
       setPlaying(null);
     }
   };
