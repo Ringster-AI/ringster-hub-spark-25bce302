@@ -21,12 +21,40 @@ const Team = () => {
   const { data: teamMembers, isLoading } = useQuery({
     queryKey: ["team-members"],
     queryFn: async () => {
+      // First, get the user's organization memberships
+      const { data: userMemberships, error: membershipError } = await supabase
+        .from("team_members")
+        .select("organization_id")
+        .single();
+
+      if (membershipError) {
+        toast({
+          title: "Error loading organization",
+          description: membershipError.message,
+          variant: "destructive",
+        });
+        throw membershipError;
+      }
+
+      if (!userMemberships?.organization_id) {
+        return [];
+      }
+
+      // Then get all team members for those organizations
       const { data, error } = await supabase
         .from("team_members")
         .select(`
-          *,
-          profile:profiles(*)
+          id,
+          role,
+          created_at,
+          user_id,
+          profiles (
+            id,
+            full_name,
+            email
+          )
         `)
+        .eq("organization_id", userMemberships.organization_id)
         .order("created_at", { ascending: false });
 
       if (error) {
@@ -96,9 +124,9 @@ const Team = () => {
               {teamMembers?.map((member) => (
                 <TableRow key={member.id}>
                   <TableCell className="font-medium">
-                    {member.profile.full_name || "Unnamed"}
+                    {member.profiles?.full_name || "Unnamed"}
                   </TableCell>
-                  <TableCell>{member.profile.email}</TableCell>
+                  <TableCell>{member.profiles?.email}</TableCell>
                   <TableCell className="flex items-center gap-2">
                     <Shield className="w-4 h-4" />
                     {member.role}
@@ -107,7 +135,6 @@ const Team = () => {
                     {new Date(member.created_at).toLocaleDateString()}
                   </TableCell>
                   <TableCell>
-                    {/* Actions will be implemented in the next iteration */}
                     <Button variant="ghost" size="sm">
                       Edit
                     </Button>
