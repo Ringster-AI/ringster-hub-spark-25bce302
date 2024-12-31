@@ -1,7 +1,7 @@
-import { CheckSquare, XSquare, Phone, Edit } from "lucide-react";
+import { CheckSquare, XSquare, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EditAgentDialog } from "./EditAgentDialog";
-import { AgentConfig } from "@/types/database";
+import { AgentConfig } from "@/types/database/agents";
 
 interface AgentCardProps {
   agent: AgentConfig;

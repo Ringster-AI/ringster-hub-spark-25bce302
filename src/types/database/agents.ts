@@ -7,9 +7,10 @@ export interface AgentConfig {
   description: string | null;
   greeting: string | null;
   goodbye: string | null;
-  status: 'active' | 'inactive' | 'draft' | 'maintenance';
-  config: Json;
-  transfer_directory: Json;
+  // Changed to string to match Supabase's type
+  status: string;
+  config: Json | null;
+  transfer_directory: Json | null;
   minutes_used: number | null;
   total_minutes_used: number | null;
   created_at: string | null;
