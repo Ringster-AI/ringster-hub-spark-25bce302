@@ -36,12 +36,25 @@ export const VoiceSelection = ({
 
     setPlaying(voiceId);
     try {
-      // TODO: Implement voice testing API call
-      await new Promise(resolve => setTimeout(resolve, 2000)); // Simulated API call
-      toast({
-        title: "Voice sample played",
-        description: "This is a placeholder for the voice testing feature.",
+      const response = await fetch('/.netlify/functions/text-to-speech', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          text: "Hello, this is a sample of my voice.",
+          voiceId: voiceId
+        })
       });
+
+      if (!response.ok) throw new Error('Failed to fetch audio');
+
+      const arrayBuffer = await response.arrayBuffer();
+      const audioBlob = new Blob([arrayBuffer], { type: 'audio/mpeg' });
+      const audioUrl = URL.createObjectURL(audioBlob);
+      const audio = new Audio(audioUrl);
+      await audio.play();
+      
     } catch (error) {
       toast({
         title: "Error playing voice sample",
@@ -50,6 +63,7 @@ export const VoiceSelection = ({
       });
     } finally {
       setPlaying(null);
+      // Clean up the audio URL if needed
     }
   };
 
