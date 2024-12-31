@@ -27,6 +27,7 @@ export const VoiceSelection = ({
     if (playing || disabled) return;
     
     setPlaying(voiceId);
+    
     try {
       const { data, error } = await supabase.functions.invoke('text-to-speech', {
         body: {
@@ -50,13 +51,12 @@ export const VoiceSelection = ({
       const audioUrl = URL.createObjectURL(audioBlob);
       const audio = new Audio(audioUrl);
       
-      await audio.play();
-      
-      // Clean up the URL after playing
       audio.onended = () => {
         URL.revokeObjectURL(audioUrl);
         setPlaying(null);
       };
+
+      await audio.play();
       
     } catch (error) {
       console.error('Error playing voice sample:', error);
@@ -85,7 +85,7 @@ export const VoiceSelection = ({
       </div>
       <RadioGroup 
         value={value} 
-        onValueChange={onChange} 
+        onValueChange={onChange}
       >
         {availableVoices.map((voice) => (
           <div
@@ -93,7 +93,7 @@ export const VoiceSelection = ({
             className="flex items-center justify-between mb-4 p-4 border rounded-lg"
           >
             <div className="flex items-center space-x-2">
-              <RadioGroupItem value={voice.id} id={voice.id} />
+              <RadioGroupItem value={voice.id} id={voice.id} disabled={disabled} />
               <Label htmlFor={voice.id} className="cursor-pointer">
                 <div>
                   <div className="font-medium">{voice.name}</div>
@@ -104,10 +104,11 @@ export const VoiceSelection = ({
               </Label>
             </div>
             <Button
+              type="button"
               variant="ghost"
               size="sm"
               onClick={() => playVoiceSample(voice.id)}
-              disabled={playing !== null}
+              disabled={playing !== null || disabled}
             >
               <PlayCircle
                 className={`h-5 w-5 ${
