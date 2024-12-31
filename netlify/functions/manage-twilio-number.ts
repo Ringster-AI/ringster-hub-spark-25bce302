@@ -7,9 +7,10 @@ const twilio = new Twilio(
   process.env.TWILIO_AUTH_TOKEN!
 )
 
+// Initialize Supabase client with required credentials
 const supabase = createClient(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  process.env.SUPABASE_URL || '',
+  process.env.SUPABASE_SERVICE_ROLE_KEY || ''
 )
 
 export const handler: Handler = async (event) => {
@@ -39,6 +40,7 @@ export const handler: Handler = async (event) => {
   try {
     console.log('Starting Twilio number assignment process')
     
+    // Validate environment variables
     if (!process.env.TWILIO_ACCOUNT_SID || !process.env.TWILIO_AUTH_TOKEN) {
       console.error('Missing Twilio credentials')
       throw new Error('Twilio credentials are not configured')
@@ -47,6 +49,11 @@ export const handler: Handler = async (event) => {
     if (!process.env.WEBHOOK_URL) {
       console.error('Missing webhook URL')
       throw new Error('WEBHOOK_URL environment variable is not configured')
+    }
+
+    if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      console.error('Missing Supabase credentials')
+      throw new Error('Supabase credentials are not configured')
     }
 
     const { agentId } = JSON.parse(event.body || '{}')
