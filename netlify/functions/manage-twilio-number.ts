@@ -13,24 +13,60 @@ const supabase = createClient(
 )
 
 export const handler: Handler = async (event) => {
+  const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'Content-Type',
+  }
+
+  // Handle preflight requests
+  if (event.httpMethod === 'OPTIONS') {
+    return {
+      statusCode: 200,
+      headers: corsHeaders,
+      body: ''
+    }
+  }
+
   if (event.httpMethod !== 'POST') {
-    return { statusCode: 405, body: 'Method Not Allowed' }
+    return { 
+      statusCode: 405, 
+      headers: corsHeaders,
+      body: 'Method Not Allowed' 
+    }
   }
 
   try {
-    const { agentId } = JSON.parse(event.body || '{}')
+    console.log('Starting Twilio number assignment process')
     
+    if (!process.env.TWILIO_ACCOUNT_SID || !process.env.TWILIO_AUTH_TOKEN) {
+      console.error('Missing Twilio credentials')
+      throw new Error('Twilio credentials are not configured')
+    }
+
     if (!process.env.WEBHOOK_URL) {
+      console.error('Missing webhook URL')
       throw new Error('WEBHOOK_URL environment variable is not configured')
     }
 
+    const { agentId } = JSON.parse(event.body || '{}')
+    
+    if (!agentId) {
+      console.error('Missing agentId in request body')
+      throw new Error('Agent ID is required')
+    }
+
+    console.log(`Searching for available numbers for agent ${agentId}`)
+    
     // 1. Purchase random number
     const numbers = await twilio.availablePhoneNumbers('US')
       .local.list({ limit: 1 })
     
     if (!numbers[0]) {
+      console.error('No phone numbers available from Twilio')
       throw new Error('No phone numbers available')
     }
+
+    console.log(`Found available number: ${numbers[0].phoneNumber}`)
 
     // 2. Purchase the number and set webhook
     const purchasedNumber = await twilio.incomingPhoneNumbers
@@ -40,8 +76,10 @@ export const handler: Handler = async (event) => {
         voiceMethod: 'POST'
       })
 
+    console.log(`Successfully purchased number: ${purchasedNumber.phoneNumber}`)
+
     // 3. Update agent in database with phone number
-    const { error } = await supabase
+    const { error: updateError } = await supabase
       .from('agent_configs')
       .update({
         phone_number: purchasedNumber.phoneNumber,
@@ -49,20 +87,30 @@ export const handler: Handler = async (event) => {
       })
       .eq('id', agentId)
 
-    if (error) throw error
+    if (updateError) {
+      console.error('Error updating agent config:', updateError)
+      throw updateError
+    }
+
+    console.log('Successfully updated agent config with phone number')
 
     return {
       statusCode: 200,
+      headers: corsHeaders,
       body: JSON.stringify({
         phoneNumber: purchasedNumber.phoneNumber,
         sid: purchasedNumber.sid
       })
     }
-  } catch (error) {
-    console.error('Error:', error)
+  } catch (error: any) {
+    console.error('Error in manage-twilio-number:', error)
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: error.message })
+      headers: corsHeaders,
+      body: JSON.stringify({ 
+        error: error.message,
+        details: error.code ? `Twilio Error Code: ${error.code}` : undefined
+      })
     }
   }
-} 
+}
