@@ -1,14 +1,14 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { useQueryClient } from "@tanstack/react-query";
 import { useSubscriptionFeatures } from "@/hooks/useSubscriptionFeatures";
 import { DialogHeader } from "./DialogHeader";
 import { AgentForm } from "./AgentForm";
-import { useQuery } from "@tanstack/react-query";
 import { SubscriptionGate } from "../subscription/SubscriptionGate";
+import { useOrganization } from "./hooks/useOrganization";
+import { useAgentCount } from "./hooks/useAgentCount";
+import { useCreateAgent } from "./hooks/useCreateAgent";
+import { useToast } from "@/hooks/use-toast";
 
 export type AgentFormData = {
   name: string;
@@ -21,48 +21,8 @@ export type AgentFormData = {
 
 export const CreateAgentDialog = ({ trigger }: { trigger: React.ReactNode }) => {
   const [open, setOpen] = useState(false);
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
   const { features } = useSubscriptionFeatures();
-  const [isLoading, setIsLoading] = useState(false);
-
-  const { data: userOrg, isError: isOrgError, error: orgError } = useQuery({
-    queryKey: ["user-organization"],
-    queryFn: async () => {
-      const { data: teamMember, error } = await supabase
-        .from("team_members")
-        .select("organization_id")
-        .single();
-      
-      if (error) {
-        console.error("Error fetching organization:", error);
-        throw new Error("Failed to fetch organization data");
-      }
-      
-      if (!teamMember?.organization_id) {
-        throw new Error("No organization found");
-      }
-      
-      return teamMember;
-    },
-    enabled: open, // Only fetch when dialog is open
-  });
-
-  const { data: agentCount = 0 } = useQuery({
-    queryKey: ["agents-count", userOrg?.organization_id],
-    queryFn: async () => {
-      if (!userOrg?.organization_id) return 0;
-
-      const { count, error } = await supabase
-        .from("agent_configs")
-        .select("*", { count: "exact", head: true })
-        .eq('organization_id', userOrg.organization_id);
-      
-      if (error) throw error;
-      return count || 0;
-    },
-    enabled: !!userOrg?.organization_id && open, // Only fetch when we have an org ID and dialog is open
-  });
+  const { toast } = useToast();
 
   const form = useForm<AgentFormData>({
     defaultValues: {
@@ -71,85 +31,16 @@ export const CreateAgentDialog = ({ trigger }: { trigger: React.ReactNode }) => 
     },
   });
 
+  const { data: userOrg, isError: isOrgError, error: orgError } = useOrganization(open);
+  const { data: agentCount = 0 } = useAgentCount(userOrg?.organization_id, open);
+  const { createAgent, isLoading } = useCreateAgent(() => {
+    setOpen(false);
+    form.reset();
+  });
+
   const onSubmit = async (data: AgentFormData) => {
-    if (!userOrg?.organization_id) {
-      toast({
-        title: "Error",
-        description: "Unable to create agent: No organization found. Please try logging out and back in.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      setIsLoading(true);
-
-      if (agentCount >= features.limits.maxAgents) {
-        toast({
-          title: "Agent limit reached",
-          description: "Please upgrade your plan to create more agents.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Create the agent with organization_id
-      const { data: newAgent, error } = await supabase
-        .from("agent_configs")
-        .insert([{
-          ...data,
-          status: "draft",
-          config: { voice_id: data.voice_id },
-          transfer_directory: data.transfer_directory,
-          organization_id: userOrg.organization_id,
-        }])
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      // Purchase and assign Twilio number
-      try {
-        const response = await fetch('/.netlify/functions/manage-twilio-number', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ agentId: newAgent.id })
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to assign phone number');
-        }
-
-        const twilioData = await response.json();
-        console.log('Twilio number assigned:', twilioData);
-      } catch (twilioError: any) {
-        console.error('Error assigning Twilio number:', twilioError);
-        toast({
-          title: "Warning",
-          description: "Agent created but failed to assign phone number. Please try again later.",
-          variant: "destructive",
-        });
-      }
-
-      toast({
-        title: "Agent created",
-        description: "Your new AI agent has been created successfully.",
-      });
-
-      queryClient.invalidateQueries({ queryKey: ["agents"] });
-      queryClient.invalidateQueries({ queryKey: ["agents-count"] });
-      setOpen(false);
-      form.reset();
-    } catch (error: any) {
-      toast({
-        title: "Error creating agent",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
+    if (userOrg?.organization_id) {
+      await createAgent(data, userOrg.organization_id, features.limits.maxAgents, agentCount);
     }
   };
 
