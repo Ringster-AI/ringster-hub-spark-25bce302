@@ -25,15 +25,6 @@ export const VoiceSelection = ({
   const playVoiceSample = async (voiceId: string) => {
     if (playing || disabled) return;
     
-    if (disabled) {
-      toast({
-        title: "Feature not available",
-        description: disabledMessage,
-        variant: "destructive",
-      });
-      return;
-    }
-
     setPlaying(voiceId);
     try {
       const response = await fetch('/.netlify/functions/text-to-speech', {
@@ -63,9 +54,11 @@ export const VoiceSelection = ({
       });
     } finally {
       setPlaying(null);
-      // Clean up the audio URL if needed
     }
   };
+
+  // Only show first three voices for free tier
+  const availableVoices = disabled ? VOICE_OPTIONS.slice(0, 3) : VOICE_OPTIONS;
 
   return (
     <div className="space-y-4">
@@ -78,13 +71,14 @@ export const VoiceSelection = ({
           </div>
         )}
       </div>
-      <RadioGroup value={disabled ? "9BWtsMINqrJLrRacOk9x" : value} onValueChange={onChange} disabled={disabled}>
-        {VOICE_OPTIONS.map((voice) => (
+      <RadioGroup 
+        value={value} 
+        onValueChange={onChange} 
+      >
+        {availableVoices.map((voice) => (
           <div
             key={voice.id}
-            className={`flex items-center justify-between mb-4 p-4 border rounded-lg ${
-              disabled ? "opacity-50" : ""
-            }`}
+            className="flex items-center justify-between mb-4 p-4 border rounded-lg"
           >
             <div className="flex items-center space-x-2">
               <RadioGroupItem value={voice.id} id={voice.id} />
@@ -101,7 +95,7 @@ export const VoiceSelection = ({
               variant="ghost"
               size="sm"
               onClick={() => playVoiceSample(voice.id)}
-              disabled={playing !== null || disabled}
+              disabled={playing !== null}
             >
               <PlayCircle
                 className={`h-5 w-5 ${
