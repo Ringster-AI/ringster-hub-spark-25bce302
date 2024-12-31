@@ -1,10 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
-import { Plus, Server, Edit, CheckSquare, XSquare, Phone } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { CreateAgentDialog } from "@/components/agents/CreateAgentDialog";
-import { EditAgentDialog } from "@/components/agents/EditAgentDialog";
+import { EmptyAgentState } from "@/components/agents/EmptyAgentState";
+import { AgentCard } from "@/components/agents/AgentCard";
 
 const Agents = () => {
   const { toast } = useToast();
@@ -81,55 +82,16 @@ const Agents = () => {
       </div>
 
       {!agents || agents.length === 0 ? (
-        <div className="flex flex-col items-center justify-center h-96 space-y-4 border-2 border-dashed rounded-lg p-8">
-          <Server className="w-12 h-12 text-muted-foreground" />
-          <div className="text-center">
-            <h3 className="text-lg font-semibold">No agents yet</h3>
-            <p className="text-muted-foreground">
-              Create your first AI agent to get started
-            </p>
-          </div>
-          <CreateAgentDialog trigger={createButton} />
-        </div>
+        <EmptyAgentState />
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {agents.map((agent) => (
-            <div
+            <AgentCard
               key={agent.id}
-              className="border rounded-lg p-6 space-y-4 hover:shadow-md transition-shadow"
-            >
-              <div className="flex items-center justify-between">
-                <h3 className="font-semibold">{agent.name}</h3>
-                <div className="flex items-center gap-2">
-                  <EditAgentDialog agent={agent} onUpdate={refetch} />
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => toggleStatus(agent.id, agent.status)}
-                    title={`Click to ${agent.status === 'active' ? 'deactivate' : 'activate'}`}
-                  >
-                    {agent.status === 'active' ? (
-                      <CheckSquare className="h-5 w-5 text-green-600" />
-                    ) : (
-                      <XSquare className="h-5 w-5 text-gray-400" />
-                    )}
-                  </Button>
-                </div>
-              </div>
-              <p className="text-sm text-muted-foreground line-clamp-2">
-                {agent.description || "No description provided"}
-              </p>
-              {agent.phone_number && (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Phone className="h-4 w-4" />
-                  <span>{agent.phone_number}</span>
-                </div>
-              )}
-              <div className="text-sm text-muted-foreground">
-                <p>Minutes used: {agent.minutes_used || 0}</p>
-                <p>Total minutes: {agent.total_minutes_used || 0}</p>
-              </div>
-            </div>
+              agent={agent}
+              onToggleStatus={toggleStatus}
+              onUpdate={refetch}
+            />
           ))}
         </div>
       )}
