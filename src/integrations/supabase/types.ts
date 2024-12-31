@@ -19,13 +19,13 @@ export type Database = {
           id: string
           minutes_used: number | null
           name: string
-          organization_id: string
           phone_number: string | null
           status: string
           total_minutes_used: number | null
           transfer_directory: Json | null
           twilio_sid: string | null
           updated_at: string | null
+          user_id: string | null
           voice_id: string | null
         }
         Insert: {
@@ -37,13 +37,13 @@ export type Database = {
           id?: string
           minutes_used?: number | null
           name: string
-          organization_id: string
           phone_number?: string | null
           status?: string
           total_minutes_used?: number | null
           transfer_directory?: Json | null
           twilio_sid?: string | null
           updated_at?: string | null
+          user_id?: string | null
           voice_id?: string | null
         }
         Update: {
@@ -55,13 +55,13 @@ export type Database = {
           id?: string
           minutes_used?: number | null
           name?: string
-          organization_id?: string
           phone_number?: string | null
           status?: string
           total_minutes_used?: number | null
           transfer_directory?: Json | null
           twilio_sid?: string | null
           updated_at?: string | null
+          user_id?: string | null
           voice_id?: string | null
         }
         Relationships: []
@@ -72,7 +72,6 @@ export type Database = {
           created_by: string | null
           id: string
           name: string
-          organization_id: string | null
           updated_at: string | null
           voice_id: string
         }
@@ -81,7 +80,6 @@ export type Database = {
           created_by?: string | null
           id?: string
           name: string
-          organization_id?: string | null
           updated_at?: string | null
           voice_id: string
         }
@@ -90,7 +88,6 @@ export type Database = {
           created_by?: string | null
           id?: string
           name?: string
-          organization_id?: string | null
           updated_at?: string | null
           voice_id?: string
         }
@@ -102,35 +99,7 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "custom_voices_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
         ]
-      }
-      organizations: {
-        Row: {
-          created_at: string | null
-          id: string
-          name: string
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          name: string
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          name?: string
-          updated_at?: string | null
-        }
-        Relationships: []
       }
       profiles: {
         Row: {
@@ -218,41 +187,6 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
-      }
-      team_members: {
-        Row: {
-          created_at: string
-          id: string
-          organization_id: string
-          role: Database["public"]["Enums"]["team_member_role"]
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          organization_id: string
-          role?: Database["public"]["Enums"]["team_member_role"]
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          organization_id?: string
-          role?: Database["public"]["Enums"]["team_member_role"]
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "team_members_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       user_subscriptions: {
         Row: {

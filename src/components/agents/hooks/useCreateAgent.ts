@@ -9,16 +9,7 @@ export const useCreateAgent = (onSuccess: () => void) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const createAgent = async (data: AgentFormData, organizationId: string, maxAgents: number, currentCount: number) => {
-    if (!organizationId) {
-      toast({
-        title: "Error",
-        description: "Unable to create agent: No organization found. Please try logging out and back in.",
-        variant: "destructive",
-      });
-      return;
-    }
-
+  const createAgent = async (data: AgentFormData, maxAgents: number, currentCount: number) => {
     try {
       setIsLoading(true);
 
@@ -38,7 +29,6 @@ export const useCreateAgent = (onSuccess: () => void) => {
           status: "draft",
           config: { voice_id: data.voice_id },
           transfer_directory: data.transfer_directory,
-          organization_id: organizationId,
         }])
         .select()
         .single();

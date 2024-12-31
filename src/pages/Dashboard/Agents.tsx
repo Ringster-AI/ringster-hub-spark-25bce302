@@ -9,30 +9,12 @@ import { EditAgentDialog } from "@/components/agents/EditAgentDialog";
 const Agents = () => {
   const { toast } = useToast();
 
-  // First get the user's organization
-  const { data: userOrg } = useQuery({
-    queryKey: ["user-organization"],
-    queryFn: async () => {
-      const { data: teamMember, error } = await supabase
-        .from("team_members")
-        .select("organization_id")
-        .single();
-      
-      if (error) throw error;
-      return teamMember;
-    },
-  });
-
-  // Then get agents for that organization
   const { data: agents, isLoading, refetch } = useQuery({
-    queryKey: ["agents", userOrg?.organization_id],
+    queryKey: ["agents"],
     queryFn: async () => {
-      if (!userOrg?.organization_id) return [];
-
       const { data, error } = await supabase
         .from("agent_configs")
         .select("*")
-        .eq('organization_id', userOrg.organization_id)
         .order("created_at", { ascending: false });
 
       if (error) {
@@ -46,7 +28,6 @@ const Agents = () => {
 
       return data;
     },
-    enabled: !!userOrg?.organization_id,
   });
 
   const toggleStatus = async (id: string, currentStatus: string) => {
