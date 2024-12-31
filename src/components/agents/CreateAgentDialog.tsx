@@ -26,7 +26,6 @@ export const CreateAgentDialog = ({ trigger }: { trigger: React.ReactNode }) => 
   const { features } = useSubscriptionFeatures();
   const [isLoading, setIsLoading] = useState(false);
 
-  // Get user's organization with error handling
   const { data: userOrg, isError: isOrgError, error: orgError } = useQuery({
     queryKey: ["user-organization"],
     queryFn: async () => {
@@ -46,10 +45,11 @@ export const CreateAgentDialog = ({ trigger }: { trigger: React.ReactNode }) => 
       
       return teamMember;
     },
+    enabled: open, // Only fetch when dialog is open
   });
 
   const { data: agentCount = 0 } = useQuery({
-    queryKey: ["agents-count"],
+    queryKey: ["agents-count", userOrg?.organization_id],
     queryFn: async () => {
       if (!userOrg?.organization_id) return 0;
 
@@ -61,7 +61,7 @@ export const CreateAgentDialog = ({ trigger }: { trigger: React.ReactNode }) => 
       if (error) throw error;
       return count || 0;
     },
-    enabled: !!userOrg?.organization_id,
+    enabled: !!userOrg?.organization_id && open, // Only fetch when we have an org ID and dialog is open
   });
 
   const form = useForm<AgentFormData>({
