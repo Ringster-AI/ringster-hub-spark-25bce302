@@ -37,6 +37,7 @@ export const CreateAgentDialog = ({ trigger }: { trigger: React.ReactNode }) => 
   });
 
   const onSubmit = async (data: AgentFormData) => {
+    if (isLoading) return; // Prevent multiple submissions
     try {
       await createAgent(data, features.limits.maxAgents, agentCount);
     } catch (error) {
@@ -50,7 +51,10 @@ export const CreateAgentDialog = ({ trigger }: { trigger: React.ReactNode }) => 
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(newOpen) => {
+      if (isLoading) return; // Prevent closing while loading
+      setOpen(newOpen);
+    }}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <SubscriptionGate requirement={{ type: "agents", value: agentCount + 1 }}>
@@ -61,7 +65,7 @@ export const CreateAgentDialog = ({ trigger }: { trigger: React.ReactNode }) => 
           <AgentForm 
             form={form} 
             onSubmit={onSubmit} 
-            onCancel={() => setOpen(false)}
+            onCancel={() => !isLoading && setOpen(false)}
             canCustomizeVoice={() => features.limits.canCustomizeVoices}
             disabled={agentCount >= features.limits.maxAgents || isLoading}
           />

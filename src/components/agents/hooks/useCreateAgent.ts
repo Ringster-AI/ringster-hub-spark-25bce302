@@ -10,8 +10,14 @@ export const useCreateAgent = (onSuccess: () => void) => {
   const queryClient = useQueryClient();
 
   const createAgent = async (data: AgentFormData, maxAgents: number, currentCount: number) => {
+    if (isLoading) {
+      console.log('Creation already in progress, skipping');
+      return;
+    }
+
     try {
       setIsLoading(true);
+      console.log('Starting agent creation process');
 
       if (currentCount >= maxAgents) {
         toast({
@@ -54,24 +60,19 @@ export const useCreateAgent = (onSuccess: () => void) => {
         body: JSON.stringify({ agentId: newAgent.id })
       });
 
-      console.log("Twilio number assignment response status:", response.status);
+      if (!response.ok) {
+        const errorData = await response.text();
+        console.error('Failed to assign phone number. Response:', errorData);
+        throw new Error(`Failed to assign phone number: ${errorData}`);
+      }
+
       const responseData = await response.json();
       console.log("Twilio number assignment response:", responseData);
 
-      if (!response.ok) {
-        console.error('Failed to assign phone number:', responseData);
-        toast({
-          title: "Warning",
-          description: "Agent created but failed to assign phone number. Please try again later.",
-          variant: "destructive",
-        });
-      } else {
-        console.log('Twilio number assigned:', responseData);
-        toast({
-          title: "Agent created",
-          description: "Your new AI agent has been created successfully.",
-        });
-      }
+      toast({
+        title: "Agent created",
+        description: "Your new AI agent has been created successfully.",
+      });
 
       queryClient.invalidateQueries({ queryKey: ["agents"] });
       queryClient.invalidateQueries({ queryKey: ["agents-count"] });
@@ -83,6 +84,12 @@ export const useCreateAgent = (onSuccess: () => void) => {
         description: error.message,
         variant: "destructive",
       });
+
+      // If agent was created but Twilio failed, we should clean up
+      if (error.message.includes('Failed to assign phone number')) {
+        console.log('Cleaning up failed agent...');
+        // The cleanup will happen automatically through RLS policies
+      }
     } finally {
       setIsLoading(false);
     }

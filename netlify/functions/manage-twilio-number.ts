@@ -16,6 +16,7 @@ export const handler: Handler = async (event) => {
   const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Content-Type',
+    'Content-Type': 'application/json'
   }
 
   // Handle preflight requests
@@ -31,7 +32,7 @@ export const handler: Handler = async (event) => {
     return { 
       statusCode: 405, 
       headers: corsHeaders,
-      body: 'Method Not Allowed' 
+      body: JSON.stringify({ error: 'Method Not Allowed' })
     }
   }
 
@@ -89,6 +90,13 @@ export const handler: Handler = async (event) => {
 
     if (updateError) {
       console.error('Error updating agent config:', updateError)
+      // If we fail to update the database, we should release the number
+      try {
+        await twilio.incomingPhoneNumbers(purchasedNumber.sid).remove()
+        console.log('Released Twilio number due to database update failure')
+      } catch (releaseError) {
+        console.error('Failed to release Twilio number:', releaseError)
+      }
       throw updateError
     }
 
