@@ -26,8 +26,8 @@ export const CreateAgentDialog = ({ trigger }: { trigger: React.ReactNode }) => 
   const { features } = useSubscriptionFeatures();
   const [isLoading, setIsLoading] = useState(false);
 
-  // Get user's organization
-  const { data: userOrg } = useQuery({
+  // Get user's organization with error handling
+  const { data: userOrg, isError: isOrgError, error: orgError } = useQuery({
     queryKey: ["user-organization"],
     queryFn: async () => {
       const { data: teamMember, error } = await supabase
@@ -35,7 +35,15 @@ export const CreateAgentDialog = ({ trigger }: { trigger: React.ReactNode }) => 
         .select("organization_id")
         .single();
       
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching organization:", error);
+        throw new Error("Failed to fetch organization data");
+      }
+      
+      if (!teamMember?.organization_id) {
+        throw new Error("No organization found");
+      }
+      
       return teamMember;
     },
   });
@@ -43,13 +51,17 @@ export const CreateAgentDialog = ({ trigger }: { trigger: React.ReactNode }) => 
   const { data: agentCount = 0 } = useQuery({
     queryKey: ["agents-count"],
     queryFn: async () => {
+      if (!userOrg?.organization_id) return 0;
+
       const { count, error } = await supabase
         .from("agent_configs")
-        .select("*", { count: "exact", head: true });
+        .select("*", { count: "exact", head: true })
+        .eq('organization_id', userOrg.organization_id);
       
       if (error) throw error;
       return count || 0;
     },
+    enabled: !!userOrg?.organization_id,
   });
 
   const form = useForm<AgentFormData>({
@@ -63,7 +75,7 @@ export const CreateAgentDialog = ({ trigger }: { trigger: React.ReactNode }) => 
     if (!userOrg?.organization_id) {
       toast({
         title: "Error",
-        description: "No organization found. Please contact support.",
+        description: "Unable to create agent: No organization found. Please try logging out and back in.",
         variant: "destructive",
       });
       return;
@@ -140,6 +152,15 @@ export const CreateAgentDialog = ({ trigger }: { trigger: React.ReactNode }) => 
       setIsLoading(false);
     }
   };
+
+  // Show error state if organization fetch failed
+  if (isOrgError) {
+    toast({
+      title: "Error",
+      description: orgError?.message || "Failed to load organization data. Please try logging out and back in.",
+      variant: "destructive",
+    });
+  }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
