@@ -4,8 +4,23 @@ import { ElevenLabsAPI } from './services/elevenlabs'
 const elevenLabs = new ElevenLabsAPI(process.env.ELEVENLABS_API_KEY!)
 
 export const handler: Handler = async (event) => {
+  // Enable CORS
+  if (event.httpMethod === 'OPTIONS') {
+    return {
+      statusCode: 200,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS'
+      }
+    }
+  }
+
   if (event.httpMethod !== 'POST') {
-    return { statusCode: 405, body: 'Method Not Allowed' }
+    return { 
+      statusCode: 405, 
+      body: JSON.stringify({ error: 'Method Not Allowed' })
+    }
   }
 
   try {
@@ -32,14 +47,19 @@ export const handler: Handler = async (event) => {
       statusCode: 200,
       headers: {
         'Content-Type': 'audio/mpeg',
+        'Access-Control-Allow-Origin': '*'
       },
       body: audioBuffer.toString('base64'),
       isBase64Encoded: true
     }
   } catch (error) {
+    console.error('Text-to-speech error:', error)
     return {
       statusCode: 500,
+      headers: {
+        'Access-Control-Allow-Origin': '*'
+      },
       body: JSON.stringify({ error: 'Failed to generate speech' })
     }
   }
-} 
+}
