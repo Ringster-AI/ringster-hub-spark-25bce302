@@ -3,12 +3,14 @@ import { ProfilesSchema } from './profiles';
 import { OrganizationsSchema } from './organizations';
 import { SubscriptionsSchema } from './subscriptions';
 import { TeamsSchema } from './teams';
+import { AgentsSchema } from './agents';
 
 export interface Database {
   public: ProfilesSchema['Tables'] & 
           OrganizationsSchema['Tables'] & 
           SubscriptionsSchema['Tables'] & 
-          TeamsSchema['Tables']
+          TeamsSchema['Tables'] &
+          AgentsSchema['Tables']
   auth: AuthSchema
 }
 
@@ -17,3 +19,4 @@ export * from './profiles';
 export * from './organizations';
 export * from './subscriptions';
 export * from './teams';
+export * from './agents';
