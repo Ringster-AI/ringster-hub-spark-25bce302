@@ -4,13 +4,17 @@ import { OrganizationsSchema } from './organizations';
 import { SubscriptionsSchema } from './subscriptions';
 import { TeamsSchema } from './teams';
 import { AgentsSchema } from './agents';
+import { CallLogsSchema } from './call-logs';
+import { UsageSummarySchema } from './usage-summary';
 
 export interface Database {
   public: ProfilesSchema['Tables'] & 
           OrganizationsSchema['Tables'] & 
           SubscriptionsSchema['Tables'] & 
           TeamsSchema['Tables'] &
-          AgentsSchema['Tables']
+          AgentsSchema['Tables'] &
+          CallLogsSchema['Tables'] &
+          UsageSummarySchema['Tables']
   auth: AuthSchema
 }
 
@@ -20,3 +24,5 @@ export * from './organizations';
 export * from './subscriptions';
 export * from './teams';
 export * from './agents';
+export * from './call-logs';
+export * from './usage-summary';

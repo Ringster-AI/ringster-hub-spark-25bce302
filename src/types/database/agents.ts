@@ -7,7 +7,6 @@ export interface AgentConfig {
   description: string | null;
   greeting: string | null;
   goodbye: string | null;
-  // Changed to string to match Supabase's type
   status: string;
   config: Json | null;
   transfer_directory: Json | null;
@@ -18,6 +17,9 @@ export interface AgentConfig {
   voice_id: string | null;
   twilio_sid: string | null;
   user_id: string | null;
+  minutes_allowance: number | null;
+  is_trial: boolean | null;
+  trial_ends_at: string | null;
 }
 
 export interface AgentsSchema {

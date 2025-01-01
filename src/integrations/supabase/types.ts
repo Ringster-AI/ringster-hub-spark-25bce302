@@ -17,12 +17,15 @@ export type Database = {
           goodbye: string | null
           greeting: string | null
           id: string
+          is_trial: boolean | null
+          minutes_allowance: number | null
           minutes_used: number | null
           name: string
           phone_number: string | null
           status: string
           total_minutes_used: number | null
           transfer_directory: Json | null
+          trial_ends_at: string | null
           twilio_sid: string | null
           updated_at: string | null
           user_id: string | null
@@ -35,12 +38,15 @@ export type Database = {
           goodbye?: string | null
           greeting?: string | null
           id?: string
+          is_trial?: boolean | null
+          minutes_allowance?: number | null
           minutes_used?: number | null
           name: string
           phone_number?: string | null
           status?: string
           total_minutes_used?: number | null
           transfer_directory?: Json | null
+          trial_ends_at?: string | null
           twilio_sid?: string | null
           updated_at?: string | null
           user_id?: string | null
@@ -53,18 +59,71 @@ export type Database = {
           goodbye?: string | null
           greeting?: string | null
           id?: string
+          is_trial?: boolean | null
+          minutes_allowance?: number | null
           minutes_used?: number | null
           name?: string
           phone_number?: string | null
           status?: string
           total_minutes_used?: number | null
           transfer_directory?: Json | null
+          trial_ends_at?: string | null
           twilio_sid?: string | null
           updated_at?: string | null
           user_id?: string | null
           voice_id?: string | null
         }
         Relationships: []
+      }
+      call_logs: {
+        Row: {
+          agent_id: string | null
+          call_sid: string
+          created_at: string | null
+          duration: number | null
+          end_time: string | null
+          from_number: string | null
+          id: string
+          start_time: string | null
+          status: string | null
+          to_number: string | null
+          transfer_count: number | null
+        }
+        Insert: {
+          agent_id?: string | null
+          call_sid: string
+          created_at?: string | null
+          duration?: number | null
+          end_time?: string | null
+          from_number?: string | null
+          id?: string
+          start_time?: string | null
+          status?: string | null
+          to_number?: string | null
+          transfer_count?: number | null
+        }
+        Update: {
+          agent_id?: string | null
+          call_sid?: string
+          created_at?: string | null
+          duration?: number | null
+          end_time?: string | null
+          from_number?: string | null
+          id?: string
+          start_time?: string | null
+          status?: string | null
+          to_number?: string | null
+          transfer_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "call_logs_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agent_configs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       custom_voices: {
         Row: {
@@ -185,6 +244,39 @@ export type Database = {
           prod_id?: string | null
           stripe_price_id?: string | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      usage_summary: {
+        Row: {
+          created_at: string | null
+          id: string
+          month: number
+          total_calls: number | null
+          total_minutes: number | null
+          total_transfers: number | null
+          user_id: string | null
+          year: number
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          month: number
+          total_calls?: number | null
+          total_minutes?: number | null
+          total_transfers?: number | null
+          user_id?: string | null
+          year: number
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          month?: number
+          total_calls?: number | null
+          total_minutes?: number | null
+          total_transfers?: number | null
+          user_id?: string | null
+          year?: number
         }
         Relationships: []
       }
