@@ -15,7 +15,14 @@ export const AgentCard = ({ agent, onToggleStatus, onUpdate }: AgentCardProps) =
       <div className="flex items-center justify-between">
         <h3 className="font-semibold">{agent.name}</h3>
         <div className="flex items-center gap-2">
-          <EditAgentDialog agent={agent} onUpdate={onUpdate} />
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => {}}
+            title="Edit agent"
+          >
+            <Edit className="h-5 w-5 text-gray-600" />
+          </Button>
           <Button
             variant="ghost"
             size="icon"
@@ -43,6 +50,7 @@ export const AgentCard = ({ agent, onToggleStatus, onUpdate }: AgentCardProps) =
         <p>Minutes used: {agent.minutes_used || 0}</p>
         <p>Total minutes: {agent.total_minutes_used || 0}</p>
       </div>
+      <EditAgentDialog agent={agent} onUpdate={onUpdate} />
     </div>
   );
 };
