@@ -5,16 +5,17 @@ import { useSubscriptionFeatures } from "@/hooks/useSubscriptionFeatures";
 import { DialogHeader } from "./DialogHeader";
 import { AgentForm } from "./AgentForm";
 import { useToast } from "@/hooks/use-toast";
-import { AgentFormData, AgentConfigInsert } from "@/types/agents";
+import { AgentFormData } from "@/types/agents";
 import { supabase } from "@/integrations/supabase/client";
+import { AgentConfig } from "@/types/database/agents";
+import { Json } from "@/types/database/auth";
 
 interface EditAgentDialogProps {
-  agent: any;
-  trigger: React.ReactNode;
+  agent: AgentConfig;
   onUpdate: () => void;
 }
 
-export const EditAgentDialog = ({ agent, trigger, onUpdate }: EditAgentDialogProps) => {
+export const EditAgentDialog = ({ agent, onUpdate }: EditAgentDialogProps) => {
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { features } = useSubscriptionFeatures();
@@ -23,9 +24,9 @@ export const EditAgentDialog = ({ agent, trigger, onUpdate }: EditAgentDialogPro
   const form = useForm<AgentFormData>({
     defaultValues: {
       name: agent.name,
-      description: agent.description,
-      greeting: agent.greeting,
-      goodbye: agent.goodbye,
+      description: agent.description || "",
+      greeting: agent.greeting || "",
+      goodbye: agent.goodbye || "",
       voice_id: agent.config?.voice_id || "9BWtsMINqrJLrRacOk9x",
       transfer_directory: agent.transfer_directory || {},
     },
@@ -42,18 +43,16 @@ export const EditAgentDialog = ({ agent, trigger, onUpdate }: EditAgentDialogPro
         throw new Error("User not authenticated");
       }
 
-      const updateData: Partial<AgentConfigInsert> = {
-        name: data.name,
-        description: data.description,
-        greeting: data.greeting,
-        goodbye: data.goodbye,
-        config: { voice_id: data.voice_id },
-        transfer_directory: data.transfer_directory as Json,
-      };
-
       const { error } = await supabase
         .from('agent_configs')
-        .update(updateData)
+        .update({
+          name: data.name,
+          description: data.description,
+          greeting: data.greeting,
+          goodbye: data.goodbye,
+          config: { voice_id: data.voice_id },
+          transfer_directory: data.transfer_directory as Json,
+        })
         .eq('id', agent.id);
 
       if (error) throw error;
@@ -83,7 +82,10 @@ export const EditAgentDialog = ({ agent, trigger, onUpdate }: EditAgentDialogPro
       setOpen(newOpen);
     }}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader title="Edit Agent" description="Update your AI agent's configuration." />
+        <DialogHeader 
+          features={features} 
+          currentAgentCount={0}
+        />
         <AgentForm 
           form={form} 
           onSubmit={onSubmit} 
