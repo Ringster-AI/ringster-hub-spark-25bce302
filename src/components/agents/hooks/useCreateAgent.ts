@@ -42,8 +42,8 @@ export const useCreateAgent = (onSuccess: () => void) => {
         greeting: data.greeting,
         goodbye: data.goodbye,
         status: "draft",
-        config: { voice_id: data.voice_id },
-        transfer_directory: data.transfer_directory as Json,
+        config: { voice_id: data.voice_id } as Json,
+        transfer_directory: data.transfer_directory as unknown as Json,
         user_id: user.id
       };
 

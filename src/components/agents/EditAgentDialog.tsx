@@ -27,8 +27,8 @@ export const EditAgentDialog = ({ agent, onUpdate }: EditAgentDialogProps) => {
       description: agent.description || "",
       greeting: agent.greeting || "",
       goodbye: agent.goodbye || "",
-      voice_id: agent.config?.voice_id || "9BWtsMINqrJLrRacOk9x",
-      transfer_directory: agent.transfer_directory || {},
+      voice_id: (agent.config as { voice_id?: string })?.voice_id || "9BWtsMINqrJLrRacOk9x",
+      transfer_directory: (agent.transfer_directory as Record<string, { keywords: string[]; number: string; transfer_message: string }>) || {},
     },
   });
 
@@ -50,8 +50,8 @@ export const EditAgentDialog = ({ agent, onUpdate }: EditAgentDialogProps) => {
           description: data.description,
           greeting: data.greeting,
           goodbye: data.goodbye,
-          config: { voice_id: data.voice_id },
-          transfer_directory: data.transfer_directory as Json,
+          config: { voice_id: data.voice_id } as Json,
+          transfer_directory: data.transfer_directory as unknown as Json,
         })
         .eq('id', agent.id);
 
