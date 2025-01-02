@@ -5,7 +5,7 @@ import { AgentMessages } from "./AgentMessages";
 import { VoiceSelection } from "./VoiceSelection";
 import { TransferDirectory } from "./TransferDirectory";
 import { FormActions } from "./FormActions";
-import { AgentFormData } from "./CreateAgentDialog";
+import { AgentFormData } from "@/types/agents";
 
 interface AgentFormProps {
   form: UseFormReturn<AgentFormData>;

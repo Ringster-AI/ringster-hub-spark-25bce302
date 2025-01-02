@@ -10,7 +10,7 @@ import { VoiceSelection } from "./VoiceSelection";
 import { TransferDirectory } from "./TransferDirectory";
 import { BasicAgentInfo } from "./BasicAgentInfo";
 import { AgentMessages } from "./AgentMessages";
-import { AgentFormData } from "./CreateAgentDialog";
+import { AgentFormData } from "@/types/agents";
 
 interface EditAgentDialogProps {
   agent: any;
@@ -34,7 +34,6 @@ export const EditAgentDialog = ({ agent, onUpdate }: EditAgentDialogProps) => {
 
   const onSubmit = async (data: AgentFormData) => {
     try {
-      // Get the current user's ID
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
@@ -47,7 +46,7 @@ export const EditAgentDialog = ({ agent, onUpdate }: EditAgentDialogProps) => {
           ...data,
           config: { voice_id: data.voice_id },
           transfer_directory: data.transfer_directory,
-          user_id: user.id // Set the user_id here
+          user_id: user.id
         })
         .eq('id', agent.id);
 

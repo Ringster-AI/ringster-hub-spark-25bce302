@@ -8,15 +8,7 @@ import { SubscriptionGate } from "../subscription/SubscriptionGate";
 import { useAgentCount } from "./hooks/useAgentCount";
 import { useCreateAgent } from "./hooks/useCreateAgent";
 import { useToast } from "@/hooks/use-toast";
-
-export type AgentFormData = {
-  name: string;
-  description: string;
-  greeting: string;
-  goodbye: string;
-  voice_id: string;
-  transfer_directory: Record<string, string>;
-};
+import { AgentFormData } from "@/types/agents";
 
 export const CreateAgentDialog = ({ trigger }: { trigger: React.ReactNode }) => {
   const [open, setOpen] = useState(false);
@@ -37,7 +29,7 @@ export const CreateAgentDialog = ({ trigger }: { trigger: React.ReactNode }) => 
   });
 
   const onSubmit = async (data: AgentFormData) => {
-    if (isLoading) return; // Prevent multiple submissions
+    if (isLoading) return;
     try {
       await createAgent(data, features.limits.maxAgents, agentCount);
     } catch (error) {
@@ -52,7 +44,7 @@ export const CreateAgentDialog = ({ trigger }: { trigger: React.ReactNode }) => 
 
   return (
     <Dialog open={open} onOpenChange={(newOpen) => {
-      if (isLoading) return; // Prevent closing while loading
+      if (isLoading) return;
       setOpen(newOpen);
     }}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
