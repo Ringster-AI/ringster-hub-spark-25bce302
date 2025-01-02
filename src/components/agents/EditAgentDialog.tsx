@@ -1,38 +1,40 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Form } from "@/components/ui/form";
-import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { useSubscriptionFeatures } from "@/hooks/useSubscriptionFeatures";
+import { DialogHeader } from "./DialogHeader";
+import { AgentForm } from "./AgentForm";
 import { useToast } from "@/hooks/use-toast";
+import { AgentFormData, AgentConfigInsert } from "@/types/agents";
 import { supabase } from "@/integrations/supabase/client";
-import { Edit } from "lucide-react";
-import { VoiceSelection } from "./VoiceSelection";
-import { TransferDirectory } from "./TransferDirectory";
-import { BasicAgentInfo } from "./BasicAgentInfo";
-import { AgentMessages } from "./AgentMessages";
-import { AgentFormData } from "@/types/agents";
 
 interface EditAgentDialogProps {
   agent: any;
+  trigger: React.ReactNode;
   onUpdate: () => void;
 }
 
-export const EditAgentDialog = ({ agent, onUpdate }: EditAgentDialogProps) => {
+export const EditAgentDialog = ({ agent, trigger, onUpdate }: EditAgentDialogProps) => {
   const [open, setOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const { features } = useSubscriptionFeatures();
   const { toast } = useToast();
-  
+
   const form = useForm<AgentFormData>({
     defaultValues: {
       name: agent.name,
       description: agent.description,
       greeting: agent.greeting,
       goodbye: agent.goodbye,
-      voice_id: agent.voice_id || "9BWtsMINqrJLrRacOk9x",
+      voice_id: agent.config?.voice_id || "9BWtsMINqrJLrRacOk9x",
       transfer_directory: agent.transfer_directory || {},
     },
   });
 
   const onSubmit = async (data: AgentFormData) => {
+    if (isLoading) return;
+    setIsLoading(true);
+
     try {
       const { data: { user } } = await supabase.auth.getUser();
       
@@ -40,17 +42,18 @@ export const EditAgentDialog = ({ agent, onUpdate }: EditAgentDialogProps) => {
         throw new Error("User not authenticated");
       }
 
+      const updateData: Partial<AgentConfigInsert> = {
+        name: data.name,
+        description: data.description,
+        greeting: data.greeting,
+        goodbye: data.goodbye,
+        config: { voice_id: data.voice_id },
+        transfer_directory: data.transfer_directory as Json,
+      };
+
       const { error } = await supabase
-        .from("agent_configs")
-        .update({
-          name: data.name,
-          description: data.description,
-          greeting: data.greeting,
-          goodbye: data.goodbye,
-          config: { voice_id: data.voice_id },
-          transfer_directory: data.transfer_directory as any,
-          user_id: user.id
-        })
+        .from('agent_configs')
+        .update(updateData)
         .eq('id', agent.id);
 
       if (error) throw error;
@@ -63,39 +66,31 @@ export const EditAgentDialog = ({ agent, onUpdate }: EditAgentDialogProps) => {
       onUpdate();
       setOpen(false);
     } catch (error: any) {
+      console.error("Error updating agent:", error);
       toast({
         title: "Error updating agent",
         description: error.message,
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="ghost" size="icon" title="Edit agent">
-          <Edit className="h-4 w-4" />
-        </Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={(newOpen) => {
+      if (isLoading) return;
+      setOpen(newOpen);
+    }}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Edit AI Agent</DialogTitle>
-        </DialogHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <BasicAgentInfo form={form} />
-            <AgentMessages form={form} />
-            <VoiceSelection value={form.watch("voice_id")} onChange={(value) => form.setValue("voice_id", value)} />
-            <TransferDirectory value={form.watch("transfer_directory")} onChange={(value) => form.setValue("transfer_directory", value)} />
-            <div className="flex justify-end space-x-2 sticky bottom-0 bg-background py-4 border-t">
-              <Button variant="outline" onClick={() => setOpen(false)} type="button">
-                Cancel
-              </Button>
-              <Button type="submit">Save Changes</Button>
-            </div>
-          </form>
-        </Form>
+        <DialogHeader title="Edit Agent" description="Update your AI agent's configuration." />
+        <AgentForm 
+          form={form} 
+          onSubmit={onSubmit} 
+          onCancel={() => !isLoading && setOpen(false)}
+          canCustomizeVoice={() => features.limits.canCustomizeVoices}
+          disabled={isLoading}
+        />
       </DialogContent>
     </Dialog>
   );

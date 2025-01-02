@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { AgentFormData } from "@/types/agents";
+import { AgentFormData, AgentConfigInsert } from "@/types/agents";
 
 export const useCreateAgent = (onSuccess: () => void) => {
   const [isLoading, setIsLoading] = useState(false);
@@ -35,18 +35,20 @@ export const useCreateAgent = (onSuccess: () => void) => {
       }
 
       console.log("Creating new agent in database...");
+      const insertData: AgentConfigInsert = {
+        name: data.name,
+        description: data.description,
+        greeting: data.greeting,
+        goodbye: data.goodbye,
+        status: "draft",
+        config: { voice_id: data.voice_id },
+        transfer_directory: data.transfer_directory as Json,
+        user_id: user.id
+      };
+
       const { data: newAgent, error } = await supabase
         .from("agent_configs")
-        .insert([{
-          name: data.name,
-          description: data.description,
-          greeting: data.greeting,
-          goodbye: data.goodbye,
-          status: "draft",
-          config: { voice_id: data.voice_id },
-          transfer_directory: data.transfer_directory,
-          user_id: user.id
-        }])
+        .insert(insertData)
         .select()
         .single();
 
