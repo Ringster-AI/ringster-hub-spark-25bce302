@@ -43,7 +43,10 @@ export const EditAgentDialog = ({ agent, onUpdate }: EditAgentDialogProps) => {
       const { error } = await supabase
         .from("agent_configs")
         .update({
-          ...data,
+          name: data.name,
+          description: data.description,
+          greeting: data.greeting,
+          goodbye: data.goodbye,
           config: { voice_id: data.voice_id },
           transfer_directory: data.transfer_directory,
           user_id: user.id

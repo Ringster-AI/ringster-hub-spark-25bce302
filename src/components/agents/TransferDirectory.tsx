@@ -26,7 +26,7 @@ export const TransferDirectory = ({ value, onChange, disabled }: TransferDirecto
       [newName]: {
         keywords: newKeywords.split(',').map(k => k.trim()).filter(k => k),
         number: newNumber,
-        transfer_message: newMessage || `I'll transfer you to our ${newName} team.`
+        transfer_message: "I'll transfer you right away"
       }
     });
     
@@ -51,17 +51,6 @@ export const TransferDirectory = ({ value, onChange, disabled }: TransferDirecto
       [name]: {
         ...value[name],
         keywords: keywords.split(',').map(k => k.trim()).filter(k => k)
-      }
-    });
-  };
-
-  const handleUpdateMessage = (name: string, message: string) => {
-    if (disabled) return;
-    onChange({
-      ...value,
-      [name]: {
-        ...value[name],
-        transfer_message: message
       }
     });
   };
@@ -97,13 +86,6 @@ export const TransferDirectory = ({ value, onChange, disabled }: TransferDirecto
                 onChange={(e) => handleUpdateKeywords(name, e.target.value)}
                 disabled={disabled}
               />
-              
-              <Textarea
-                value={entry.transfer_message || ''}
-                placeholder="Transfer Message"
-                onChange={(e) => handleUpdateMessage(name, e.target.value)}
-                disabled={disabled}
-              />
             </div>
           </div>
         ))}
@@ -128,12 +110,6 @@ export const TransferDirectory = ({ value, onChange, disabled }: TransferDirecto
             placeholder="Keywords (comma-separated)"
             value={newKeywords}
             onChange={(e) => setNewKeywords(e.target.value)}
-            disabled={disabled}
-          />
-          <Textarea
-            placeholder="Transfer Message (optional)"
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
             disabled={disabled}
           />
           <Button 
