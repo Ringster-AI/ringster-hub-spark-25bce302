@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { AgentFormData } from "../CreateAgentDialog";
+import { AgentFormData } from "@/types/agents";
 
 export const useCreateAgent = (onSuccess: () => void) => {
   const [isLoading, setIsLoading] = useState(false);
@@ -28,7 +28,6 @@ export const useCreateAgent = (onSuccess: () => void) => {
         return;
       }
 
-      // Get the current user's ID
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
@@ -39,7 +38,10 @@ export const useCreateAgent = (onSuccess: () => void) => {
       const { data: newAgent, error } = await supabase
         .from("agent_configs")
         .insert([{
-          ...data,
+          name: data.name,
+          description: data.description,
+          greeting: data.greeting,
+          goodbye: data.goodbye,
           status: "draft",
           config: { voice_id: data.voice_id },
           transfer_directory: data.transfer_directory,
@@ -85,10 +87,8 @@ export const useCreateAgent = (onSuccess: () => void) => {
         variant: "destructive",
       });
 
-      // If agent was created but Twilio failed, we should clean up
       if (error.message.includes('Failed to assign phone number')) {
         console.log('Cleaning up failed agent...');
-        // The cleanup will happen automatically through RLS policies
       }
     } finally {
       setIsLoading(false);

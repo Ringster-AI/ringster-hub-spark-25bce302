@@ -1,7 +1,7 @@
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import { UseFormReturn } from "react-hook-form";
-import { AgentFormData } from "./CreateAgentDialog";
+import { AgentFormData } from "@/types/agents";
 
 interface AgentMessagesProps {
   form: UseFormReturn<AgentFormData>;

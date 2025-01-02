@@ -48,7 +48,7 @@ export const EditAgentDialog = ({ agent, onUpdate }: EditAgentDialogProps) => {
           greeting: data.greeting,
           goodbye: data.goodbye,
           config: { voice_id: data.voice_id },
-          transfer_directory: data.transfer_directory,
+          transfer_directory: data.transfer_directory as any,
           user_id: user.id
         })
         .eq('id', agent.id);
