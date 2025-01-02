@@ -4,12 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, X } from "lucide-react";
-
-interface TransferEntry {
-  keywords: string[];
-  number: string;
-  transfer_message: string;
-}
+import { TransferEntry } from "@/types/agents";
 
 interface TransferDirectoryProps {
   value: Record<string, TransferEntry>;
@@ -75,7 +70,7 @@ export const TransferDirectory = ({ value, onChange, disabled }: TransferDirecto
     <div className="space-y-4">
       <Label>Transfer Directory</Label>
       <div className="space-y-6">
-        {Object.entries(value).map(([name, entry]) => (
+        {Object.entries(value || {}).map(([name, entry]) => (
           <div key={name} className="space-y-2 p-4 border rounded-lg">
             <div className="flex items-center justify-between">
               <Label>{name}</Label>
@@ -97,14 +92,14 @@ export const TransferDirectory = ({ value, onChange, disabled }: TransferDirecto
               />
               
               <Input
-                value={entry.keywords.join(', ')}
+                value={(entry.keywords || []).join(', ')}
                 placeholder="Keywords (comma-separated)"
                 onChange={(e) => handleUpdateKeywords(name, e.target.value)}
                 disabled={disabled}
               />
               
               <Textarea
-                value={entry.transfer_message}
+                value={entry.transfer_message || ''}
                 placeholder="Transfer Message"
                 onChange={(e) => handleUpdateMessage(name, e.target.value)}
                 disabled={disabled}
