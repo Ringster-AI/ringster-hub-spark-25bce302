@@ -13,10 +13,11 @@ import { Json } from "@/types/database/auth";
 interface EditAgentDialogProps {
   agent: AgentConfig;
   onUpdate: () => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
-export const EditAgentDialog = ({ agent, onUpdate }: EditAgentDialogProps) => {
-  const [open, setOpen] = useState(false);
+export const EditAgentDialog = ({ agent, onUpdate, open, onOpenChange }: EditAgentDialogProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const { features } = useSubscriptionFeatures();
   const { toast } = useToast();
@@ -27,7 +28,7 @@ export const EditAgentDialog = ({ agent, onUpdate }: EditAgentDialogProps) => {
       description: agent.description || "",
       greeting: agent.greeting || "",
       goodbye: agent.goodbye || "",
-      voice_id: (agent.config as { voice_id?: string })?.voice_id || "9BWtsMINqrJLrRacOk9x",
+      voice_id: ((agent.config as any)?.voice_id as string) || "9BWtsMINqrJLrRacOk9x",
       transfer_directory: (agent.transfer_directory as Record<string, { keywords: string[]; number: string; transfer_message: string }>) || {},
     },
   });
@@ -50,7 +51,7 @@ export const EditAgentDialog = ({ agent, onUpdate }: EditAgentDialogProps) => {
           description: data.description,
           greeting: data.greeting,
           goodbye: data.goodbye,
-          config: { voice_id: data.voice_id } as Json,
+          config: { voice_id: data.voice_id } as unknown as Json,
           transfer_directory: data.transfer_directory as unknown as Json,
         })
         .eq('id', agent.id);
@@ -63,7 +64,7 @@ export const EditAgentDialog = ({ agent, onUpdate }: EditAgentDialogProps) => {
       });
 
       onUpdate();
-      setOpen(false);
+      onOpenChange(false);
     } catch (error: any) {
       console.error("Error updating agent:", error);
       toast({
@@ -79,7 +80,7 @@ export const EditAgentDialog = ({ agent, onUpdate }: EditAgentDialogProps) => {
   return (
     <Dialog open={open} onOpenChange={(newOpen) => {
       if (isLoading) return;
-      setOpen(newOpen);
+      onOpenChange(newOpen);
     }}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader 
@@ -89,7 +90,7 @@ export const EditAgentDialog = ({ agent, onUpdate }: EditAgentDialogProps) => {
         <AgentForm 
           form={form} 
           onSubmit={onSubmit} 
-          onCancel={() => !isLoading && setOpen(false)}
+          onCancel={() => !isLoading && onOpenChange(false)}
           canCustomizeVoice={() => features.limits.canCustomizeVoices}
           disabled={isLoading}
         />

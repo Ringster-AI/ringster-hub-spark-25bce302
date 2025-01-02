@@ -2,6 +2,7 @@ import { CheckSquare, XSquare, Phone, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EditAgentDialog } from "./EditAgentDialog";
 import { AgentConfig } from "@/types/database/agents";
+import { useState } from "react";
 
 interface AgentCardProps {
   agent: AgentConfig;
@@ -10,6 +11,8 @@ interface AgentCardProps {
 }
 
 export const AgentCard = ({ agent, onToggleStatus, onUpdate }: AgentCardProps) => {
+  const [isEditOpen, setIsEditOpen] = useState(false);
+
   return (
     <div className="border rounded-lg p-6 space-y-4 hover:shadow-md transition-shadow">
       <div className="flex items-center justify-between">
@@ -18,7 +21,7 @@ export const AgentCard = ({ agent, onToggleStatus, onUpdate }: AgentCardProps) =
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => {}}
+            onClick={() => setIsEditOpen(true)}
             title="Edit agent"
           >
             <Edit className="h-5 w-5 text-gray-600" />
@@ -50,7 +53,12 @@ export const AgentCard = ({ agent, onToggleStatus, onUpdate }: AgentCardProps) =
         <p>Minutes used: {agent.minutes_used || 0}</p>
         <p>Total minutes: {agent.total_minutes_used || 0}</p>
       </div>
-      <EditAgentDialog agent={agent} onUpdate={onUpdate} />
+      <EditAgentDialog 
+        agent={agent} 
+        onUpdate={onUpdate} 
+        open={isEditOpen}
+        onOpenChange={setIsEditOpen}
+      />
     </div>
   );
 };
