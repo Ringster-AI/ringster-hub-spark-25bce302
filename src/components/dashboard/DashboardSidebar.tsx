@@ -46,7 +46,7 @@ export const DashboardSidebar = () => {
   };
 
   return (
-    <Sidebar>
+    <Sidebar className="h-full">
       <SidebarContent>
         <div className="p-4">
           <h1 className="text-2xl font-bold text-primary">Ringster</h1>
