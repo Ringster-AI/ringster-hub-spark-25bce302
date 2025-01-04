@@ -22,7 +22,7 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
                 <span className="sr-only">Toggle menu</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="p-0 w-[300px]">
+            <SheetContent side="left" className="p-0">
               <DashboardSidebar />
             </SheetContent>
           </Sheet>
