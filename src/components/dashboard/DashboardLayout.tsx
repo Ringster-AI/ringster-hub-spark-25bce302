@@ -26,9 +26,9 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
               side="left" 
               className="w-[280px] p-0"
             >
-              <nav className="h-full bg-white">
+              <div className="flex h-full flex-col bg-background">
                 <DashboardSidebar />
-              </nav>
+              </div>
             </SheetContent>
           </Sheet>
         </div>
