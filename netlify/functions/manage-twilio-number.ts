@@ -46,9 +46,9 @@ export const handler: Handler = async (event) => {
       throw new Error('Twilio credentials are not configured')
     }
 
-    if (!process.env.WEBHOOK_URL) {
-      console.error('Missing webhook URL')
-      throw new Error('WEBHOOK_URL environment variable is not configured')
+    if (!process.env.WEBHOOK_URL || !process.env.SMS_WEBHOOK_URL) {
+      console.error('Missing webhook URLs')
+      throw new Error('WEBHOOK_URL and SMS_WEBHOOK_URL environment variables are required')
     }
 
     if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
@@ -76,12 +76,14 @@ export const handler: Handler = async (event) => {
 
     console.log(`Found available number: ${numbers[0].phoneNumber}`)
 
-    // 2. Purchase the number and set webhook
+    // 2. Purchase the number and set webhooks for both voice and SMS
     const purchasedNumber = await twilio.incomingPhoneNumbers
       .create({
         phoneNumber: numbers[0].phoneNumber,
         voiceUrl: process.env.WEBHOOK_URL,
-        voiceMethod: 'POST'
+        voiceMethod: 'POST',
+        smsUrl: process.env.SMS_WEBHOOK_URL,
+        smsMethod: 'POST'
       })
 
     console.log(`Successfully purchased number: ${purchasedNumber.phoneNumber}`)

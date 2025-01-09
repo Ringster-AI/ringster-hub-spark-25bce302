@@ -24,7 +24,11 @@ const menuItems = [
   { title: "Settings", icon: Settings, url: "/dashboard/settings" },
 ];
 
-export const DashboardSidebar = () => {
+interface DashboardSidebarProps {
+  className?: string;
+}
+
+export const DashboardSidebar = ({ className = '' }: DashboardSidebarProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -46,7 +50,7 @@ export const DashboardSidebar = () => {
   };
 
   return (
-    <Sidebar className="h-full border-r">
+    <div className={`${className} h-full border-r`}>
       <SidebarContent>
         <div className="p-4">
           <h1 className="text-2xl font-bold text-primary">Ringster</h1>
@@ -78,6 +82,6 @@ export const DashboardSidebar = () => {
           <span>Logout</span>
         </SidebarMenuButton>
       </SidebarFooter>
-    </Sidebar>
+    </div>
   );
 };

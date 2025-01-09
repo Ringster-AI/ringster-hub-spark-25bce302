@@ -24,9 +24,11 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
             </SheetTrigger>
             <SheetContent 
               side="left" 
-              className="w-[280px] p-0 overflow-y-auto"
+              className="w-[280px] p-0"
             >
-              <DashboardSidebar />
+              <nav className="h-full py-4 overflow-y-auto">
+                <DashboardSidebar className="border-none" />
+              </nav>
             </SheetContent>
           </Sheet>
         </div>
