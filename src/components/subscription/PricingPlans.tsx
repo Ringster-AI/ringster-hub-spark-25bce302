@@ -4,7 +4,8 @@ import { Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
+import { Toggle } from "@/components/ui/toggle";
+import { useState } from "react";
 
 interface PricingPlan {
   id: string;
@@ -27,7 +28,7 @@ interface PricingPlan {
 
 export const PricingPlans = () => {
   const { toast } = useToast();
-  const navigate = useNavigate();
+  const [billingInterval, setBillingInterval] = useState<'month' | 'year'>('month');
 
   const { data: plans, isLoading } = useQuery({
     queryKey: ["subscription-plans"],
@@ -39,10 +40,9 @@ export const PricingPlans = () => {
 
       if (error) throw error;
       
-      // Transform the data to match our PricingPlan interface
       return data?.map(plan => ({
         ...plan,
-        features: plan.features as PricingPlan['features'] // Type assertion for the features object
+        features: plan.features as PricingPlan['features']
       })) as PricingPlan[];
     },
   });
@@ -67,26 +67,47 @@ export const PricingPlans = () => {
     }
   };
 
+  const filteredPlans = plans?.filter(
+    (plan) => plan.billing_interval === billingInterval && plan.is_active
+  );
+
   if (isLoading) {
     return <div className="text-center">Loading plans...</div>;
   }
 
   return (
-    <div className="container mx-auto py-12">
+    <div className="container mx-auto py-8">
       <div className="text-center mb-12">
         <h2 className="text-3xl font-bold">Choose Your Plan</h2>
         <p className="text-muted-foreground mt-2">
           Select the perfect plan for your needs
         </p>
+        <div className="flex items-center justify-center mt-6 space-x-4">
+          <Toggle
+            pressed={billingInterval === 'month'}
+            onPressedChange={() => setBillingInterval('month')}
+            className="data-[state=on]:bg-primary"
+          >
+            Monthly
+          </Toggle>
+          <Toggle
+            pressed={billingInterval === 'year'}
+            onPressedChange={() => setBillingInterval('year')}
+            className="data-[state=on]:bg-primary"
+          >
+            Yearly
+            <span className="ml-2 text-xs text-green-500 font-medium">Save 20%</span>
+          </Toggle>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {plans?.map((plan) => (
+        {filteredPlans?.map((plan) => (
           <Card key={plan.id} className="flex flex-col">
             <CardHeader>
               <CardTitle>{plan.name}</CardTitle>
               <CardDescription>
-                ${plan.price.toFixed(2)}/{plan.billing_interval || 'month'}
+                ${plan.price.toFixed(2)}/{billingInterval}
               </CardDescription>
             </CardHeader>
             <CardContent className="flex-grow">
