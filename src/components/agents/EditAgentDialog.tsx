@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { useSubscriptionFeatures } from "@/hooks/useSubscriptionFeatures";
 import { DialogHeader } from "./DialogHeader";
 import { AgentForm } from "./AgentForm";
@@ -83,6 +83,7 @@ export const EditAgentDialog = ({ agent, onUpdate, open, onOpenChange }: EditAge
       onOpenChange(newOpen);
     }}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+        <DialogTitle className="sr-only">Edit AI Agent</DialogTitle>
         <DialogHeader 
           features={features} 
           currentAgentCount={0}
