@@ -3,10 +3,24 @@ import { Progress } from "@/components/ui/progress";
 import { useSubscriptionFeatures } from "@/hooks/useSubscriptionFeatures";
 import { PricingPlans } from "@/components/subscription/PricingPlans";
 import { SubscriptionBadge } from "@/components/subscription/SubscriptionBadge";
-import { Bot, Users, Clock } from "lucide-react";
+import { Bot, Clock } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 const SubscriptionPage = () => {
   const { features, subscription, isLoading } = useSubscriptionFeatures();
+
+  const { data: agentCount = 0 } = useQuery({
+    queryKey: ["agents-count"],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("agent_configs")
+        .select("*", { count: "exact", head: true });
+      
+      if (error) throw error;
+      return count || 0;
+    },
+  });
 
   if (isLoading) {
     return <div>Loading subscription details...</div>;
@@ -55,11 +69,11 @@ const SubscriptionPage = () => {
               {features.limits.maxAgents} agents
             </div>
             <Progress 
-              value={calculateUsagePercentage(0, features.limits.maxAgents)} 
+              value={calculateUsagePercentage(agentCount, features.limits.maxAgents)} 
               className="mt-2"
             />
             <p className="text-xs text-muted-foreground mt-2">
-              0 of {features.limits.maxAgents} agents used
+              {agentCount} of {features.limits.maxAgents} agents used
             </p>
           </CardContent>
         </Card>
