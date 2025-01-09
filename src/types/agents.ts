@@ -1,9 +1,15 @@
 import { Json } from "@/integrations/supabase/types";
 
+export interface TransferHours {
+  start: string; // Format: "HH:mm"
+  end: string;   // Format: "HH:mm"
+}
+
 export interface TransferEntry {
   keywords: string[];
   number: string;
   transfer_message: string;
+  transfer_hours?: TransferHours;
 }
 
 export interface AgentFormData {
