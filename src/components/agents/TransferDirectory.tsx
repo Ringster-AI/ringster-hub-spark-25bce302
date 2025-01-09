@@ -43,7 +43,7 @@ export const TransferDirectory = ({ value, onChange, disabled }: TransferDirecto
       </div>
       
       <NewTransferEntryForm
-        onAdd={(name, entry) => handleAdd(name, entry)}
+        onAdd={handleAdd}
         disabled={disabled}
       />
     </div>

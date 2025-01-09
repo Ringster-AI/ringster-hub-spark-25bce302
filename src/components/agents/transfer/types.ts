@@ -8,14 +8,15 @@ export interface TransferHoursProps {
 }
 
 export interface TransferEntryFormProps {
+  name: string; // Added name prop
   value: TransferEntry;
-  onUpdate: (value: TransferEntry) => void;
+  onUpdate: (updatedEntry: TransferEntry) => void;
   onRemove: () => void;
   disabled?: boolean;
 }
 
 export interface NewTransferEntryFormProps {
-  onAdd: (entry: TransferEntry) => void;
+  onAdd: (name: string, entry: TransferEntry) => void; // Updated signature
   disabled?: boolean;
 }
 
