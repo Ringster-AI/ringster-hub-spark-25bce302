@@ -16,7 +16,7 @@ export const NewTransferEntryForm = ({ onAdd, disabled }: NewTransferEntryFormPr
   const handleAdd = () => {
     if (!name || !number || disabled) return;
     
-    onAdd({
+    onAdd(name, {
       keywords: keywords.split(',').map(k => k.trim()).filter(k => k),
       number: number,
       transfer_message: "I'll transfer you right away",
