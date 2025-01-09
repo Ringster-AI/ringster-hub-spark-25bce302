@@ -25,15 +25,26 @@ const SubscriptionPage = () => {
   const { data: minutesUsed = 0 } = useQuery({
     queryKey: ["minutes-used"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // First get the user's agents
+      const { data: userAgents, error: agentsError } = await supabase
+        .from("agent_configs")
+        .select("id");
+      
+      if (agentsError) throw agentsError;
+      
+      const agentIds = userAgents?.map(agent => agent.id) || [];
+      
+      // Then get call logs only for those agents
+      const { data: calls, error: callsError } = await supabase
         .from("call_logs")
         .select("duration")
-        .eq("status", "completed");
+        .eq("status", "completed")
+        .in("agent_id", agentIds);
       
-      if (error) throw error;
+      if (callsError) throw callsError;
       
       // Convert seconds to minutes and round up
-      const totalMinutes = data?.reduce((acc, call) => acc + (call.duration || 0), 0) || 0;
+      const totalMinutes = calls?.reduce((acc, call) => acc + (call.duration || 0), 0) || 0;
       return Math.ceil(totalMinutes / 60);
     },
   });
