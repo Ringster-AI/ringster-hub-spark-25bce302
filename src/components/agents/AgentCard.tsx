@@ -1,8 +1,11 @@
-import { CheckSquare, XSquare, Phone, Edit } from "lucide-react";
+import { CheckSquare, XSquare, Phone, Edit, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EditAgentDialog } from "./EditAgentDialog";
 import { AgentConfig } from "@/types/database/agents";
 import { useState } from "react";
+import { useSubscriptionFeatures } from "@/hooks/useSubscriptionFeatures";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Link } from "react-router-dom";
 
 interface AgentCardProps {
   agent: AgentConfig;
@@ -12,9 +15,22 @@ interface AgentCardProps {
 
 export const AgentCard = ({ agent, onToggleStatus, onUpdate }: AgentCardProps) => {
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const { features } = useSubscriptionFeatures();
+
+  const showTrialWarning = features.isTrialing && features.expiresAt && 
+    new Date(features.expiresAt).getTime() - Date.now() < 24 * 60 * 60 * 1000;
 
   return (
     <div className="border rounded-lg p-6 space-y-4 hover:shadow-md transition-shadow">
+      {showTrialWarning && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            Your trial is ending soon! <Link to="/dashboard/subscription" className="underline">Upgrade now</Link> to keep your agent active.
+          </AlertDescription>
+        </Alert>
+      )}
+      
       <div className="flex items-center justify-between">
         <h3 className="font-semibold">{agent.name}</h3>
         <div className="flex items-center gap-2">
