@@ -33,6 +33,7 @@ export const TransferDirectory = ({ value, onChange, disabled }: TransferDirecto
         {Object.entries(value || {}).map(([name, entry]) => (
           <TransferEntryForm
             key={name}
+            name={name}
             value={entry}
             onUpdate={(updatedEntry) => handleUpdate(name, updatedEntry)}
             onRemove={() => handleRemove(name)}
@@ -42,7 +43,7 @@ export const TransferDirectory = ({ value, onChange, disabled }: TransferDirecto
       </div>
       
       <NewTransferEntryForm
-        onAdd={(entry) => handleAdd(entry)}
+        onAdd={(name, entry) => handleAdd(name, entry)}
         disabled={disabled}
       />
     </div>
