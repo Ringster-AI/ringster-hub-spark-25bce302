@@ -23,9 +23,7 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
               </Button>
             </SheetTrigger>
             <SheetContent side="left" className="p-0 w-72">
-              <div className="h-full">
-                <DashboardSidebar />
-              </div>
+              <DashboardSidebar />
             </SheetContent>
           </Sheet>
         </div>
