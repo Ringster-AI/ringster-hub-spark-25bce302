@@ -22,6 +22,22 @@ const SubscriptionPage = () => {
     },
   });
 
+  const { data: minutesUsed = 0 } = useQuery({
+    queryKey: ["minutes-used"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("call_logs")
+        .select("duration")
+        .eq("status", "completed");
+      
+      if (error) throw error;
+      
+      // Convert seconds to minutes and round up
+      const totalMinutes = data?.reduce((acc, call) => acc + (call.duration || 0), 0) || 0;
+      return Math.ceil(totalMinutes / 60);
+    },
+  });
+
   if (isLoading) {
     return <div>Loading subscription details...</div>;
   }
@@ -88,14 +104,11 @@ const SubscriptionPage = () => {
               {features.limits.minutesAllowance} minutes
             </div>
             <Progress 
-              value={calculateUsagePercentage(
-                features.limits.minutesAllowance - features.limits.remainingMinutes,
-                features.limits.minutesAllowance
-              )} 
+              value={calculateUsagePercentage(minutesUsed, features.limits.minutesAllowance)} 
               className="mt-2"
             />
             <p className="text-xs text-muted-foreground mt-2">
-              {features.limits.remainingMinutes} minutes remaining
+              {minutesUsed} of {features.limits.minutesAllowance} minutes used
             </p>
           </CardContent>
         </Card>
