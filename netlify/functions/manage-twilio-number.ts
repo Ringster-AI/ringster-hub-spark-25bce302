@@ -101,7 +101,7 @@ export const handler: Handler = async (event) => {
     }
 
     // 4. Create/Update Vapi assistant with the new phone number
-    const vapiResponse = await fetch('/.netlify/functions/manage-vapi-assistant', {
+    const vapiResponse = await fetch(`${event.rawUrl.split('/.netlify')[0]}/.netlify/functions/manage-vapi-assistant`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -116,6 +116,7 @@ export const handler: Handler = async (event) => {
       console.error('Failed to update Vapi assistant')
       const vapiError = await vapiResponse.text()
       console.error('Vapi error:', vapiError)
+      throw new Error(`Failed to update Vapi assistant: ${vapiError}`)
     }
 
     return {
