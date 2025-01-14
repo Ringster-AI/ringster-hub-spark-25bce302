@@ -18,7 +18,7 @@ export const Hero = () => {
               Get Started
               <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
             </Button>
-            <Button variant="outline" size="lg">
+            <Button variant="outline" size="lg" onClick={() => window.location.href = 'mailto:admin@ringster.live'}>
               Learn More
             </Button>
           </div>
