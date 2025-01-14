@@ -21,24 +21,14 @@ export interface VapiAssistantConfig {
     model: string;
     language: string;
   };
-  transportConfigurations: Array<{
-    provider: string;
-    phoneNumber: string; // Changed back to phoneNumber as per Vapi API requirements
-    timeout: number;
-    record: boolean;
-  }>;
   endCallMessage: string;
   silenceTimeoutSeconds: number;
   maxDurationSeconds: number;
 }
 
 export const createVapiAssistantConfig = (
-  agent: AgentConfig,
-  phoneNumber?: string
+  agent: AgentConfig
 ): VapiAssistantConfig => {
-  // Clean phone number to E.164 format (remove all non-digit characters except +)
-  const cleanPhoneNumber = phoneNumber ? phoneNumber.replace(/[^\d+]/g, '') : '';
-  
   return {
     name: agent.name,
     firstMessage: agent.greeting || "Hello! How can I help you today?",
@@ -62,14 +52,6 @@ export const createVapiAssistantConfig = (
       model: "nova-2",
       language: "en"
     },
-    transportConfigurations: cleanPhoneNumber ? [
-      {
-        provider: "twilio",
-        phoneNumber: cleanPhoneNumber, // Changed back to phoneNumber
-        timeout: 60,
-        record: false
-      }
-    ] : [],
     endCallMessage: agent.goodbye || "Thank you for calling. Goodbye!",
     silenceTimeoutSeconds: 30,
     maxDurationSeconds: 600

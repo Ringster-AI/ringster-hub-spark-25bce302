@@ -59,10 +59,20 @@ export const handler: Handler = async (event) => {
     }
 
     const vapiService = new VapiService(VAPI_API_KEY, VAPI_API_URL)
-    const vapiConfig = createVapiAssistantConfig(agent, phoneNumber)
+    const vapiConfig = createVapiAssistantConfig(agent)
     const vapiData = await vapiService.createAssistant(vapiConfig)
 
     console.log('Successfully created Vapi assistant:', vapiData)
+
+    // Import the Twilio number into Vapi
+    if (phoneNumber && process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN) {
+      await vapiService.importTwilioNumber(
+        vapiData.id,
+        phoneNumber,
+        process.env.TWILIO_ACCOUNT_SID,
+        process.env.TWILIO_AUTH_TOKEN
+      )
+    }
 
     const { error: updateError } = await supabase
       .from('agent_configs')

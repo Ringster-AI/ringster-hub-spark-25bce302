@@ -1,41 +1,59 @@
-import { VapiAssistantConfig } from './vapi-config';
-
 export class VapiService {
   private apiKey: string;
   private apiUrl: string;
 
-  constructor(apiKey: string, apiUrl = 'https://api.vapi.ai/assistant') {
+  constructor(apiKey: string, apiUrl: string) {
     this.apiKey = apiKey;
     this.apiUrl = apiUrl;
   }
 
-  async createAssistant(config: VapiAssistantConfig) {
+  async createAssistant(config: any) {
     console.log('Creating Vapi assistant with config:', JSON.stringify(config, null, 2));
+    
+    const response = await fetch(this.apiUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${this.apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(config),
+    });
 
-    try {
-      const response = await fetch(this.apiUrl, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(config)
-      });
-
-      const responseText = await response.text();
-      console.log('Vapi API response:', responseText);
-
-      if (!response.ok) {
-        console.error('Vapi API error:', responseText);
-        throw new Error(`Failed to create Vapi assistant: ${responseText}`);
-      }
-
-      const data = JSON.parse(responseText);
-      console.log('Successfully created Vapi assistant:', data);
-      return data;
-    } catch (error) {
-      console.error('Error in createAssistant:', error);
-      throw error;
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Failed to create Vapi assistant:', errorText);
+      throw new Error(`Failed to create Vapi assistant: ${errorText}`);
     }
+
+    const data = await response.json();
+    console.log('Successfully created Vapi assistant:', data);
+    return data;
+  }
+
+  async importTwilioNumber(assistantId: string, twilioNumber: string, twilioAccountSid: string, twilioAuthToken: string) {
+    console.log('Importing Twilio number into Vapi:', twilioNumber);
+    
+    const response = await fetch(`${this.apiUrl}/${assistantId}/import-twilio`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${this.apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        twilioPhoneNumber: twilioNumber,
+        twilioAccountSid: twilioAccountSid,
+        twilioAuthToken: twilioAuthToken,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Failed to import Twilio number:', errorText);
+      throw new Error(`Failed to import Twilio number: ${errorText}`);
+    }
+
+    const data = await response.json();
+    console.log('Successfully imported Twilio number:', data);
+    return data;
   }
 }
