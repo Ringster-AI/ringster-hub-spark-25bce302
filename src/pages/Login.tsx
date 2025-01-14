@@ -5,7 +5,7 @@ import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AuthError } from "@supabase/supabase-js";
+import { AuthError, AuthApiError } from "@supabase/supabase-js";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -24,7 +24,7 @@ export default function Login() {
     checkSession();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session) {
+      if (event === 'SIGNED_IN' && session) {
         navigate("/dashboard", { replace: true });
       }
 
@@ -38,11 +38,23 @@ export default function Login() {
   }, [navigate]);
 
   const getErrorMessage = (error: AuthError) => {
-    const message = error.message;
-    if (message.includes('User already registered')) {
-      return 'This email is already registered. Please sign in instead.';
+    if (error instanceof AuthApiError) {
+      switch (error.status) {
+        case 400:
+          if (error.message.includes('Invalid login credentials')) {
+            return 'Invalid email or password. Please check your credentials and try again.';
+          }
+          if (error.message.includes('Email not confirmed')) {
+            return 'Please verify your email address before signing in.';
+          }
+          break;
+        case 422:
+          return 'Invalid email format. Please check your email address.';
+        case 429:
+          return 'Too many login attempts. Please try again later.';
+      }
     }
-    return message;
+    return error.message;
   };
 
   if (isLoading) {
