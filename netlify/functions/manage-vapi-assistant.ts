@@ -41,6 +41,10 @@ export const handler: Handler = async (event) => {
       throw new Error('Agent ID is required')
     }
 
+    if (!VAPI_API_KEY) {
+      throw new Error('VAPI_API_KEY is not configured')
+    }
+
     // Get agent details from database
     const { data: agent, error: agentError } = await supabase
       .from('agent_configs')
@@ -49,8 +53,14 @@ export const handler: Handler = async (event) => {
       .single()
 
     if (agentError || !agent) {
+      console.error('Failed to fetch agent details:', agentError)
       throw new Error('Failed to fetch agent details')
     }
+
+    console.log('Creating Vapi assistant with config:', {
+      name: agent.name,
+      phoneNumber: phoneNumber
+    })
 
     // Prepare Vapi assistant configuration
     const vapiAssistant = {
@@ -59,6 +69,7 @@ export const handler: Handler = async (event) => {
       model: {
         provider: "openai",
         model: "gpt-3.5-turbo",
+        temperature: 0.7,
         messages: [
           {
             role: "system",
@@ -88,6 +99,8 @@ export const handler: Handler = async (event) => {
       maxDurationSeconds: 600
     }
 
+    console.log('Sending request to Vapi API...')
+
     // Create or update Vapi assistant
     const vapiResponse = await fetch(VAPI_API_URL, {
       method: 'POST',
@@ -98,13 +111,17 @@ export const handler: Handler = async (event) => {
       body: JSON.stringify(vapiAssistant)
     })
 
+    const responseText = await vapiResponse.text()
+    console.log('Vapi API response:', responseText)
+
     if (!vapiResponse.ok) {
-      const errorData = await vapiResponse.text()
-      console.error('Vapi API error:', errorData)
-      throw new Error(`Failed to create Vapi assistant: ${errorData}`)
+      console.error('Vapi API error:', responseText)
+      throw new Error(`Failed to create Vapi assistant: ${responseText}`)
     }
 
-    const vapiData = await vapiResponse.json()
+    const vapiData = JSON.parse(responseText)
+
+    console.log('Successfully created Vapi assistant:', vapiData)
 
     // Update agent with Vapi assistant ID
     const { error: updateError } = await supabase
@@ -122,7 +139,7 @@ export const handler: Handler = async (event) => {
       throw updateError
     }
 
-    console.log('Successfully created/updated Vapi assistant')
+    console.log('Successfully updated agent config with Vapi assistant ID')
 
     return {
       statusCode: 200,
