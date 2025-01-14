@@ -14,7 +14,10 @@ export default function Login() {
 
   useEffect(() => {
     const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) {
+        setError(getErrorMessage(sessionError));
+      }
       if (session) {
         navigate("/dashboard", { replace: true });
       }
@@ -27,10 +30,18 @@ export default function Login() {
       if (event === 'SIGNED_IN' && session) {
         navigate("/dashboard", { replace: true });
       }
-
-      // Clear error when auth state changes
       if (event === 'SIGNED_OUT') {
         setError(null);
+      }
+      // Handle auth errors through the state change event
+      if (event === 'USER_UPDATED' && !session) {
+        const checkError = async () => {
+          const { error: authError } = await supabase.auth.getSession();
+          if (authError) {
+            setError(getErrorMessage(authError));
+          }
+        };
+        checkError();
       }
     });
 
@@ -95,10 +106,6 @@ export default function Login() {
             }}
             theme="light"
             providers={[]}
-            onError={(error) => {
-              console.error('Auth error:', error);
-              setError(getErrorMessage(error));
-            }}
           />
         </CardContent>
       </Card>
