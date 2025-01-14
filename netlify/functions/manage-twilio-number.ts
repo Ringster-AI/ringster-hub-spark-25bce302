@@ -1,11 +1,7 @@
 import { Handler } from '@netlify/functions'
-import { Twilio } from 'twilio'
 import { createClient } from '@supabase/supabase-js'
-
-const twilio = new Twilio(
-  process.env.TWILIO_ACCOUNT_SID!,
-  process.env.TWILIO_AUTH_TOKEN!
-)
+import { TwilioService } from './services/twilio-service'
+import { DatabaseService } from './services/database-service'
 
 const supabase = createClient(
   process.env.SUPABASE_URL || '',
@@ -39,93 +35,71 @@ export const handler: Handler = async (event) => {
     console.log('Starting Twilio number assignment process')
     
     if (!process.env.TWILIO_ACCOUNT_SID || !process.env.TWILIO_AUTH_TOKEN) {
-      console.error('Missing Twilio credentials')
       throw new Error('Twilio credentials are not configured')
     }
 
     if (!process.env.WEBHOOK_URL || !process.env.SMS_WEBHOOK_URL) {
-      console.error('Missing webhook URLs')
       throw new Error('WEBHOOK_URL and SMS_WEBHOOK_URL environment variables are required')
     }
 
     const { agentId } = JSON.parse(event.body || '{}')
     
     if (!agentId) {
-      console.error('Missing agentId in request body')
       throw new Error('Agent ID is required')
     }
 
-    console.log(`Searching for available numbers for agent ${agentId}`)
+    const twilioService = new TwilioService(
+      process.env.TWILIO_ACCOUNT_SID,
+      process.env.TWILIO_AUTH_TOKEN
+    )
     
-    // 1. Purchase random number
-    const numbers = await twilio.availablePhoneNumbers('US')
-      .local.list({ limit: 1 })
-    
-    if (!numbers[0]) {
-      console.error('No phone numbers available from Twilio')
-      throw new Error('No phone numbers available')
-    }
+    const databaseService = new DatabaseService(supabase)
 
-    console.log(`Found available number: ${numbers[0].phoneNumber}`)
+    // Find and purchase number
+    const phoneNumber = await twilioService.findAvailableNumber()
+    const purchasedNumber = await twilioService.purchaseNumber(
+      phoneNumber,
+      process.env.WEBHOOK_URL,
+      process.env.SMS_WEBHOOK_URL
+    )
 
-    // 2. Purchase the number and set webhooks
-    const purchasedNumber = await twilio.incomingPhoneNumbers
-      .create({
-        phoneNumber: numbers[0].phoneNumber,
-        voiceUrl: process.env.WEBHOOK_URL,
-        voiceMethod: 'POST',
-        smsUrl: process.env.SMS_WEBHOOK_URL,
-        smsMethod: 'POST'
-      })
-
-    console.log(`Successfully purchased number: ${purchasedNumber.phoneNumber}`)
-
-    // 3. Update agent in database with phone number
-    const { error: updateError } = await supabase
-      .from('agent_configs')
-      .update({
-        phone_number: purchasedNumber.phoneNumber,
-        twilio_sid: purchasedNumber.sid
-      })
-      .eq('id', agentId)
-
-    if (updateError) {
-      console.error('Error updating agent config:', updateError)
-      try {
-        await twilio.incomingPhoneNumbers(purchasedNumber.sid).remove()
-        console.log('Released Twilio number due to database update failure')
-      } catch (releaseError) {
-        console.error('Failed to release Twilio number:', releaseError)
-      }
-      throw updateError
-    }
-
-    // 4. Create/Update Vapi assistant with the new phone number
-    const vapiResponse = await fetch(`${event.rawUrl.split('/.netlify')[0]}/.netlify/functions/manage-vapi-assistant`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
+    try {
+      // Update agent in database
+      await databaseService.updateAgentWithPhoneNumber(
         agentId,
-        phoneNumber: purchasedNumber.phoneNumber
-      })
-    })
+        purchasedNumber.phoneNumber,
+        purchasedNumber.sid
+      )
 
-    if (!vapiResponse.ok) {
-      console.error('Failed to update Vapi assistant')
-      const vapiError = await vapiResponse.text()
-      console.error('Vapi error:', vapiError)
-      throw new Error(`Failed to update Vapi assistant: ${vapiError}`)
-    }
-
-    return {
-      statusCode: 200,
-      headers: corsHeaders,
-      body: JSON.stringify({
-        phoneNumber: purchasedNumber.phoneNumber,
-        sid: purchasedNumber.sid
+      // Create/Update Vapi assistant
+      const vapiResponse = await fetch(`${event.rawUrl.split('/.netlify')[0]}/.netlify/functions/manage-vapi-assistant`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          agentId,
+          phoneNumber: purchasedNumber.phoneNumber
+        })
       })
+
+      if (!vapiResponse.ok) {
+        const vapiError = await vapiResponse.text()
+        throw new Error(`Failed to update Vapi assistant: ${vapiError}`)
+      }
+
+      return {
+        statusCode: 200,
+        headers: corsHeaders,
+        body: JSON.stringify({
+          phoneNumber: purchasedNumber.phoneNumber,
+          sid: purchasedNumber.sid
+        })
+      }
+    } catch (error) {
+      // If database update or Vapi update fails, release the number
+      await twilioService.releaseNumber(purchasedNumber.sid)
+      throw error
     }
   } catch (error: any) {
     console.error('Error in manage-twilio-number:', error)
