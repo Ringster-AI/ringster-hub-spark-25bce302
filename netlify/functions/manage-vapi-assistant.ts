@@ -78,7 +78,7 @@ export const handler: Handler = async (event) => {
         ]
       },
       voice: {
-        provider: "elevenlabs",
+        provider: "11labs", // Changed from "elevenlabs" to "11labs"
         voiceId: agent.config?.voice_id || "21m00Tcm4TlvDq8ikWAM",
       },
       transcriber: {
@@ -89,7 +89,7 @@ export const handler: Handler = async (event) => {
       transportConfigurations: phoneNumber ? [
         {
           provider: "twilio",
-          phoneNumber: phoneNumber,
+          phoneNumber: phoneNumber.replace(/[^\d+]/g, ''), // Clean the phone number format
           timeout: 60,
           record: false
         }
@@ -99,7 +99,7 @@ export const handler: Handler = async (event) => {
       maxDurationSeconds: 600
     }
 
-    console.log('Sending request to Vapi API...')
+    console.log('Sending request to Vapi API with configuration:', JSON.stringify(vapiAssistant))
 
     // Create or update Vapi assistant
     const vapiResponse = await fetch(VAPI_API_URL, {
