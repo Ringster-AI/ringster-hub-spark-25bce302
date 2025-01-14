@@ -23,7 +23,7 @@ export interface VapiAssistantConfig {
   };
   transportConfigurations: Array<{
     provider: string;
-    number: string; // Changed from phoneNumber to number
+    phoneNumber: string; // Changed back to phoneNumber as per Vapi API requirements
     timeout: number;
     record: boolean;
   }>;
@@ -65,7 +65,7 @@ export const createVapiAssistantConfig = (
     transportConfigurations: cleanPhoneNumber ? [
       {
         provider: "twilio",
-        number: cleanPhoneNumber, // Changed from phoneNumber to number
+        phoneNumber: cleanPhoneNumber, // Changed back to phoneNumber
         timeout: 60,
         record: false
       }
