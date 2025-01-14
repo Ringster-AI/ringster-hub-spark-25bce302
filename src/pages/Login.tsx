@@ -4,10 +4,13 @@ import { Auth } from "@supabase/auth-ui-react";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AuthError } from "@supabase/supabase-js";
 
 export default function Login() {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const checkSession = async () => {
@@ -20,14 +23,27 @@ export default function Login() {
 
     checkSession();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (session) {
         navigate("/dashboard", { replace: true });
+      }
+
+      // Clear error when auth state changes
+      if (event === 'SIGNED_OUT') {
+        setError(null);
       }
     });
 
     return () => subscription.unsubscribe();
   }, [navigate]);
+
+  const getErrorMessage = (error: AuthError) => {
+    const message = error.message;
+    if (message.includes('User already registered')) {
+      return 'This email is already registered. Please sign in instead.';
+    }
+    return message;
+  };
 
   if (isLoading) {
     return (
@@ -47,6 +63,11 @@ export default function Login() {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {error && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
           <Auth
             supabaseClient={supabase}
             appearance={{
@@ -62,6 +83,10 @@ export default function Login() {
             }}
             theme="light"
             providers={[]}
+            onError={(error) => {
+              console.error('Auth error:', error);
+              setError(getErrorMessage(error));
+            }}
           />
         </CardContent>
       </Card>
