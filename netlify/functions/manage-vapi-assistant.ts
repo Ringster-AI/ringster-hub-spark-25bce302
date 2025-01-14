@@ -1,5 +1,7 @@
 import { Handler } from '@netlify/functions'
 import { createClient } from '@supabase/supabase-js'
+import { VapiService } from './services/vapi-service'
+import { createVapiAssistantConfig } from './services/vapi-config'
 
 const VAPI_API_KEY = process.env.VAPI_API_KEY!
 const VAPI_API_URL = 'https://api.vapi.ai/assistant'
@@ -45,7 +47,6 @@ export const handler: Handler = async (event) => {
       throw new Error('VAPI_API_KEY is not configured')
     }
 
-    // Get agent details from database
     const { data: agent, error: agentError } = await supabase
       .from('agent_configs')
       .select('*')
@@ -57,73 +58,12 @@ export const handler: Handler = async (event) => {
       throw new Error('Failed to fetch agent details')
     }
 
-    console.log('Creating Vapi assistant with config:', {
-      name: agent.name,
-      phoneNumber: phoneNumber
-    })
-
-    // Prepare Vapi assistant configuration
-    const vapiAssistant = {
-      name: agent.name,
-      firstMessage: agent.greeting || "Hello! How can I help you today?",
-      model: {
-        provider: "openai",
-        model: "gpt-3.5-turbo",
-        temperature: 0.7,
-        messages: [
-          {
-            role: "system",
-            content: agent.description || "You are a helpful AI assistant."
-          }
-        ]
-      },
-      voice: {
-        provider: "11labs", // Changed from "elevenlabs" to "11labs"
-        voiceId: agent.config?.voice_id || "21m00Tcm4TlvDq8ikWAM",
-      },
-      transcriber: {
-        provider: "deepgram",
-        model: "nova-2",
-        language: "en"
-      },
-      transportConfigurations: phoneNumber ? [
-        {
-          provider: "twilio",
-          phoneNumber: phoneNumber.replace(/[^\d+]/g, ''), // Clean the phone number format
-          timeout: 60,
-          record: false
-        }
-      ] : [],
-      endCallMessage: agent.goodbye || "Thank you for calling. Goodbye!",
-      silenceTimeoutSeconds: 30,
-      maxDurationSeconds: 600
-    }
-
-    console.log('Sending request to Vapi API with configuration:', JSON.stringify(vapiAssistant))
-
-    // Create or update Vapi assistant
-    const vapiResponse = await fetch(VAPI_API_URL, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${VAPI_API_KEY}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(vapiAssistant)
-    })
-
-    const responseText = await vapiResponse.text()
-    console.log('Vapi API response:', responseText)
-
-    if (!vapiResponse.ok) {
-      console.error('Vapi API error:', responseText)
-      throw new Error(`Failed to create Vapi assistant: ${responseText}`)
-    }
-
-    const vapiData = JSON.parse(responseText)
+    const vapiService = new VapiService(VAPI_API_KEY, VAPI_API_URL)
+    const vapiConfig = createVapiAssistantConfig(agent, phoneNumber)
+    const vapiData = await vapiService.createAssistant(vapiConfig)
 
     console.log('Successfully created Vapi assistant:', vapiData)
 
-    // Update agent with Vapi assistant ID
     const { error: updateError } = await supabase
       .from('agent_configs')
       .update({
