@@ -10,25 +10,32 @@ export class VapiService {
   }
 
   async createAssistant(config: VapiAssistantConfig) {
-    console.log('Creating Vapi assistant with config:', JSON.stringify(config));
+    console.log('Creating Vapi assistant with config:', JSON.stringify(config, null, 2));
 
-    const response = await fetch(this.apiUrl, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${this.apiKey}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(config)
-    });
+    try {
+      const response = await fetch(this.apiUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.apiKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(config)
+      });
 
-    const responseText = await response.text();
-    console.log('Vapi API response:', responseText);
+      const responseText = await response.text();
+      console.log('Vapi API response:', responseText);
 
-    if (!response.ok) {
-      console.error('Vapi API error:', responseText);
-      throw new Error(`Failed to create Vapi assistant: ${responseText}`);
+      if (!response.ok) {
+        console.error('Vapi API error:', responseText);
+        throw new Error(`Failed to create Vapi assistant: ${responseText}`);
+      }
+
+      const data = JSON.parse(responseText);
+      console.log('Successfully created Vapi assistant:', data);
+      return data;
+    } catch (error) {
+      console.error('Error in createAssistant:', error);
+      throw error;
     }
-
-    return JSON.parse(responseText);
   }
 }

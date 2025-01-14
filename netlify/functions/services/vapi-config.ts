@@ -36,6 +36,9 @@ export const createVapiAssistantConfig = (
   agent: AgentConfig,
   phoneNumber?: string
 ): VapiAssistantConfig => {
+  // Clean phone number to E.164 format (remove all non-digit characters except +)
+  const cleanPhoneNumber = phoneNumber ? phoneNumber.replace(/[^\d+]/g, '') : '';
+  
   return {
     name: agent.name,
     firstMessage: agent.greeting || "Hello! How can I help you today?",
@@ -51,7 +54,7 @@ export const createVapiAssistantConfig = (
       ]
     },
     voice: {
-      provider: "11labs",
+      provider: "11labs", // Changed from elevenlabs to 11labs
       voiceId: agent.config?.voice_id || "21m00Tcm4TlvDq8ikWAM",
     },
     transcriber: {
@@ -59,10 +62,10 @@ export const createVapiAssistantConfig = (
       model: "nova-2",
       language: "en"
     },
-    transportConfigurations: phoneNumber ? [
+    transportConfigurations: cleanPhoneNumber ? [
       {
         provider: "twilio",
-        phoneNumber: phoneNumber.replace(/[^\d+]/g, ''),
+        phoneNumber: cleanPhoneNumber,
         timeout: 60,
         record: false
       }
