@@ -23,7 +23,7 @@ export interface VapiAssistantConfig {
   };
   transportConfigurations: Array<{
     provider: string;
-    phoneNumber: string;
+    number: string; // Changed from phoneNumber to number
     timeout: number;
     record: boolean;
   }>;
@@ -54,7 +54,7 @@ export const createVapiAssistantConfig = (
       ]
     },
     voice: {
-      provider: "11labs", // Changed from elevenlabs to 11labs
+      provider: "11labs",
       voiceId: agent.config?.voice_id || "21m00Tcm4TlvDq8ikWAM",
     },
     transcriber: {
@@ -65,7 +65,7 @@ export const createVapiAssistantConfig = (
     transportConfigurations: cleanPhoneNumber ? [
       {
         provider: "twilio",
-        phoneNumber: cleanPhoneNumber,
+        number: cleanPhoneNumber, // Changed from phoneNumber to number
         timeout: 60,
         record: false
       }
