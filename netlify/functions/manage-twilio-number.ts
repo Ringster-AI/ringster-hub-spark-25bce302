@@ -31,6 +31,8 @@ export const handler: Handler = async (event) => {
     }
   }
 
+  let purchasedNumber = null;
+
   try {
     console.log('Starting Twilio number assignment process')
     
@@ -57,20 +59,22 @@ export const handler: Handler = async (event) => {
 
     // Find and purchase number
     const phoneNumber = await twilioService.findAvailableNumber()
-    const purchasedNumber = await twilioService.purchaseNumber(
+    purchasedNumber = await twilioService.purchaseNumber(
       phoneNumber,
       process.env.WEBHOOK_URL,
       process.env.SMS_WEBHOOK_URL
     )
 
-    try {
-      // Update agent in database
-      await databaseService.updateAgentWithPhoneNumber(
-        agentId,
-        purchasedNumber.phoneNumber,
-        purchasedNumber.sid
-      )
+    // Update agent in database first
+    await databaseService.updateAgentWithPhoneNumber(
+      agentId,
+      purchasedNumber.phoneNumber,
+      purchasedNumber.sid
+    )
 
+    console.log('Successfully updated agent with phone number')
+
+    try {
       // Create/Update Vapi assistant
       const vapiResponse = await fetch(`${event.rawUrl.split('/.netlify')[0]}/.netlify/functions/manage-vapi-assistant`, {
         method: 'POST',
@@ -85,6 +89,12 @@ export const handler: Handler = async (event) => {
 
       if (!vapiResponse.ok) {
         const vapiError = await vapiResponse.text()
+        // If Vapi update fails, we need to clean up the database entry
+        await databaseService.updateAgentWithPhoneNumber(agentId, null, null)
+        // Then release the number
+        if (purchasedNumber) {
+          await twilioService.releaseNumber(purchasedNumber.sid)
+        }
         throw new Error(`Failed to update Vapi assistant: ${vapiError}`)
       }
 
@@ -97,12 +107,21 @@ export const handler: Handler = async (event) => {
         })
       }
     } catch (error) {
-      // If database update or Vapi update fails, release the number
-      await twilioService.releaseNumber(purchasedNumber.sid)
+      // Re-throw the error to be caught by the outer catch block
       throw error
     }
   } catch (error: any) {
     console.error('Error in manage-twilio-number:', error)
+    
+    // Only release the number if we haven't updated the database yet
+    if (purchasedNumber && !error.message.includes('Failed to update Vapi assistant')) {
+      try {
+        await twilioService.releaseNumber(purchasedNumber.sid)
+      } catch (releaseError) {
+        console.error('Error releasing Twilio number:', releaseError)
+      }
+    }
+
     return {
       statusCode: 500,
       headers: corsHeaders,
