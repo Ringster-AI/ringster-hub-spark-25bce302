@@ -1,3 +1,5 @@
+import { randomUUID } from 'crypto';
+
 export class VapiService {
   private apiKey: string;
   private apiUrl: string;
@@ -36,8 +38,8 @@ export class VapiService {
     const importUrl = 'https://api.vapi.ai/phone-number';
     console.log('Using import URL:', importUrl);
     
-    // Generate a UUID for the credential ID using the Twilio Account SID
-    const credentialId = crypto.randomUUID();
+    // Generate a UUID for the credential ID using the imported randomUUID function
+    const credentialId = randomUUID();
     
     const config = {
       provider: "twilio",
