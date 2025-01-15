@@ -33,14 +33,18 @@ export class VapiService {
   async importTwilioNumber(assistantId: string, twilioNumber: string, twilioAccountSid: string, twilioAuthToken: string) {
     console.log('Importing Twilio number into Vapi:', twilioNumber);
     
-    // Fix: Use the correct URL format for the import endpoint
-    const response = await fetch(`${this.apiUrl}s/${assistantId}/import-twilio`, {
+    // Update: Use the base URL for importing Twilio numbers
+    const importUrl = 'https://api.vapi.ai/phone/import-twilio';
+    console.log('Using import URL:', importUrl);
+    
+    const response = await fetch(importUrl, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${this.apiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
+        assistantId: assistantId,
         twilioPhoneNumber: twilioNumber,
         twilioAccountSid: twilioAccountSid,
         twilioAuthToken: twilioAuthToken,
