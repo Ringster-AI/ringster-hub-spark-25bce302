@@ -33,9 +33,25 @@ export class VapiService {
   async importTwilioNumber(assistantId: string, twilioNumber: string, twilioAccountSid: string, twilioAuthToken: string) {
     console.log('Importing Twilio number into Vapi:', twilioNumber);
     
-    // Update: Use the base URL for importing Twilio numbers
-    const importUrl = 'https://api.vapi.ai/phone/import-twilio';
+    const importUrl = 'https://api.vapi.ai/phone-number';
     console.log('Using import URL:', importUrl);
+    
+    const config = {
+      provider: "byo-phone-number",
+      numberE164CheckEnabled: true,
+      number: twilioNumber,
+      credentialId: twilioAccountSid, // Using accountSid as credentialId
+      name: `Twilio Number ${twilioNumber}`,
+      assistantId: assistantId,
+      server: {
+        timeoutSeconds: 20,
+        url: "", // This will be configured by Vapi
+        secret: twilioAuthToken,
+        headers: {}
+      }
+    };
+
+    console.log('Import configuration:', JSON.stringify(config, null, 2));
     
     const response = await fetch(importUrl, {
       method: 'POST',
@@ -43,12 +59,7 @@ export class VapiService {
         'Authorization': `Bearer ${this.apiKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        assistantId: assistantId,
-        twilioPhoneNumber: twilioNumber,
-        twilioAccountSid: twilioAccountSid,
-        twilioAuthToken: twilioAuthToken,
-      }),
+      body: JSON.stringify(config),
     });
 
     if (!response.ok) {
