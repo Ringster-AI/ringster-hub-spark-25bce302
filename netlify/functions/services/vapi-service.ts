@@ -36,18 +36,23 @@ export class VapiService {
     const importUrl = 'https://api.vapi.ai/phone-number';
     console.log('Using import URL:', importUrl);
     
+    // Generate a UUID for the credential ID using the Twilio Account SID
+    const credentialId = crypto.randomUUID();
+    
     const config = {
-      provider: "byo-phone-number",
+      provider: "twilio",
       numberE164CheckEnabled: true,
       number: twilioNumber,
-      credentialId: twilioAccountSid, // Using accountSid as credentialId
+      credentialId: credentialId,
       name: `Twilio Number ${twilioNumber}`,
       assistantId: assistantId,
       server: {
         timeoutSeconds: 20,
-        url: "", // This will be configured by Vapi
+        url: "https://api.vapi.ai/webhook", // Default webhook URL
         secret: twilioAuthToken,
-        headers: {}
+        headers: {
+          'X-Twilio-Account-Sid': twilioAccountSid
+        }
       }
     };
 
