@@ -352,6 +352,13 @@ export type Database = {
         }
         Returns: undefined
       }
+      sync_user_subscription: {
+        Args: {
+          p_user_id: string
+          p_plan_id?: string
+        }
+        Returns: undefined
+      }
       update_minutes_used: {
         Args: {
           p_user_id: string
