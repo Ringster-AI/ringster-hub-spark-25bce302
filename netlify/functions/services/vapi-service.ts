@@ -1,5 +1,3 @@
-import { randomUUID } from 'crypto';
-
 export class VapiService {
   private apiKey: string;
   private apiUrl: string;
