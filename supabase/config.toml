@@ -13,5 +13,9 @@ enabled = true
 port = 54323
 
 [[functions]]
-name = "send-trial-notification"
+[functions.stripe-webhook]
+verify_jwt = false
+
+[[functions]]
+[functions.send-trial-notification]
 verify_jwt = false
