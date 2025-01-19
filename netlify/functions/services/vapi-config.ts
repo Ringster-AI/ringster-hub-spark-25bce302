@@ -29,6 +29,10 @@ export interface VapiAssistantConfig {
 export const createVapiAssistantConfig = (
   agent: AgentConfig
 ): VapiAssistantConfig => {
+  const advancedConfig = agent.advanced_config as any || {};
+  const voiceConfig = advancedConfig.voice || {};
+  const transcriberConfig = advancedConfig.transcriber || {};
+
   return {
     name: agent.name,
     firstMessage: agent.greeting || "Hello! How can I help you today?",
@@ -44,13 +48,13 @@ export const createVapiAssistantConfig = (
       ]
     },
     voice: {
-      provider: "11labs",
-      voiceId: agent.config?.voice_id || "21m00Tcm4TlvDq8ikWAM",
+      provider: voiceConfig.provider || "11labs",
+      voiceId: voiceConfig.useCustomVoiceId ? voiceConfig.customVoiceId : (agent.config?.voice_id || "21m00Tcm4TlvDq8ikWAM"),
     },
     transcriber: {
-      provider: "deepgram",
-      model: "nova-2",
-      language: "en"
+      provider: transcriberConfig.provider || "deepgram",
+      model: transcriberConfig.model || "nova-2",
+      language: transcriberConfig.language || "en"
     },
     endCallMessage: agent.goodbye || "Thank you for calling. Goodbye!",
     silenceTimeoutSeconds: 30,

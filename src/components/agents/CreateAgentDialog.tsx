@@ -19,6 +19,19 @@ export const CreateAgentDialog = ({ trigger }: { trigger: React.ReactNode }) => 
     defaultValues: {
       voice_id: "9BWtsMINqrJLrRacOk9x", // Default to Aria
       transfer_directory: {},
+      advanced_config: {
+        transcriber: {
+          provider: "deepgram",
+          model: "nova-2",
+          language: "en"
+        },
+        voice: {
+          provider: "11labs",
+          voiceId: null,
+          customVoiceId: null,
+          useCustomVoiceId: false
+        }
+      }
     },
   });
 

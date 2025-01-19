@@ -12,6 +12,20 @@ export interface TransferEntry {
   transfer_hours?: TransferHours;
 }
 
+export interface AdvancedConfig {
+  transcriber: {
+    provider: string;
+    model: string;
+    language: string;
+  };
+  voice: {
+    provider: string;
+    voiceId: string | null;
+    customVoiceId: string | null;
+    useCustomVoiceId?: boolean;
+  };
+}
+
 export interface AgentFormData {
   name: string;
   description: string;
@@ -19,6 +33,7 @@ export interface AgentFormData {
   goodbye: string;
   voice_id: string;
   transfer_directory: Record<string, TransferEntry>;
+  advanced_config: AdvancedConfig;
 }
 
 export interface AgentConfigInsert {
@@ -30,4 +45,5 @@ export interface AgentConfigInsert {
   config: Json;
   transfer_directory: Json;
   user_id: string;
+  advanced_config?: Json;
 }

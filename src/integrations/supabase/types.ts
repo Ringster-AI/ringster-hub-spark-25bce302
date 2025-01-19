@@ -11,6 +11,7 @@ export type Database = {
     Tables: {
       agent_configs: {
         Row: {
+          advanced_config: Json | null
           config: Json | null
           created_at: string | null
           description: string | null
@@ -32,6 +33,7 @@ export type Database = {
           voice_id: string | null
         }
         Insert: {
+          advanced_config?: Json | null
           config?: Json | null
           created_at?: string | null
           description?: string | null
@@ -53,6 +55,7 @@ export type Database = {
           voice_id?: string | null
         }
         Update: {
+          advanced_config?: Json | null
           config?: Json | null
           created_at?: string | null
           description?: string | null
