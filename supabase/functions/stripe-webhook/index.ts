@@ -52,12 +52,21 @@ serve(async (req) => {
       case 'customer.subscription.deleted': {
         const subscription = event.data.object;
         const customerId = subscription.customer;
+        const priceId = subscription.items.data[0].price.id;
+
+        console.log('Processing subscription event:', {
+          customerId,
+          priceId,
+          status: subscription.status
+        });
 
         // Get customer's email
         const customer = await stripe.customers.retrieve(customerId as string);
         if (!customer || !('email' in customer)) {
           throw new Error('No customer email found');
         }
+
+        console.log('Found customer:', customer.email);
 
         // Get user by email
         const { data: users, error: userError } = await supabase
@@ -67,21 +76,27 @@ serve(async (req) => {
           .single();
 
         if (userError || !users) {
+          console.error('User lookup error:', userError);
           throw new Error(`No user found for email: ${customer.email}`);
         }
 
-        // Get plan from price ID
+        console.log('Found user:', users.id);
+
+        // Get plan from Stripe price ID
         const { data: plans, error: planError } = await supabase
           .from('subscription_plans')
           .select('id')
-          .eq('stripe_price_id', subscription.items.data[0].price.id)
+          .eq('stripe_price_id', priceId)
           .single();
 
         if (planError || !plans) {
-          throw new Error(`No plan found for price: ${subscription.items.data[0].price.id}`);
+          console.error('Plan lookup error:', planError);
+          throw new Error(`No plan found for price: ${priceId}`);
         }
 
-        // Call the database function to update subscription
+        console.log('Found plan:', plans.id);
+
+        // Update subscription with new plan ID and status
         const { error: updateError } = await supabase.rpc(
           'handle_subscription_update',
           {
@@ -94,6 +109,7 @@ serve(async (req) => {
         );
 
         if (updateError) {
+          console.error('Subscription update error:', updateError);
           throw updateError;
         }
 
