@@ -9,6 +9,7 @@ import { TransferDirectory } from "./TransferDirectory";
 import { FormActions } from "./FormActions";
 import { AdvancedAgentConfig } from "./AdvancedAgentConfig";
 import { AgentFormData } from "@/types/agents";
+import { useSubscriptionFeatures } from "@/hooks/useSubscriptionFeatures";
 
 interface AgentFormProps {
   form: UseFormReturn<AgentFormData>;
@@ -20,6 +21,7 @@ interface AgentFormProps {
 
 export const AgentForm = ({ form, onSubmit, onCancel, canCustomizeVoice, disabled }: AgentFormProps) => {
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const { features } = useSubscriptionFeatures();
 
   return (
     <Form {...form}>
@@ -27,21 +29,23 @@ export const AgentForm = ({ form, onSubmit, onCancel, canCustomizeVoice, disable
         <BasicAgentInfo form={form} disabled={disabled} />
         <AgentMessages form={form} disabled={disabled} />
         
-        <div className="flex items-center justify-between rounded-lg border p-4">
-          <div>
-            <h3 className="text-lg font-medium">Advanced Mode</h3>
-            <p className="text-sm text-muted-foreground">
-              Configure advanced settings for transcription and voice
-            </p>
+        {features.isPaid && (
+          <div className="flex items-center justify-between rounded-lg border p-4">
+            <div>
+              <h3 className="text-lg font-medium">Advanced Mode</h3>
+              <p className="text-sm text-muted-foreground">
+                Configure advanced settings for transcription and voice
+              </p>
+            </div>
+            <Switch
+              checked={showAdvanced}
+              onCheckedChange={setShowAdvanced}
+              disabled={disabled}
+            />
           </div>
-          <Switch
-            checked={showAdvanced}
-            onCheckedChange={setShowAdvanced}
-            disabled={disabled}
-          />
-        </div>
+        )}
 
-        {showAdvanced ? (
+        {showAdvanced && features.isPaid ? (
           <AdvancedAgentConfig form={form} disabled={disabled} />
         ) : (
           <VoiceSelection 
