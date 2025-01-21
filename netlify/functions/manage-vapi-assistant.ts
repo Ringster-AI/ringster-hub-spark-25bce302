@@ -59,12 +59,33 @@ export const handler: Handler = async (event) => {
     }
 
     const vapiService = new VapiService(VAPI_API_KEY, VAPI_API_URL)
+    
+    // Create transfer tool if directory exists
+    let transferToolId = null
+    if (agent.transfer_directory && Object.keys(agent.transfer_directory).length > 0) {
+      console.log('Creating transfer tool for directory:', agent.transfer_directory)
+      const toolData = await vapiService.createTransferTool(agent.transfer_directory)
+      transferToolId = toolData.id
+      console.log('Created transfer tool:', transferToolId)
+    }
+
+    // Create Vapi assistant
     const vapiConfig = createVapiAssistantConfig(agent)
     const vapiData = await vapiService.createAssistant(vapiConfig)
-
     console.log('Successfully created Vapi assistant:', vapiData)
 
-    // Import the Twilio number into Vapi
+    // Update assistant with transfer tool if created
+    if (transferToolId) {
+      await vapiService.updateAssistantTools(
+        vapiData.id,
+        transferToolId,
+        vapiConfig.model.model,
+        vapiConfig.model.provider
+      )
+      console.log('Updated assistant with transfer tool')
+    }
+
+    // Import Twilio number if provided
     if (phoneNumber && process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN) {
       await vapiService.importTwilioNumber(
         vapiData.id,
@@ -74,12 +95,14 @@ export const handler: Handler = async (event) => {
       )
     }
 
+    // Update agent config with assistant and tool IDs
     const { error: updateError } = await supabase
       .from('agent_configs')
       .update({
         config: {
           ...agent.config,
-          vapi_assistant_id: vapiData.id
+          vapi_assistant_id: vapiData.id,
+          transfer_tool_id: transferToolId
         }
       })
       .eq('id', agentId)
@@ -89,13 +112,14 @@ export const handler: Handler = async (event) => {
       throw updateError
     }
 
-    console.log('Successfully updated agent config with Vapi assistant ID')
+    console.log('Successfully updated agent config with Vapi assistant and tool IDs')
 
     return {
       statusCode: 200,
       headers: corsHeaders,
       body: JSON.stringify({
-        assistantId: vapiData.id
+        assistantId: vapiData.id,
+        transferToolId: transferToolId
       })
     }
   } catch (error: any) {
