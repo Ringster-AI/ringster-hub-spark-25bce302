@@ -31,12 +31,12 @@ export class VapiService {
   }
 
   async createTransferTool(transferDirectory: Record<string, any>) {
-    console.log('Creating Vapi transfer tool');
+    console.log('Creating Vapi transfer tool with directory:', transferDirectory);
     
     const destinations = Object.entries(transferDirectory).map(([name, entry]) => ({
       type: "number",
       number: entry.number,
-      message: `I am forwarding your call to our ${name}. Please stay on the line.`
+      message: entry.transfer_message || `Transferring your call to ${name}.`
     }));
 
     const enumValues = Object.values(transferDirectory).map(entry => entry.number);
@@ -46,14 +46,14 @@ export class VapiService {
       destinations,
       function: {
         name: "transferCall",
-        description: "Use this function to transfer the call. Only use it when following instructions that explicitly ask you to use the transferCall function.",
+        description: "Transfer the call to a specific department or person.",
         parameters: {
           type: "object",
           properties: {
             destination: {
               type: "string",
               enum: enumValues,
-              description: "The destination to transfer the call to."
+              description: "The phone number to transfer the call to."
             },
             reason: {
               type: "string",
