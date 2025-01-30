@@ -25,7 +25,14 @@ export const AgentCard = ({ agent, onToggleStatus, onUpdate }: AgentCardProps) =
 
   const handleCall = async () => {
     try {
+      // Log all environment variables that start with VITE_
+      console.log('All VITE_ environment variables:', Object.keys(import.meta.env)
+        .filter(key => key.startsWith('VITE_'))
+        .reduce((acc, key) => ({ ...acc, [key]: import.meta.env[key] }), {}));
+
       const publicKey = import.meta.env.VITE_VAPI_PUBLIC_KEY;
+      console.log('Raw VAPI public key value:', publicKey);
+      
       if (!publicKey) {
         throw new Error("Vapi public key is not configured. Please check your environment variables.");
       }
