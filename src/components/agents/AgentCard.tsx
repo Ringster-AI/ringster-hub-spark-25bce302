@@ -25,7 +25,11 @@ export const AgentCard = ({ agent, onToggleStatus, onUpdate }: AgentCardProps) =
 
   const handleCall = async () => {
     try {
-      const vapi = new Vapi(import.meta.env.VITE_VAPI_PUBLIC_KEY);
+      // Initialize Vapi with the public key
+      const vapi = new Vapi(import.meta.env.VITE_VAPI_PUBLIC_KEY, {
+        authorization: `Bearer ${import.meta.env.VITE_VAPI_PUBLIC_KEY}`
+      });
+
       const config = agent.config ? 
         (typeof agent.config === 'string' ? JSON.parse(agent.config) : agent.config) 
         : null;
@@ -47,9 +51,10 @@ export const AgentCard = ({ agent, onToggleStatus, onUpdate }: AgentCardProps) =
         description: "You can now speak with your AI agent.",
       });
     } catch (error) {
+      console.error('Vapi call error:', error);
       toast({
         title: "Error Starting Call",
-        description: error instanceof Error ? error.message : "Failed to start call",
+        description: error instanceof Error ? error.message : "Failed to start call. Please check your Vapi configuration.",
         variant: "destructive",
       });
     }
