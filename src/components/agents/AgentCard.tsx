@@ -25,21 +25,16 @@ export const AgentCard = ({ agent, onToggleStatus, onUpdate }: AgentCardProps) =
 
   const handleCall = async () => {
     try {
-      // Initialize Vapi with the public key
-      const vapi = new Vapi(import.meta.env.VITE_VAPI_PUBLIC_KEY);
+      const publicKey = import.meta.env.VITE_VAPI_PUBLIC_KEY;
+      if (!publicKey) {
+        throw new Error("Vapi public key is not configured");
+      }
 
-      const config = agent.config ? 
-        (typeof agent.config === 'string' ? JSON.parse(agent.config) : agent.config) 
-        : null;
-      const assistantId = config?.vapi_assistant_id || agent.vapi_assistant_id;
+      const vapi = new Vapi(publicKey);
       
+      const assistantId = agent.vapi_assistant_id;
       if (!assistantId) {
-        toast({
-          title: "Error",
-          description: "This agent doesn't have a valid assistant ID configured.",
-          variant: "destructive",
-        });
-        return;
+        throw new Error("This agent doesn't have a valid assistant ID configured.");
       }
 
       console.log('Starting call with assistant ID:', assistantId);
