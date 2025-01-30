@@ -49,7 +49,7 @@ export const useCreateAgent = (onSuccess: () => void) => {
         } as Json,
         transfer_directory: data.transfer_directory as unknown as Json,
         user_id: user.id,
-        advanced_config: data.advanced_config
+        advanced_config: data.advanced_config as unknown as Json
       };
 
       const { data: newAgent, error } = await supabase

@@ -45,7 +45,7 @@ export const EditAgentDialog = ({ agent, onUpdate, open, onOpenChange }: EditAge
       }
 
       // Preserve existing config values while updating voice_id
-      const existingConfig = agent.config || {};
+      const existingConfig = (agent.config || {}) as Record<string, unknown>;
       const updatedConfig = {
         ...existingConfig,
         voice_id: data.voice_id,
