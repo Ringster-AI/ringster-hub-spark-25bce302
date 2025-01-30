@@ -9,8 +9,8 @@ import { Link } from "react-router-dom";
 import Vapi from "@vapi-ai/web";
 import { useToast } from "@/hooks/use-toast";
 
-// Define the public key at module level
-const VAPI_PUBLIC_KEY = import.meta.env.VITE_VAPI_PUBLIC_KEY || window.ENV?.VITE_VAPI_PUBLIC_KEY;
+// Define the public key at module level with proper type checking
+const VAPI_PUBLIC_KEY = import.meta.env.VITE_VAPI_PUBLIC_KEY || window.ENV?.VITE_VAPI_PUBLIC_KEY || '';
 
 interface AgentCardProps {
   agent: AgentConfig;
