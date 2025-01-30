@@ -20,6 +20,8 @@ export interface AgentConfig {
   minutes_allowance: number | null;
   is_trial: boolean | null;
   trial_ends_at: string | null;
+  vapi_assistant_id: string | null;
+  advanced_config: Json | null;
 }
 
 export interface AgentsSchema {
