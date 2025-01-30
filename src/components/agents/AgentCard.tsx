@@ -60,9 +60,9 @@ export const AgentCard = ({ agent, onToggleStatus, onUpdate }: AgentCardProps) =
         {agent.description || "No description provided"}
       </p>
       {agent.phone_number && (
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Phone className="h-4 w-4" />
-          <span>{agent.phone_number}</span>
+        <div className="flex items-center gap-2 p-2 bg-primary/5 rounded-md">
+          <Phone className="h-5 w-5 text-primary" />
+          <span className="text-base font-medium text-primary">{agent.phone_number}</span>
         </div>
       )}
       <div className="text-sm text-muted-foreground">
