@@ -26,7 +26,10 @@ export const AgentCard = ({ agent, onToggleStatus, onUpdate }: AgentCardProps) =
   const handleCall = async () => {
     try {
       const vapi = new Vapi(import.meta.env.VITE_VAPI_PUBLIC_KEY);
-      const assistantId = agent.config?.vapi_assistant_id;
+      const config = agent.config ? 
+        (typeof agent.config === 'string' ? JSON.parse(agent.config) : agent.config) 
+        : null;
+      const assistantId = config?.vapi_assistant_id;
       
       if (!assistantId) {
         toast({

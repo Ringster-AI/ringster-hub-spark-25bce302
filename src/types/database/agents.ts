@@ -8,11 +8,7 @@ export interface AgentConfig {
   greeting: string | null;
   goodbye: string | null;
   status: string;
-  config: {
-    voice_id?: string | null;
-    vapi_assistant_id?: string | null;
-    transfer_tool_id?: string | null;
-  } | null;
+  config: Json | null;
   transfer_directory: Json | null;
   minutes_used: number | null;
   total_minutes_used: number | null;
