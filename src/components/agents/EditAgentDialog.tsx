@@ -44,6 +44,13 @@ export const EditAgentDialog = ({ agent, onUpdate, open, onOpenChange }: EditAge
         throw new Error("User not authenticated");
       }
 
+      // Preserve existing config values while updating voice_id
+      const existingConfig = agent.config || {};
+      const updatedConfig = {
+        ...existingConfig,
+        voice_id: data.voice_id,
+      };
+
       const { error } = await supabase
         .from('agent_configs')
         .update({
@@ -51,7 +58,7 @@ export const EditAgentDialog = ({ agent, onUpdate, open, onOpenChange }: EditAge
           description: data.description,
           greeting: data.greeting,
           goodbye: data.goodbye,
-          config: { voice_id: data.voice_id } as unknown as Json,
+          config: updatedConfig as Json,
           transfer_directory: data.transfer_directory as unknown as Json,
         })
         .eq('id', agent.id);

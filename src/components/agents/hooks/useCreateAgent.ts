@@ -42,9 +42,14 @@ export const useCreateAgent = (onSuccess: () => void) => {
         greeting: data.greeting,
         goodbye: data.goodbye,
         status: "draft",
-        config: { voice_id: data.voice_id } as Json,
+        config: {
+          voice_id: data.voice_id,
+          vapi_assistant_id: null,
+          transfer_tool_id: null
+        } as Json,
         transfer_directory: data.transfer_directory as unknown as Json,
-        user_id: user.id
+        user_id: user.id,
+        advanced_config: data.advanced_config
       };
 
       const { data: newAgent, error } = await supabase
