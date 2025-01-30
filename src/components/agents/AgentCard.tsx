@@ -26,9 +26,10 @@ export const AgentCard = ({ agent, onToggleStatus, onUpdate }: AgentCardProps) =
   const handleCall = async () => {
     try {
       // Initialize Vapi with the public key
-      const vapi = new Vapi(import.meta.env.VITE_VAPI_PUBLIC_KEY, {
-        authorization: `Bearer ${import.meta.env.VITE_VAPI_PUBLIC_KEY}`
-      });
+      const vapi = new Vapi(import.meta.env.VITE_VAPI_PUBLIC_KEY);
+      
+      // Set the authorization header for the call
+      vapi.setAuthorizationHeader(`Bearer ${import.meta.env.VITE_VAPI_PUBLIC_KEY}`);
 
       const config = agent.config ? 
         (typeof agent.config === 'string' ? JSON.parse(agent.config) : agent.config) 
