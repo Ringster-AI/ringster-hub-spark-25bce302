@@ -31,7 +31,7 @@ export const AgentCard = ({ agent, onToggleStatus, onUpdate }: AgentCardProps) =
       const config = agent.config ? 
         (typeof agent.config === 'string' ? JSON.parse(agent.config) : agent.config) 
         : null;
-      const assistantId = config?.vapi_assistant_id;
+      const assistantId = config?.vapi_assistant_id || agent.vapi_assistant_id;
       
       if (!assistantId) {
         toast({
@@ -42,6 +42,7 @@ export const AgentCard = ({ agent, onToggleStatus, onUpdate }: AgentCardProps) =
         return;
       }
 
+      console.log('Starting call with assistant ID:', assistantId);
       await vapi.start(assistantId);
       
       toast({
