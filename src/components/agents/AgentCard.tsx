@@ -9,6 +9,9 @@ import { Link } from "react-router-dom";
 import Vapi from "@vapi-ai/web";
 import { useToast } from "@/hooks/use-toast";
 
+// Define the public key at module level
+const VAPI_PUBLIC_KEY = import.meta.env.VITE_VAPI_PUBLIC_KEY || window.ENV?.VITE_VAPI_PUBLIC_KEY;
+
 interface AgentCardProps {
   agent: AgentConfig;
   onToggleStatus: (id: string, currentStatus: string) => Promise<void>;
@@ -25,16 +28,11 @@ export const AgentCard = ({ agent, onToggleStatus, onUpdate }: AgentCardProps) =
 
   const handleCall = async () => {
     try {
-      // Log all environment variables that start with VITE_
-      console.log('All VITE_ environment variables:', Object.keys(import.meta.env)
-        .filter(key => key.startsWith('VITE_'))
-        .reduce((acc, key) => ({ ...acc, [key]: import.meta.env[key] }), {}));
-
-      const publicKey = import.meta.env.VITE_VAPI_PUBLIC_KEY;
-      console.log('Raw VAPI public key value:', publicKey);
+      console.log('VAPI Public Key:', VAPI_PUBLIC_KEY);
+      console.log('Environment variables:', import.meta.env);
       
-      if (!publicKey) {
-        throw new Error("Vapi public key is not configured. Please check your environment variables.");
+      if (!VAPI_PUBLIC_KEY) {
+        throw new Error("Vapi public key is not configured. Please check your environment variables and ensure VITE_VAPI_PUBLIC_KEY is set.");
       }
 
       const assistantId = agent.vapi_assistant_id;
@@ -43,9 +41,7 @@ export const AgentCard = ({ agent, onToggleStatus, onUpdate }: AgentCardProps) =
       }
 
       console.log('Starting call with assistant ID:', assistantId);
-      console.log('Using Vapi public key:', publicKey);
-      
-      const vapi = new Vapi(publicKey);
+      const vapi = new Vapi(VAPI_PUBLIC_KEY);
       await vapi.start(assistantId);
       
       toast({
