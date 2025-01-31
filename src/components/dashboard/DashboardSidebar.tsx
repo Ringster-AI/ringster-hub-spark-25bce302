@@ -1,4 +1,4 @@
-import { Bot, Home, Settings, PieChart, Users, User, CreditCard, LogOut } from "lucide-react";
+import { Bot, Home, Settings, PieChart, Users, User, CreditCard, LogOut, Mic } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -17,6 +17,7 @@ import { useToast } from "@/components/ui/use-toast";
 const menuItems = [
   { title: "Overview", icon: Home, url: "/dashboard" },
   { title: "AI Agents", icon: Bot, url: "/dashboard/agents" },
+  { title: "Recordings", icon: Mic, url: "/dashboard/recordings" },
   { title: "Analytics", icon: PieChart, url: "/dashboard/analytics" },
   { title: "Team", icon: Users, url: "/dashboard/team" },
   { title: "Profile", icon: User, url: "/dashboard/profile" },

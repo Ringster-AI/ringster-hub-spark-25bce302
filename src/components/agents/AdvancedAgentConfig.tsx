@@ -4,6 +4,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { AgentFormData } from "@/types/agents";
+import { Separator } from "@/components/ui/separator";
 
 const TRANSCRIBER_PROVIDERS = [
   { value: "deepgram", label: "Deepgram" },
@@ -56,9 +57,36 @@ interface AdvancedAgentConfigProps {
 export const AdvancedAgentConfig = ({ form, disabled }: AdvancedAgentConfigProps) => {
   const advancedConfig = form.watch("advanced_config");
   const useCustomVoiceId = form.watch("advanced_config.voice.useCustomVoiceId");
+  const hipaaEnabled = form.watch("hipaa_enabled");
 
   return (
     <div className="space-y-6">
+      <div className="space-y-4">
+        <FormField
+          control={form.control}
+          name="hipaa_enabled"
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+              <div className="space-y-0.5">
+                <FormLabel className="text-base">HIPAA Compliance</FormLabel>
+                <FormDescription>
+                  When enabled, no logs, recordings, or transcriptions will be stored
+                </FormDescription>
+              </div>
+              <FormControl>
+                <Switch
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                  disabled={disabled}
+                />
+              </FormControl>
+            </FormItem>
+          )}
+        />
+      </div>
+
+      <Separator />
+
       <div className="space-y-4">
         <h3 className="text-lg font-medium">Transcriber Settings</h3>
         <FormField
@@ -216,6 +244,31 @@ export const AdvancedAgentConfig = ({ form, disabled }: AdvancedAgentConfigProps
             )}
           />
         )}
+      </div>
+
+      <div className="space-y-4">
+        <h3 className="text-lg font-medium">Recording Settings</h3>
+        <FormField
+          control={form.control}
+          name="config.artifactPlan.recordingEnabled"
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+              <div className="space-y-0.5">
+                <FormLabel className="text-base">Record Conversations</FormLabel>
+                <FormDescription>
+                  Record the conversation with the assistant
+                </FormDescription>
+              </div>
+              <FormControl>
+                <Switch
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                  disabled={disabled || hipaaEnabled}
+                />
+              </FormControl>
+            </FormItem>
+          )}
+        />
       </div>
     </div>
   );

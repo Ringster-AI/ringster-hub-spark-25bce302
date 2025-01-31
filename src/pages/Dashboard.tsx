@@ -6,6 +6,7 @@ import Team from "./Dashboard/Team";
 import Analytics from "./Dashboard/Analytics";
 import Subscription from "./Dashboard/Subscription";
 import Settings from "./Dashboard/Settings";
+import Recordings from "./Dashboard/Recordings";
 
 const Dashboard = () => {
   return (
@@ -14,6 +15,7 @@ const Dashboard = () => {
         <Route path="/" element={<Navigate to="/dashboard/agents" replace />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/agents" element={<Agents />} />
+        <Route path="/recordings" element={<Recordings />} />
         <Route path="/team" element={<Team />} />
         <Route path="/subscription" element={<Subscription />} />
         <Route path="/analytics" element={<Analytics />} />
