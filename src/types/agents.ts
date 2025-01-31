@@ -5,7 +5,7 @@ export interface AgentFormData {
   goodbye?: string;
   voice_id?: string;
   phone_number?: string;
-  transfer_directory?: Record<string, any>;
+  transfer_directory?: Record<string, TransferEntry>;
   hipaa_enabled?: boolean;
   advanced_config?: {
     voice: {
@@ -31,5 +31,14 @@ export interface AgentFormData {
       };
       recordingPath?: string;
     };
+  };
+}
+
+export interface TransferEntry {
+  name: string;
+  phone: string;
+  hours?: {
+    start: string;
+    end: string;
   };
 }

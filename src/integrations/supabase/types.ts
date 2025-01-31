@@ -17,6 +17,7 @@ export type Database = {
           description: string | null
           goodbye: string | null
           greeting: string | null
+          hipaa_enabled: boolean | null
           id: string
           is_trial: boolean | null
           minutes_allowance: number | null
@@ -40,6 +41,7 @@ export type Database = {
           description?: string | null
           goodbye?: string | null
           greeting?: string | null
+          hipaa_enabled?: boolean | null
           id?: string
           is_trial?: boolean | null
           minutes_allowance?: number | null
@@ -63,6 +65,7 @@ export type Database = {
           description?: string | null
           goodbye?: string | null
           greeting?: string | null
+          hipaa_enabled?: boolean | null
           id?: string
           is_trial?: boolean | null
           minutes_allowance?: number | null
@@ -127,6 +130,45 @@ export type Database = {
             columns: ["agent_id"]
             isOneToOne: false
             referencedRelation: "agent_configs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      call_recordings: {
+        Row: {
+          call_log_id: string
+          created_at: string | null
+          id: string
+          recording_url: string | null
+          transcript_url: string | null
+        }
+        Insert: {
+          call_log_id: string
+          created_at?: string | null
+          id?: string
+          recording_url?: string | null
+          transcript_url?: string | null
+        }
+        Update: {
+          call_log_id?: string
+          created_at?: string | null
+          id?: string
+          recording_url?: string | null
+          transcript_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "call_recordings_call_log_id_fkey"
+            columns: ["call_log_id"]
+            isOneToOne: false
+            referencedRelation: "call_logs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_call_log"
+            columns: ["call_log_id"]
+            isOneToOne: false
+            referencedRelation: "call_logs"
             referencedColumns: ["id"]
           },
         ]

@@ -7,8 +7,8 @@ import { format } from "date-fns";
 interface Recording {
   id: string;
   call_log_id: string;
-  recording_url: string;
-  transcript_url: string;
+  recording_url: string | null;
+  transcript_url: string | null;
   created_at: string;
   call_log: {
     from_number: string;
@@ -106,32 +106,36 @@ const Recordings = () => {
                   </p>
                 </div>
                 <div className="space-x-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() =>
-                      handleDownload(
-                        recording.recording_url,
-                        `recording-${recording.id}.mp3`
-                      )
-                    }
-                  >
-                    <Download className="h-4 w-4 mr-2" />
-                    Audio
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() =>
-                      handleDownload(
-                        recording.transcript_url,
-                        `transcript-${recording.id}.txt`
-                      )
-                    }
-                  >
-                    <Download className="h-4 w-4 mr-2" />
-                    Transcript
-                  </Button>
+                  {recording.recording_url && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        handleDownload(
+                          recording.recording_url!,
+                          `recording-${recording.id}.mp3`
+                        )
+                      }
+                    >
+                      <Download className="h-4 w-4 mr-2" />
+                      Audio
+                    </Button>
+                  )}
+                  {recording.transcript_url && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        handleDownload(
+                          recording.transcript_url!,
+                          `transcript-${recording.id}.txt`
+                        )
+                      }
+                    >
+                      <Download className="h-4 w-4 mr-2" />
+                      Transcript
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>
