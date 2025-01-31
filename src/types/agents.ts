@@ -35,9 +35,10 @@ export interface AgentFormData {
 }
 
 export interface TransferEntry {
-  name: string;
-  phone: string;
-  hours?: {
+  keywords: string[];
+  number: string;
+  transfer_message: string;
+  transfer_hours?: {
     start: string;
     end: string;
   };

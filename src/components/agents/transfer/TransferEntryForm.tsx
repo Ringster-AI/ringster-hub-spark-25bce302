@@ -42,7 +42,7 @@ export const TransferEntryForm = ({ value, onUpdate, onRemove, disabled }: Trans
         />
         
         <Input
-          value={(value.keywords || []).join(', ')}
+          value={value.keywords.join(', ')}
           placeholder="Keywords (comma-separated)"
           onChange={(e) => handleUpdateKeywords(e.target.value)}
           disabled={disabled}

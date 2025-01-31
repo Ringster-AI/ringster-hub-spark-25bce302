@@ -28,7 +28,7 @@ const Recordings = () => {
         .from("call_recordings")
         .select(`
           *,
-          call_log:call_logs (
+          call_log:call_logs!call_recordings_call_log_id_fkey (
             from_number,
             to_number,
             duration,
