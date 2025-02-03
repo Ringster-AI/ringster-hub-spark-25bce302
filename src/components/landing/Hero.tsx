@@ -5,6 +5,34 @@ export const Hero = () => {
   return (
     <div className="relative overflow-hidden bg-gradient-to-br from-[#FF512F] to-[#DD2476]">
       <div className="absolute inset-0 bg-grid-white/[0.1] bg-grid-8" />
+      
+      {/* Navigation */}
+      <div className="absolute top-4 w-full px-6">
+        <div className="flex justify-between items-center max-w-7xl mx-auto">
+          <div className="flex gap-4">
+            <Button 
+              variant="ghost" 
+              className="text-white hover:bg-white/10"
+              onClick={() => window.location.href = '/login'}
+            >
+              Login
+            </Button>
+            <Button 
+              variant="outline" 
+              className="border-white text-white hover:bg-white/10"
+              onClick={() => window.location.href = '/signup'}
+            >
+              Sign Up
+            </Button>
+          </div>
+          <img 
+            src="/lovable-uploads/059d2b53-6e4e-4788-a607-2344b4097212.png" 
+            alt="Ringster Logo" 
+            className="h-12 w-auto"
+          />
+        </div>
+      </div>
+
       <div className="container mx-auto px-4 py-24 sm:px-6 lg:px-8 relative">
         <div className="text-center animate-fade-down">
           <h1 className="text-4xl font-bold tracking-tight text-white sm:text-6xl">
