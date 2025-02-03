@@ -12,7 +12,7 @@ const Index = () => {
             <img 
               src="/lovable-uploads/059d2b53-6e4e-4788-a607-2344b4097212.png" 
               alt="Ringster Logo" 
-              className="h-16 w-auto" // Increased from h-12 to h-16
+              className="h-20 w-auto" // Increased from h-16 to h-20
             />
             <div className="flex gap-4">
               <Button 
