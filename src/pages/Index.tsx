@@ -2,6 +2,8 @@ import { Hero } from "@/components/landing/Hero";
 import { Features } from "@/components/landing/Features";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Building2, Home, Stethoscope } from "lucide-react";
 
 const Index = () => {
   return (
@@ -36,6 +38,44 @@ const Index = () => {
       <div className="pt-20">
         <Hero />
         <Features />
+        
+        {/* Use Cases Section */}
+        <section className="py-16 bg-white">
+          <div className="container mx-auto px-6">
+            <h2 className="text-3xl font-bold text-center mb-12 text-[#1A1F2C]">Real-World Use Cases</h2>
+            <div className="grid md:grid-cols-3 gap-8">
+              <Card className="bg-white shadow-lg hover:shadow-xl transition-shadow">
+                <CardHeader className="flex flex-col items-center">
+                  <Building2 className="w-12 h-12 text-[#DD2476] mb-4" />
+                  <CardTitle className="text-xl text-center">Retail</CardTitle>
+                </CardHeader>
+                <CardContent className="text-center text-gray-600">
+                  Manage customer inquiries during peak hours, ensuring no call goes unanswered and every customer receives immediate attention.
+                </CardContent>
+              </Card>
+
+              <Card className="bg-white shadow-lg hover:shadow-xl transition-shadow">
+                <CardHeader className="flex flex-col items-center">
+                  <Home className="w-12 h-12 text-[#DD2476] mb-4" />
+                  <CardTitle className="text-xl text-center">Real Estate</CardTitle>
+                </CardHeader>
+                <CardContent className="text-center text-gray-600">
+                  Capture every lead, even when agents are busy, ensuring no potential opportunity is missed and every inquiry is addressed promptly.
+                </CardContent>
+              </Card>
+
+              <Card className="bg-white shadow-lg hover:shadow-xl transition-shadow">
+                <CardHeader className="flex flex-col items-center">
+                  <Stethoscope className="w-12 h-12 text-[#DD2476] mb-4" />
+                  <CardTitle className="text-xl text-center">Healthcare</CardTitle>
+                </CardHeader>
+                <CardContent className="text-center text-gray-600">
+                  Answer patient calls and book appointments efficiently, providing 24/7 availability for patient inquiries and scheduling.
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </section>
         
         {/* FAQ Section */}
         <section className="py-16 bg-[#F1F0FB]">
