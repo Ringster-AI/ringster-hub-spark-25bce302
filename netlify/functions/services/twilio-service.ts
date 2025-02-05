@@ -40,4 +40,17 @@ export class TwilioService {
     await this.client.incomingPhoneNumbers(sid).remove();
     console.log('Successfully released Twilio number');
   }
+
+  async makeOutboundCall(fromNumber: string, toNumber: string) {
+    console.log(`Initiating outbound call from ${fromNumber} to ${toNumber}`);
+    const call = await this.client.calls.create({
+      to: toNumber,
+      from: fromNumber,
+      url: 'https://api.vapi.ai/webhook', // Using Vapi's webhook URL for call handling
+      method: 'POST'
+    });
+    
+    console.log(`Successfully initiated call with SID: ${call.sid}`);
+    return call;
+  }
 }
