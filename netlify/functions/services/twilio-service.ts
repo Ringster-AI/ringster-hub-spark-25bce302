@@ -48,8 +48,10 @@ export class TwilioService {
     }
 
     console.log(`Initiating outbound call from ${fromNumber} to ${toNumber}`);
-    const vapiWebhookUrl = `https://api.vapi.ai/webhook?apikey=${vapiApiKey}`;
-    const vapiCallbackUrl = `https://api.vapi.ai/call?apikey=${vapiApiKey}`;
+    
+    // Use the correct Vapi webhook URL structure
+    const vapiWebhookUrl = `https://api.vapi.ai/v1/call/webhook`;
+    const vapiCallbackUrl = `https://api.vapi.ai/v1/call/status`;
 
     const call = await this.client.calls.create({
       to: toNumber,
@@ -58,7 +60,11 @@ export class TwilioService {
       method: 'POST',
       statusCallback: vapiCallbackUrl,
       statusCallbackMethod: 'POST',
-      statusCallbackEvent: ['initiated', 'ringing', 'answered', 'completed']
+      statusCallbackEvent: ['initiated', 'ringing', 'answered', 'completed'],
+      headers: {
+        'Authorization': `Bearer ${vapiApiKey}`,
+        'Content-Type': 'application/json'
+      }
     });
     
     console.log(`Successfully initiated call with SID: ${call.sid}`);
