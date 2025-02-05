@@ -47,7 +47,10 @@ export class TwilioService {
       to: toNumber,
       from: fromNumber,
       url: 'https://api.vapi.ai/webhook', // Using Vapi's webhook URL for call handling
-      method: 'POST'
+      method: 'POST',
+      statusCallback: 'https://api.vapi.ai/call', // Add status callback to Vapi
+      statusCallbackMethod: 'POST',
+      statusCallbackEvent: ['initiated', 'ringing', 'answered', 'completed']
     });
     
     console.log(`Successfully initiated call with SID: ${call.sid}`);
