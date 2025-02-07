@@ -1,10 +1,9 @@
-
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Phone, ArrowUpRight } from "lucide-react";
 
 export const Hero = () => {
   return (
-    <div className="relative overflow-hidden bg-gradient-to-br from-[#FF512F]/50 to-[#DD2476]/50 backdrop-blur-sm sticky top-0 z-40">
+    <div className="relative overflow-hidden bg-gradient-to-br from-[#FF512F] to-[#DD2476]">
       <div className="absolute inset-0 bg-grid-white/[0.1] bg-grid-8" />
 
       <div className="container mx-auto px-4 py-24 sm:px-6 lg:px-8 relative">
