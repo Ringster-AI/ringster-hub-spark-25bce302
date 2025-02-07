@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Phone, ArrowUpRight } from "lucide-react";
 
@@ -43,7 +44,7 @@ export const Hero = () => {
             <Button 
               variant="outline" 
               size="lg" 
-              className="border-white text-white hover:bg-white/10"
+              className="border-white text-[#DD2476] bg-white hover:bg-white/10 hover:text-white"
               onClick={() => window.location.href = 'mailto:admin@ringster.live'}
             >
               Learn More
