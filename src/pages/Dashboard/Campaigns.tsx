@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Play, Pause, StopCircle, Calendar, PhoneCall } from "lucide-react";
@@ -6,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Campaign } from "@/types/database/campaigns";
 import { CreateCampaignDialog } from "@/components/campaigns/CreateCampaignDialog";
+import { cn } from "@/lib/utils";
 
 const Campaigns = () => {
   const { toast } = useToast();

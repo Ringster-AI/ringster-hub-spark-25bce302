@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -6,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { CreateAgentDialog } from "@/components/agents/CreateAgentDialog";
 import { EmptyAgentState } from "@/components/agents/EmptyAgentState";
 import { AgentCard } from "@/components/agents/AgentCard";
+import { AgentConfig } from "@/types/database/agents";
 
 const Agents = () => {
   const { toast } = useToast();
@@ -27,7 +29,11 @@ const Agents = () => {
         throw error;
       }
 
-      return data;
+      // Explicitly cast the agent_type to ensure it matches the AgentConfig type
+      return data.map((agent) => ({
+        ...agent,
+        agent_type: agent.agent_type as 'inbound' | 'outbound'
+      })) as AgentConfig[];
     },
   });
 
