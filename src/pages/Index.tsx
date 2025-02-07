@@ -1,3 +1,4 @@
+
 import { Hero } from "@/components/landing/Hero";
 import { Features } from "@/components/landing/Features";
 import { Button } from "@/components/ui/button";
@@ -8,13 +9,13 @@ import { Building2, Home, Stethoscope } from "lucide-react";
 const Index = () => {
   return (
     <main>
-      <nav className="fixed w-full top-0 z-50 bg-gradient-to-br from-[#FF512F] to-[#DD2476]">
+      <nav className="fixed w-full top-0 z-50 bg-gradient-to-br from-[#FF512F]/50 to-[#DD2476]/50">
         <div className="container mx-auto px-6 py-4">
           <div className="flex justify-between items-center">
             <img 
-              src="/lovable-uploads/059d2b53-6e4e-4788-a607-2344b4097212.png" 
+              src="/lovable-uploads/3190f9e7-4b7d-4492-814d-17bc44f30d07.png" 
               alt="Ringster Logo" 
-              className="h-20 w-auto" // Increased from h-16 to h-20
+              className="h-20 w-auto"
             />
             <div className="flex gap-4">
               <Button 
