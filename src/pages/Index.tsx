@@ -13,9 +13,9 @@ const Index = () => {
         <div className="container mx-auto px-6 py-4">
           <div className="flex justify-between items-center">
             <img 
-              src="/lovable-uploads/f8969c35-1f75-4e65-b5de-3dcae8ca1d52.png" 
+              src="/lovable-uploads/059d2b53-6e4e-4788-a607-2344b4097212.png" 
               alt="Ringster Logo" 
-              className="h-20 w-auto" 
+              className="h-20 w-auto"
             />
             <div className="flex gap-4">
               <Button 
