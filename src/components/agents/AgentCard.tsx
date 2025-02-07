@@ -1,4 +1,5 @@
-import { CheckSquare, XSquare, Phone, Edit, AlertTriangle, PhoneCall, PhoneOutgoing } from "lucide-react";
+
+import { CheckSquare, XSquare, Phone, Edit, AlertTriangle, PhoneCall } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EditAgentDialog } from "./EditAgentDialog";
 import { AgentConfig } from "@/types/database/agents";
@@ -153,19 +154,11 @@ export const AgentCard = ({ agent, onToggleStatus, onUpdate }: AgentCardProps) =
         )}
         <div className="flex gap-2 ml-auto">
           <Button 
-            onClick={() => setIsOutboundDialogOpen(true)}
-            variant="outline"
-            disabled={agent.status !== 'active'}
-          >
-            <PhoneOutgoing className="mr-2 h-4 w-4" />
-            Make Call
-          </Button>
-          <Button 
             onClick={handleBrowserCall}
             disabled={agent.status !== 'active'}
           >
             <PhoneCall className="mr-2 h-4 w-4" />
-            Browser Call
+            Call Agent
           </Button>
         </div>
       </div>
