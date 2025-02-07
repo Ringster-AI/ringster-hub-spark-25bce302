@@ -22,11 +22,13 @@ export function CreateCampaignDialog() {
           New Campaign
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-4xl">
-        <DialogHeader>
+      <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0">
+        <DialogHeader className="p-6 pb-0">
           <DialogTitle>Create New Campaign</DialogTitle>
         </DialogHeader>
-        <CampaignForm onSuccess={() => setOpen(false)} />
+        <div className="flex-1 overflow-y-auto px-6">
+          <CampaignForm onSuccess={() => setOpen(false)} />
+        </div>
       </DialogContent>
     </Dialog>
   );

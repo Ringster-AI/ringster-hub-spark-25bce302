@@ -107,7 +107,7 @@ export function CampaignForm({ onSuccess }: CampaignFormProps) {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 pb-6">
         <FormField
           control={form.control}
           name="name"
@@ -188,7 +188,7 @@ export function CampaignForm({ onSuccess }: CampaignFormProps) {
           <ContactList />
         </div>
 
-        <div className="flex justify-end gap-4">
+        <div className="sticky bottom-0 bg-background pt-4 border-t flex justify-end gap-4">
           <Button type="submit" disabled={createCampaign.isPending}>
             Create Campaign
           </Button>
