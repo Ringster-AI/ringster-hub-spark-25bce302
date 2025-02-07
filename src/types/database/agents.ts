@@ -1,3 +1,4 @@
+
 import { Json } from './auth';
 
 export interface AgentConfig {
@@ -22,6 +23,7 @@ export interface AgentConfig {
   trial_ends_at: string | null;
   vapi_assistant_id: string | null;
   advanced_config: Json | null;
+  agent_type: 'inbound' | 'outbound';
 }
 
 export interface AgentsSchema {

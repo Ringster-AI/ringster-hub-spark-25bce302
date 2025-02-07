@@ -1,3 +1,4 @@
+
 import { AuthSchema } from './auth';
 import { ProfilesSchema } from './profiles';
 import { OrganizationsSchema } from './organizations';
@@ -6,6 +7,7 @@ import { TeamsSchema } from './teams';
 import { AgentsSchema } from './agents';
 import { CallLogsSchema } from './call-logs';
 import { UsageSummarySchema } from './usage-summary';
+import { CampaignsSchema } from './campaigns';
 
 export interface Database {
   public: ProfilesSchema['Tables'] & 
@@ -14,7 +16,8 @@ export interface Database {
           TeamsSchema['Tables'] &
           AgentsSchema['Tables'] &
           CallLogsSchema['Tables'] &
-          UsageSummarySchema['Tables']
+          UsageSummarySchema['Tables'] &
+          CampaignsSchema['Tables']
   auth: AuthSchema
 }
 
@@ -26,3 +29,4 @@ export * from './teams';
 export * from './agents';
 export * from './call-logs';
 export * from './usage-summary';
+export * from './campaigns';

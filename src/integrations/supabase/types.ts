@@ -12,6 +12,7 @@ export type Database = {
       agent_configs: {
         Row: {
           advanced_config: Json | null
+          agent_type: string
           config: Json | null
           created_at: string | null
           description: string | null
@@ -36,6 +37,7 @@ export type Database = {
         }
         Insert: {
           advanced_config?: Json | null
+          agent_type?: string
           config?: Json | null
           created_at?: string | null
           description?: string | null
@@ -60,6 +62,7 @@ export type Database = {
         }
         Update: {
           advanced_config?: Json | null
+          agent_type?: string
           config?: Json | null
           created_at?: string | null
           description?: string | null
@@ -169,6 +172,110 @@ export type Database = {
             columns: ["call_log_id"]
             isOneToOne: false
             referencedRelation: "call_logs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campaign_contacts: {
+        Row: {
+          call_attempts: number | null
+          campaign_id: string | null
+          created_at: string | null
+          first_name: string
+          id: string
+          last_call_at: string | null
+          last_name: string
+          metadata: Json | null
+          phone_number: string
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          call_attempts?: number | null
+          campaign_id?: string | null
+          created_at?: string | null
+          first_name: string
+          id?: string
+          last_call_at?: string | null
+          last_name: string
+          metadata?: Json | null
+          phone_number: string
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          call_attempts?: number | null
+          campaign_id?: string | null
+          created_at?: string | null
+          first_name?: string
+          id?: string
+          last_call_at?: string | null
+          last_name?: string
+          metadata?: Json | null
+          phone_number?: string
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_contacts_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campaigns: {
+        Row: {
+          agent_id: string | null
+          config: Json | null
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string
+          scheduled_start: string | null
+          status: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          agent_id?: string | null
+          config?: Json | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          scheduled_start?: string | null
+          status?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          agent_id?: string | null
+          config?: Json | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          scheduled_start?: string | null
+          status?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaigns_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agent_configs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaigns_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
