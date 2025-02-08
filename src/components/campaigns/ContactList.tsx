@@ -14,7 +14,8 @@ import { Upload, UserPlus, Trash } from "lucide-react";
 import Papa from "papaparse";
 
 interface Contact {
-  name: string;
+  firstName: string;
+  lastName: string;
   phoneNumber: string;
 }
 
@@ -31,9 +32,10 @@ export function ContactList() {
       header: true,
       complete: (results) => {
         const validContacts = results.data
-          .filter((row: any) => row.name && row.phoneNumber)
+          .filter((row: any) => row.firstName && row.lastName && row.phoneNumber)
           .map((row: any) => ({
-            name: row.name,
+            firstName: row.firstName,
+            lastName: row.lastName,
             phoneNumber: row.phoneNumber.replace(/\D/g, ""),
           }));
 
@@ -41,7 +43,7 @@ export function ContactList() {
           toast({
             title: "Invalid CSV format",
             description:
-              "Please ensure your CSV file has name and phoneNumber columns.",
+              "Please ensure your CSV file has firstName, lastName, and phoneNumber columns.",
             variant: "destructive",
           });
           return;
@@ -87,7 +89,8 @@ export function ContactList() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Name</TableHead>
+              <TableHead>First Name</TableHead>
+              <TableHead>Last Name</TableHead>
               <TableHead>Phone Number</TableHead>
               <TableHead className="w-[100px]">Actions</TableHead>
             </TableRow>
@@ -95,7 +98,8 @@ export function ContactList() {
           <TableBody>
             {contacts.map((contact, index) => (
               <TableRow key={index}>
-                <TableCell>{contact.name}</TableCell>
+                <TableCell>{contact.firstName}</TableCell>
+                <TableCell>{contact.lastName}</TableCell>
                 <TableCell>{contact.phoneNumber}</TableCell>
                 <TableCell>
                   <Button
