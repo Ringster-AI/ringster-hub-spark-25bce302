@@ -25,6 +25,7 @@ import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
+import { Campaign } from "@/types/database/campaigns";
 
 const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -43,15 +44,27 @@ type FormData = z.infer<typeof formSchema>;
 
 interface CampaignFormProps {
   onSuccess: () => void;
+  initialData?: Campaign & { agent: any };
 }
 
-export function CampaignForm({ onSuccess }: CampaignFormProps) {
+export function CampaignForm({ onSuccess, initialData }: CampaignFormProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
+    defaultValues: initialData ? {
+      name: initialData.name,
+      description: initialData.description || "",
+      scheduledStart: initialData.scheduled_start ? new Date(initialData.scheduled_start) : undefined,
+      agent: {
+        name: initialData.agent?.name || "",
+        description: initialData.agent?.description || "",
+        greeting: initialData.agent?.greeting || "",
+        goodbye: initialData.agent?.goodbye || "",
+        voice_id: initialData.agent?.voice_id || "",
+      }
+    } : {
       name: "",
       description: "",
     },
@@ -63,7 +76,7 @@ export function CampaignForm({ onSuccess }: CampaignFormProps) {
       if (!session) {
         toast({
           title: "Authentication required",
-          description: "Please log in to create a campaign.",
+          description: "Please log in to manage campaigns.",
           variant: "destructive",
         });
         navigate("/login");
@@ -73,7 +86,7 @@ export function CampaignForm({ onSuccess }: CampaignFormProps) {
     checkAuth();
   }, [navigate, toast]);
 
-  const createCampaign = useMutation({
+  const mutation = useMutation({
     mutationFn: async (data: FormData) => {
       const { data: { session } } = await supabase.auth.getSession();
       
@@ -81,47 +94,71 @@ export function CampaignForm({ onSuccess }: CampaignFormProps) {
         throw new Error("Not authenticated");
       }
 
-      // First create the agent
-      const { data: agent, error: agentError } = await supabase
-        .from("agent_configs")
-        .insert({
-          name: data.agent.name,
-          description: data.agent.description,
-          greeting: data.agent.greeting,
-          goodbye: data.agent.goodbye,
-          voice_id: data.agent.voice_id,
-          agent_type: "outbound",
-          status: "draft",
-          user_id: session.user.id,
-        })
-        .select()
-        .single();
+      if (initialData) {
+        // Update existing campaign and agent
+        const { error: agentError } = await supabase
+          .from("agent_configs")
+          .update({
+            name: data.agent.name,
+            description: data.agent.description,
+            greeting: data.agent.greeting,
+            goodbye: data.agent.goodbye,
+            voice_id: data.agent.voice_id,
+          })
+          .eq('id', initialData.agent_id);
 
-      if (agentError) throw agentError;
+        if (agentError) throw agentError;
 
-      // Then create the campaign
-      const { error: campaignError } = await supabase.from("campaigns").insert({
-        name: data.name,
-        description: data.description,
-        scheduled_start: data.scheduledStart?.toISOString(),
-        agent_id: agent.id,
-        status: "draft",
-        user_id: session.user.id,
-      });
+        const { error: campaignError } = await supabase
+          .from("campaigns")
+          .update({
+            name: data.name,
+            description: data.description,
+            scheduled_start: data.scheduledStart?.toISOString(),
+          })
+          .eq('id', initialData.id);
 
-      if (campaignError) throw campaignError;
+        if (campaignError) throw campaignError;
+      } else {
+        // Create new campaign and agent
+        const { data: agent, error: agentError } = await supabase
+          .from("agent_configs")
+          .insert({
+            name: data.agent.name,
+            description: data.agent.description,
+            greeting: data.agent.greeting,
+            goodbye: data.agent.goodbye,
+            voice_id: data.agent.voice_id,
+            agent_type: "outbound",
+            status: "draft",
+            user_id: session.user.id,
+          })
+          .select()
+          .single();
+
+        if (agentError) throw agentError;
+
+        const { error: campaignError } = await supabase
+          .from("campaigns")
+          .insert({
+            name: data.name,
+            description: data.description,
+            scheduled_start: data.scheduledStart?.toISOString(),
+            agent_id: agent.id,
+            status: "draft",
+            user_id: session.user.id,
+          });
+
+        if (campaignError) throw campaignError;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["campaigns"] });
-      toast({
-        title: "Campaign created",
-        description: "Your campaign has been created successfully.",
-      });
       onSuccess();
     },
     onError: (error) => {
       toast({
-        title: "Error creating campaign",
+        title: `Error ${initialData ? 'updating' : 'creating'} campaign`,
         description: error.message,
         variant: "destructive",
       });
@@ -129,7 +166,7 @@ export function CampaignForm({ onSuccess }: CampaignFormProps) {
   });
 
   const onSubmit = (data: FormData) => {
-    createCampaign.mutate(data);
+    mutation.mutate(data);
   };
 
   return (
@@ -212,12 +249,12 @@ export function CampaignForm({ onSuccess }: CampaignFormProps) {
 
         <div className="rounded-lg border p-4">
           <h3 className="text-lg font-semibold mb-4">Contact List</h3>
-          <ContactList />
+          <ContactList campaignId={initialData?.id} />
         </div>
 
         <div className="sticky bottom-0 bg-background pt-4 border-t flex justify-end gap-4">
-          <Button type="submit" disabled={createCampaign.isPending}>
-            Create Campaign
+          <Button type="submit" disabled={mutation.isPending}>
+            {initialData ? 'Update' : 'Create'} Campaign
           </Button>
         </div>
       </form>

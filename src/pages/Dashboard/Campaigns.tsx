@@ -1,14 +1,18 @@
+
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Play, Pause, StopCircle, Calendar, PhoneCall } from "lucide-react";
+import { Play, Pause, StopCircle, Calendar, Edit } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Campaign } from "@/types/database/campaigns";
 import { CreateCampaignDialog } from "@/components/campaigns/CreateCampaignDialog";
+import { EditCampaignDialog } from "@/components/campaigns/EditCampaignDialog";
 import { cn } from "@/lib/utils";
+import { useState } from "react";
 
 const Campaigns = () => {
   const { toast } = useToast();
+  const [editingCampaign, setEditingCampaign] = useState<(Campaign & { agent: any }) | null>(null);
 
   const { data: campaigns, isLoading } = useQuery({
     queryKey: ["campaigns"],
@@ -79,6 +83,13 @@ const Campaigns = () => {
                   )}
                 </div>
                 <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setEditingCampaign(campaign)}
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
                   {getStatusIcon(campaign.status)}
                   <span
                     className={cn(
@@ -100,8 +111,21 @@ const Campaigns = () => {
           ))}
         </div>
       )}
+
+      <EditCampaignDialog
+        campaign={editingCampaign!}
+        open={!!editingCampaign}
+        onOpenChange={(open) => !open && setEditingCampaign(null)}
+        onUpdate={() => {
+          setEditingCampaign(null);
+          toast({
+            title: "Campaign updated",
+            description: "Campaign has been updated successfully.",
+          });
+        }}
+      />
     </div>
   );
-}
+};
 
 export default Campaigns;
