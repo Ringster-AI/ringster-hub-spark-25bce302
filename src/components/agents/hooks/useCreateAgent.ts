@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -29,10 +30,10 @@ export const useCreateAgent = (onSuccess: () => void) => {
         return;
       }
 
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { session } } = await supabase.auth.getSession();
       
-      if (!user) {
-        throw new Error("User not authenticated");
+      if (!session) {
+        throw new Error("Not authenticated");
       }
 
       console.log("Creating new agent in database...");
@@ -48,8 +49,9 @@ export const useCreateAgent = (onSuccess: () => void) => {
           transfer_tool_id: null
         } as Json,
         transfer_directory: data.transfer_directory as unknown as Json,
-        user_id: user.id,
-        advanced_config: data.advanced_config as unknown as Json
+        user_id: session.user.id,
+        advanced_config: data.advanced_config as unknown as Json,
+        agent_type: 'inbound' as const
       };
 
       const { data: newAgent, error } = await supabase
@@ -58,7 +60,11 @@ export const useCreateAgent = (onSuccess: () => void) => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error creating agent:", error);
+        throw error;
+      }
+      
       console.log("Agent created successfully:", newAgent);
 
       console.log("Requesting Twilio number assignment...");
