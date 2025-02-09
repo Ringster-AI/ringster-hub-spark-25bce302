@@ -56,7 +56,7 @@ export const useCreateAgent = (onSuccess: () => void) => {
         transfer_directory: data.transfer_directory as unknown as Json,
         user_id: session.user.id,
         advanced_config: data.advanced_config as unknown as Json,
-        agent_type: 'inbound' as const
+        agent_type: data.agent_type || 'inbound' as const
       };
 
       const { data: newAgent, error } = await supabase
@@ -72,13 +72,17 @@ export const useCreateAgent = (onSuccess: () => void) => {
       
       console.log("Agent created successfully:", newAgent);
 
+      // Request Twilio number assignment for both inbound and outbound agents
       console.log("Requesting Twilio number assignment...");
       const response = await fetch('/.netlify/functions/manage-twilio-number', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ agentId: newAgent.id })
+        body: JSON.stringify({ 
+          agentId: newAgent.id,
+          agentType: data.agent_type || 'inbound'
+        })
       });
 
       if (!response.ok) {

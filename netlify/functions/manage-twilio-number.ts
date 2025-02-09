@@ -1,3 +1,4 @@
+
 import { Handler } from '@netlify/functions'
 import { createClient } from '@supabase/supabase-js'
 import { TwilioService } from './services/twilio-service'
@@ -44,7 +45,7 @@ export const handler: Handler = async (event) => {
       throw new Error('WEBHOOK_URL and SMS_WEBHOOK_URL environment variables are required')
     }
 
-    const { agentId } = JSON.parse(event.body || '{}')
+    const { agentId, agentType = 'inbound' } = JSON.parse(event.body || '{}')
     
     if (!agentId) {
       throw new Error('Agent ID is required')
@@ -74,41 +75,43 @@ export const handler: Handler = async (event) => {
 
     console.log('Successfully updated agent with phone number')
 
-    try {
-      // Create/Update Vapi assistant
-      const vapiResponse = await fetch(`${event.rawUrl.split('/.netlify')[0]}/.netlify/functions/manage-vapi-assistant`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          agentId,
-          phoneNumber: purchasedNumber.phoneNumber
+    // Only create Vapi assistant for inbound agents
+    if (agentType === 'inbound') {
+      try {
+        const vapiResponse = await fetch(`${event.rawUrl.split('/.netlify')[0]}/.netlify/functions/manage-vapi-assistant`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            agentId,
+            phoneNumber: purchasedNumber.phoneNumber
+          })
         })
-      })
 
-      if (!vapiResponse.ok) {
-        const vapiError = await vapiResponse.text()
-        // If Vapi update fails, we need to clean up the database entry
-        await databaseService.updateAgentWithPhoneNumber(agentId, null, null)
-        // Then release the number
-        if (purchasedNumber) {
-          await twilioService.releaseNumber(purchasedNumber.sid)
+        if (!vapiResponse.ok) {
+          const vapiError = await vapiResponse.text()
+          // If Vapi update fails, we need to clean up the database entry
+          await databaseService.updateAgentWithPhoneNumber(agentId, null, null)
+          // Then release the number
+          if (purchasedNumber) {
+            await twilioService.releaseNumber(purchasedNumber.sid)
+          }
+          throw new Error(`Failed to update Vapi assistant: ${vapiError}`)
         }
-        throw new Error(`Failed to update Vapi assistant: ${vapiError}`)
+      } catch (error) {
+        // Re-throw the error to be caught by the outer catch block
+        throw error
       }
+    }
 
-      return {
-        statusCode: 200,
-        headers: corsHeaders,
-        body: JSON.stringify({
-          phoneNumber: purchasedNumber.phoneNumber,
-          sid: purchasedNumber.sid
-        })
-      }
-    } catch (error) {
-      // Re-throw the error to be caught by the outer catch block
-      throw error
+    return {
+      statusCode: 200,
+      headers: corsHeaders,
+      body: JSON.stringify({
+        phoneNumber: purchasedNumber.phoneNumber,
+        sid: purchasedNumber.sid
+      })
     }
   } catch (error: any) {
     console.error('Error in manage-twilio-number:', error)
