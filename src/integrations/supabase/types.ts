@@ -31,7 +31,7 @@ export type Database = {
           trial_ends_at: string | null
           twilio_sid: string | null
           updated_at: string | null
-          user_id: string | null
+          user_id: string
           vapi_assistant_id: string | null
           voice_id: string | null
         }
@@ -56,7 +56,7 @@ export type Database = {
           trial_ends_at?: string | null
           twilio_sid?: string | null
           updated_at?: string | null
-          user_id?: string | null
+          user_id: string
           vapi_assistant_id?: string | null
           voice_id?: string | null
         }
@@ -81,7 +81,7 @@ export type Database = {
           trial_ends_at?: string | null
           twilio_sid?: string | null
           updated_at?: string | null
-          user_id?: string | null
+          user_id?: string
           vapi_assistant_id?: string | null
           voice_id?: string | null
         }

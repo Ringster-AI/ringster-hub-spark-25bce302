@@ -33,6 +33,11 @@ export const useCreateAgent = (onSuccess: () => void) => {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
+        toast({
+          title: "Authentication required",
+          description: "Please log in to create an agent.",
+          variant: "destructive",
+        });
         throw new Error("Not authenticated");
       }
 

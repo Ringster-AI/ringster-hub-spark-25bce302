@@ -20,11 +20,28 @@ const Agents = () => {
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
+        toast({
+          title: "Authentication required",
+          description: "Please log in to view your agents.",
+          variant: "destructive",
+        });
         navigate("/login");
       }
     };
+    
     checkAuth();
-  }, [navigate]);
+
+    // Subscribe to auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session) {
+        navigate("/login");
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [navigate, toast]);
 
   const { data: agents, isLoading, refetch } = useQuery({
     queryKey: ["agents"],
@@ -50,12 +67,12 @@ const Agents = () => {
         throw error;
       }
 
-      // Explicitly cast the agent_type to ensure it matches the AgentConfig type
       return data.map((agent) => ({
         ...agent,
         agent_type: agent.agent_type as 'inbound' | 'outbound'
       })) as AgentConfig[];
     },
+    enabled: true // The query will automatically run when the component mounts
   });
 
   const toggleStatus = async (id: string, currentStatus: string) => {
