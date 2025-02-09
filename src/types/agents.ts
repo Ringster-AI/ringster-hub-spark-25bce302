@@ -1,3 +1,4 @@
+
 export interface AgentFormData {
   name: string;
   description?: string;
@@ -7,6 +8,7 @@ export interface AgentFormData {
   phone_number?: string;
   transfer_directory?: Record<string, TransferEntry>;
   hipaa_enabled?: boolean;
+  agent_type?: 'inbound' | 'outbound';
   advanced_config?: {
     voice: {
       provider: string;
