@@ -35,7 +35,7 @@ const Campaigns = () => {
         .from("campaign_contacts")
         .select("*")
         .eq("campaign_id", campaign.id)
-        .limit(1);
+        .limit(5); // Fetch up to 5 contacts for testing
 
       if (contactsError) throw contactsError;
       
@@ -48,8 +48,7 @@ const Campaigns = () => {
         return;
       }
 
-      const contact = contacts[0];
-      const outboundPayload = [{
+      const outboundPayload = contacts.map(contact => ({
         user: {
           firstName: contact.first_name,
           lastName: contact.last_name,
@@ -105,9 +104,8 @@ const Campaigns = () => {
             number: contact.phone_number
           }
         }
-      }];
+      }));
 
-      // Instead of querying the secrets table directly, we'll use the webhook_url from env
       const response = await fetch(import.meta.env.VITE_OUTBOUND_CALL_WEBHOOK || "", {
         method: "POST",
         headers: {
@@ -121,14 +119,14 @@ const Campaigns = () => {
       }
 
       toast({
-        title: "Test call initiated",
-        description: "The outbound call has been triggered successfully.",
+        title: "Test calls initiated",
+        description: `Outbound calls have been triggered for ${contacts.length} contact(s).`,
       });
     } catch (error) {
       console.error("Test call error:", error);
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to trigger test call",
+        description: error instanceof Error ? error.message : "Failed to trigger test calls",
         variant: "destructive",
       });
     }
@@ -258,3 +256,4 @@ const Campaigns = () => {
 };
 
 export default Campaigns;
+
