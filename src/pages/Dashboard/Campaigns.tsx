@@ -107,22 +107,8 @@ const Campaigns = () => {
         }
       }];
 
-      const { data: webhookUrl } = await supabase
-        .from("secrets")
-        .select("value")
-        .eq("name", "OUTBOUND_CALL_WEBHOOK")
-        .single();
-
-      if (!webhookUrl?.value) {
-        toast({
-          title: "Webhook URL not configured",
-          description: "Please set the OUTBOUND_CALL_WEBHOOK secret in your project settings.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const response = await fetch(webhookUrl.value, {
+      // Instead of querying the secrets table directly, we'll use the webhook_url from env
+      const response = await fetch(import.meta.env.VITE_OUTBOUND_CALL_WEBHOOK || "", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
