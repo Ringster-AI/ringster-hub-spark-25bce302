@@ -1,18 +1,20 @@
 
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Play, Pause, StopCircle, Calendar, Edit } from "lucide-react";
+import { Play, Pause, StopCircle, Calendar, Edit, Users } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Campaign } from "@/types/database/campaigns";
 import { CreateCampaignDialog } from "@/components/campaigns/CreateCampaignDialog";
 import { EditCampaignDialog } from "@/components/campaigns/EditCampaignDialog";
+import { ContactsDialog } from "@/components/campaigns/ContactsDialog";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 
 const Campaigns = () => {
   const { toast } = useToast();
   const [editingCampaign, setEditingCampaign] = useState<(Campaign & { agent: any }) | null>(null);
+  const [viewingContacts, setViewingContacts] = useState<(Campaign & { agent: any }) | null>(null);
 
   const { data: campaigns, isLoading } = useQuery({
     queryKey: ["campaigns"],
@@ -86,6 +88,14 @@ const Campaigns = () => {
                   <Button
                     variant="ghost"
                     size="icon"
+                    onClick={() => setViewingContacts(campaign)}
+                    title="View/Edit Contacts"
+                  >
+                    <Users className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
                     onClick={() => setEditingCampaign(campaign)}
                   >
                     <Edit className="h-4 w-4" />
@@ -123,6 +133,12 @@ const Campaigns = () => {
             description: "Campaign has been updated successfully.",
           });
         }}
+      />
+
+      <ContactsDialog
+        campaign={viewingContacts}
+        open={!!viewingContacts}
+        onOpenChange={(open) => !open && setViewingContacts(null)}
       />
     </div>
   );
