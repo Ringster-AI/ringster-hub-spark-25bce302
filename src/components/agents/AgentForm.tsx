@@ -1,7 +1,10 @@
-import { useState } from "react";
+
+import React, { useState } from "react";
 import { UseFormReturn } from "react-hook-form";
 import { Form } from "@/components/ui/form";
 import { Switch } from "@/components/ui/switch";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 import { BasicAgentInfo } from "./BasicAgentInfo";
 import { AgentMessages } from "./AgentMessages";
 import { VoiceSelection } from "./VoiceSelection";
@@ -26,6 +29,28 @@ export const AgentForm = ({ form, onSubmit, onCancel, canCustomizeVoice, disable
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <div className="space-y-4">
+          <div className="rounded-lg border p-4">
+            <h3 className="text-lg font-medium mb-4">Agent Type</h3>
+            <RadioGroup
+              defaultValue="inbound"
+              value={form.watch("agent_type") || "inbound"}
+              onValueChange={(value) => form.setValue("agent_type", value as "inbound" | "outbound")}
+              className="grid grid-cols-2 gap-4"
+              disabled={disabled}
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="inbound" id="inbound" />
+                <Label htmlFor="inbound">Inbound Agent</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="outbound" id="outbound" />
+                <Label htmlFor="outbound">Outbound Agent</Label>
+              </div>
+            </RadioGroup>
+          </div>
+        </div>
+
         <BasicAgentInfo form={form} disabled={disabled} />
         <AgentMessages form={form} disabled={disabled} />
         
