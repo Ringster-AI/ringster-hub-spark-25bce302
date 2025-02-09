@@ -23,6 +23,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
+import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 
 const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -46,6 +48,7 @@ interface CampaignFormProps {
 export function CampaignForm({ onSuccess }: CampaignFormProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -54,8 +57,30 @@ export function CampaignForm({ onSuccess }: CampaignFormProps) {
     },
   });
 
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast({
+          title: "Authentication required",
+          description: "Please log in to create a campaign.",
+          variant: "destructive",
+        });
+        navigate("/login");
+      }
+    };
+    
+    checkAuth();
+  }, [navigate, toast]);
+
   const createCampaign = useMutation({
     mutationFn: async (data: FormData) => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        throw new Error("Not authenticated");
+      }
+
       // First create the agent
       const { data: agent, error: agentError } = await supabase
         .from("agent_configs")
@@ -67,6 +92,7 @@ export function CampaignForm({ onSuccess }: CampaignFormProps) {
           voice_id: data.agent.voice_id,
           agent_type: "outbound",
           status: "draft",
+          user_id: session.user.id,
         })
         .select()
         .single();
@@ -80,6 +106,7 @@ export function CampaignForm({ onSuccess }: CampaignFormProps) {
         scheduled_start: data.scheduledStart?.toISOString(),
         agent_id: agent.id,
         status: "draft",
+        user_id: session.user.id,
       });
 
       if (campaignError) throw campaignError;
