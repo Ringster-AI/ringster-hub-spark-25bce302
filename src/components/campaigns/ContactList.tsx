@@ -1,5 +1,5 @@
 
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -17,6 +17,7 @@ interface Contact {
   firstName: string;
   lastName: string;
   phoneNumber: string;
+  metadata: Record<string, any>;
 }
 
 export function ContactList() {
@@ -24,7 +25,7 @@ export function ContactList() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -33,11 +34,21 @@ export function ContactList() {
       complete: (results) => {
         const validContacts = results.data
           .filter((row: any) => row.firstName && row.lastName && row.phoneNumber)
-          .map((row: any) => ({
-            firstName: row.firstName,
-            lastName: row.lastName,
-            phoneNumber: row.phoneNumber.replace(/\D/g, ""),
-          }));
+          .map((row: any) => {
+            // Extract required fields
+            const { firstName, lastName, phoneNumber, ...additionalFields } = row;
+            
+            // Clean up phone number to only include digits
+            const cleanPhoneNumber = phoneNumber.replace(/\D/g, "");
+            
+            // Create contact object with metadata
+            return {
+              firstName,
+              lastName,
+              phoneNumber: cleanPhoneNumber,
+              metadata: additionalFields
+            };
+          });
 
         if (validContacts.length === 0) {
           toast({
@@ -63,11 +74,19 @@ export function ContactList() {
         });
       },
     });
-  };
+  }, [toast]);
 
   const handleUploadClick = () => {
     fileInputRef.current?.click();
   };
+
+  const getAdditionalFields = useCallback((contact: Contact) => {
+    const fields = Object.entries(contact.metadata)
+      .filter(([_, value]) => value) // Only show non-empty fields
+      .map(([key, value]) => `${key}: ${value}`)
+      .join(", ");
+    return fields ? fields : "No additional info";
+  }, []);
 
   return (
     <div className="space-y-4">
@@ -92,6 +111,7 @@ export function ContactList() {
               <TableHead>First Name</TableHead>
               <TableHead>Last Name</TableHead>
               <TableHead>Phone Number</TableHead>
+              <TableHead>Additional Info</TableHead>
               <TableHead className="w-[100px]">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -101,6 +121,9 @@ export function ContactList() {
                 <TableCell>{contact.firstName}</TableCell>
                 <TableCell>{contact.lastName}</TableCell>
                 <TableCell>{contact.phoneNumber}</TableCell>
+                <TableCell className="max-w-md truncate">
+                  {getAdditionalFields(contact)}
+                </TableCell>
                 <TableCell>
                   <Button
                     variant="ghost"
