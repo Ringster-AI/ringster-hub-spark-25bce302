@@ -29,6 +29,15 @@ export function ContactsTable({
   onEditCancel,
   onDelete,
 }: ContactsTableProps) {
+  // Get all unique metadata keys across all contacts
+  const metadataColumns = Array.from(
+    new Set(
+      contacts.flatMap((contact) => 
+        Object.keys(contact.metadata || {})
+      )
+    )
+  ).sort();
+
   return (
     <Table>
       <TableHeader>
@@ -36,7 +45,11 @@ export function ContactsTable({
           <TableHead>First Name</TableHead>
           <TableHead>Last Name</TableHead>
           <TableHead>Phone Number</TableHead>
-          <TableHead>Additional Info</TableHead>
+          {metadataColumns.map((column) => (
+            <TableHead key={column} className="capitalize">
+              {column}
+            </TableHead>
+          ))}
           <TableHead className="w-[100px]">Actions</TableHead>
         </TableRow>
       </TableHeader>
@@ -88,11 +101,26 @@ export function ContactsTable({
                 contact.phoneNumber
               )}
             </TableCell>
-            <TableCell className="max-w-md truncate">
-              {Object.entries(contact.metadata || {})
-                .map(([key, value]) => `${key}: ${value}`)
-                .join(", ") || "No additional info"}
-            </TableCell>
+            {metadataColumns.map((column) => (
+              <TableCell key={column}>
+                {editingContact?.id === contact.id ? (
+                  <Input
+                    value={editingContact.metadata[column] || ''}
+                    onChange={(e) =>
+                      onEdit({
+                        ...editingContact,
+                        metadata: {
+                          ...editingContact.metadata,
+                          [column]: e.target.value,
+                        },
+                      })
+                    }
+                  />
+                ) : (
+                  contact.metadata[column] || ''
+                )}
+              </TableCell>
+            ))}
             <TableCell>
               <div className="flex gap-2">
                 {editingContact?.id === contact.id ? (

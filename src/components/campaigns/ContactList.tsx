@@ -29,15 +29,26 @@ export function ContactList({ campaignId }: ContactListProps) {
         complete: async (results) => {
           const contacts = results.data
             .filter((row: any) => row.firstName && row.lastName && row.phoneNumber)
-            .map((row: any) => ({
-              campaign_id: campaignId,
-              first_name: row.firstName,
-              last_name: row.lastName,
-              phone_number: row.phoneNumber.replace(/\D/g, ""),
-              metadata: Object.keys(row)
-                .filter((key) => !["firstName", "lastName", "phoneNumber"].includes(key))
-                .reduce((acc, key) => ({ ...acc, [key]: row[key] }), {}),
-            }));
+            .map((row: any) => {
+              // Extract the standard fields
+              const { firstName, lastName, phoneNumber, ...rest } = row;
+              
+              // All other columns become metadata
+              const metadata = Object.keys(rest).reduce((acc, key) => {
+                if (rest[key]) { // Only include non-empty values
+                  acc[key.toLowerCase()] = rest[key];
+                }
+                return acc;
+              }, {} as Record<string, any>);
+
+              return {
+                campaign_id: campaignId,
+                first_name: firstName,
+                last_name: lastName,
+                phone_number: phoneNumber.replace(/\D/g, ""),
+                metadata,
+              };
+            });
 
           if (contacts.length === 0) {
             toast({
