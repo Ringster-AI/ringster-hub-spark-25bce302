@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Play, Pause, StopCircle, Calendar, Edit, Users } from "lucide-react";
+import { Play, Pause, StopCircle, Calendar, Edit, Users, Phone } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Campaign } from "@/types/database/campaigns";
@@ -28,6 +28,125 @@ const Campaigns = () => {
       return data as (Campaign & { agent: any })[];
     },
   });
+
+  const handleTestCall = async (campaign: Campaign & { agent: any }) => {
+    try {
+      const { data: contacts, error: contactsError } = await supabase
+        .from("campaign_contacts")
+        .select("*")
+        .eq("campaign_id", campaign.id)
+        .limit(1);
+
+      if (contactsError) throw contactsError;
+      
+      if (!contacts || contacts.length === 0) {
+        toast({
+          title: "No contacts found",
+          description: "Please add contacts to the campaign before testing.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const contact = contacts[0];
+      const outboundPayload = [{
+        user: {
+          firstName: contact.first_name,
+          lastName: contact.last_name,
+          phoneNumber: contact.phone_number
+        },
+        assistant: {
+          firstMessage: campaign.agent.greeting || "",
+          transcriber: {
+            provider: "assembly-ai",
+            disablePartialTranscripts: true,
+            endUtteranceSilenceThreshold: 0,
+            wordBoost: []
+          },
+          model: {
+            provider: "anthropic",
+            model: "claude-2",
+            emotionRecognitionEnabled: false,
+            toolIds: [],
+            tools: [],
+            messages: [
+              {
+                role: "system",
+                content: campaign.agent.description || ""
+              }
+            ]
+          },
+          voice: {
+            provider: "11labs",
+            voiceId: campaign.agent.voice_id || ""
+          },
+          firstMessageMode: "assistant-waits-for-user",
+          hipaaEnabled: campaign.agent.hipaa_enabled || false,
+          clientMessages: [],
+          serverMessages: [],
+          backgroundSound: null,
+          name: campaign.agent.name,
+          voicemailDetection: {
+            provider: "twilio",
+            enabled: false
+          },
+          voicemailMessage: "",
+          analysisPlan: {
+            successEvaluationPlan: {
+              enabled: true
+            }
+          },
+          phoneNumber: {
+            twilioAccountSid: "",
+            twilioAuthToken: "",
+            twilioPhoneNumber: campaign.agent.phone_number || ""
+          },
+          customer: {
+            number: contact.phone_number
+          }
+        }
+      }];
+
+      const { data: webhookUrl } = await supabase
+        .from("secrets")
+        .select("value")
+        .eq("name", "OUTBOUND_CALL_WEBHOOK")
+        .single();
+
+      if (!webhookUrl?.value) {
+        toast({
+          title: "Webhook URL not configured",
+          description: "Please set the OUTBOUND_CALL_WEBHOOK secret in your project settings.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const response = await fetch(webhookUrl.value, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(outboundPayload),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to trigger outbound call");
+      }
+
+      toast({
+        title: "Test call initiated",
+        description: "The outbound call has been triggered successfully.",
+      });
+    } catch (error) {
+      console.error("Test call error:", error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to trigger test call",
+        variant: "destructive",
+      });
+    }
+  };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -99,6 +218,14 @@ const Campaigns = () => {
                     onClick={() => setEditingCampaign(campaign)}
                   >
                     <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleTestCall(campaign)}
+                    title="Test Outbound Call"
+                  >
+                    <Phone className="h-4 w-4" />
                   </Button>
                   {getStatusIcon(campaign.status)}
                   <span
