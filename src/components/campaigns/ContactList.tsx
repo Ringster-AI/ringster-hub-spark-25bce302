@@ -50,7 +50,7 @@ export function ContactList({ campaignId }: ContactListProps) {
         firstName: contact.first_name,
         lastName: contact.last_name,
         phoneNumber: contact.phone_number,
-        metadata: contact.metadata
+        metadata: contact.metadata as Record<string, any>
       }));
     },
     enabled: !!campaignId
