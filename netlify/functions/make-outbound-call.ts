@@ -1,3 +1,4 @@
+
 import { Handler } from '@netlify/functions';
 import { TwilioService } from './services/twilio-service';
 import { DatabaseService } from './services/database-service';
@@ -38,7 +39,7 @@ export const handler: Handler = async (event) => {
   }
 
   try {
-    const { agentId, toNumber } = JSON.parse(event.body || '{}');
+    const { agentId, toNumber, agent } = JSON.parse(event.body || '{}');
 
     if (!agentId || !toNumber) {
       return {
@@ -49,13 +50,13 @@ export const handler: Handler = async (event) => {
     }
 
     // Get agent details from database
-    const { data: agent, error: agentError } = await supabase
+    const { data: agentData, error: agentError } = await supabase
       .from('agent_configs')
       .select('*')
       .eq('id', agentId)
       .single();
 
-    if (agentError || !agent) {
+    if (agentError || !agentData) {
       console.error('Error fetching agent:', agentError);
       return {
         statusCode: 404,
@@ -64,7 +65,7 @@ export const handler: Handler = async (event) => {
       };
     }
 
-    if (!agent.phone_number) {
+    if (!agentData.phone_number) {
       return {
         statusCode: 400,
         headers,
@@ -72,8 +73,17 @@ export const handler: Handler = async (event) => {
       };
     }
 
+    // Include the agent configuration in the querystring parameters
+    const outboundCallWebhook = process.env.OUTBOUND_CALL_WEBHOOK;
+    if (!outboundCallWebhook) {
+      throw new Error('OUTBOUND_CALL_WEBHOOK is not configured');
+    }
+
+    const webhookUrl = new URL(outboundCallWebhook);
+    webhookUrl.searchParams.append('agentConfig', JSON.stringify(agent));
+
     // Initiate the call using Twilio
-    const call = await twilioService.makeOutboundCall(agent.phone_number, toNumber);
+    const call = await twilioService.makeOutboundCall(agentData.phone_number, toNumber, webhookUrl.toString());
 
     return {
       statusCode: 200,

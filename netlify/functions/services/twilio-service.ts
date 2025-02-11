@@ -42,26 +42,16 @@ export class TwilioService {
     console.log('Successfully released Twilio number');
   }
 
-  async makeOutboundCall(fromNumber: string, toNumber: string) {
-    const vapiApiKey = process.env.VAPI_API_KEY;
-    if (!vapiApiKey) {
-      throw new Error('VAPI_API_KEY is not configured');
-    }
-
+  async makeOutboundCall(fromNumber: string, toNumber: string, webhookUrl: string) {
     console.log(`Initiating outbound call from ${fromNumber} to ${toNumber}`);
-    
-    // Use the webhook URL from environment variable
-    const outboundCallWebhook = process.env.OUTBOUND_CALL_WEBHOOK;
-    if (!outboundCallWebhook) {
-      throw new Error('OUTBOUND_CALL_WEBHOOK is not configured');
-    }
+    console.log(`Using webhook URL: ${webhookUrl}`);
 
     const call = await this.client.calls.create({
       to: toNumber,
       from: fromNumber,
-      url: outboundCallWebhook,
+      url: webhookUrl,
       method: 'POST',
-      statusCallback: `${outboundCallWebhook}/status`,
+      statusCallback: `${webhookUrl}/status`,
       statusCallbackMethod: 'POST',
       statusCallbackEvent: ['initiated', 'ringing', 'answered', 'completed'],
     });

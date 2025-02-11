@@ -43,7 +43,15 @@ export function CardActions({ campaign, onEditClick, onContactsClick }: CardActi
             },
             body: JSON.stringify({
               agentId: campaign.agent.id,
-              toNumber: contact.phone_number
+              toNumber: contact.phone_number,
+              agent: {
+                name: campaign.agent.name,
+                description: campaign.agent.description,
+                greeting: campaign.agent.greeting,
+                goodbye: campaign.agent.goodbye,
+                voice_id: campaign.agent.voice_id,
+                advanced_config: campaign.agent.advanced_config,
+              }
             }),
           });
 
