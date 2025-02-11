@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Play, Pause, StopCircle, Calendar, Edit, Users, Phone } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Campaign } from "@/types/database/campaigns";
 import { CreateCampaignDialog } from "@/components/campaigns/CreateCampaignDialog";
@@ -13,6 +13,7 @@ import { useState } from "react";
 
 const Campaigns = () => {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [editingCampaign, setEditingCampaign] = useState<(Campaign & { agent: any }) | null>(null);
   const [viewingContacts, setViewingContacts] = useState<(Campaign & { agent: any }) | null>(null);
 
@@ -29,13 +30,38 @@ const Campaigns = () => {
     },
   });
 
+  const updateCampaignStatus = useMutation({
+    mutationFn: async ({ campaignId, newStatus }: { campaignId: string; newStatus: Campaign['status'] }) => {
+      const { error } = await supabase
+        .from("campaigns")
+        .update({ status: newStatus })
+        .eq("id", campaignId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["campaigns"] });
+      toast({
+        title: "Campaign updated",
+        description: "Campaign status has been updated successfully.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error updating campaign",
+        description: error instanceof Error ? error.message : "Failed to update campaign status",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleTestCall = async (campaign: Campaign & { agent: any }) => {
     try {
       const { data: contacts, error: contactsError } = await supabase
         .from("campaign_contacts")
         .select("*")
         .eq("campaign_id", campaign.id)
-        .limit(5); // Fetch up to 5 contacts for testing
+        .limit(5);
 
       if (contactsError) throw contactsError;
       
@@ -145,6 +171,83 @@ const Campaigns = () => {
     }
   };
 
+  const getStatusActions = (campaign: Campaign & { agent: any }) => {
+    switch (campaign.status) {
+      case "draft":
+        return (
+          <>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => updateCampaignStatus.mutate({ campaignId: campaign.id, newStatus: "scheduled" })}
+              disabled={!campaign.scheduled_start}
+            >
+              Schedule
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => updateCampaignStatus.mutate({ campaignId: campaign.id, newStatus: "running" })}
+            >
+              Start Now
+            </Button>
+          </>
+        );
+      case "scheduled":
+        return (
+          <>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => updateCampaignStatus.mutate({ campaignId: campaign.id, newStatus: "running" })}
+            >
+              Start Now
+            </Button>
+          </>
+        );
+      case "running":
+        return (
+          <>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => updateCampaignStatus.mutate({ campaignId: campaign.id, newStatus: "paused" })}
+            >
+              Pause
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => updateCampaignStatus.mutate({ campaignId: campaign.id, newStatus: "completed" })}
+            >
+              Complete
+            </Button>
+          </>
+        );
+      case "paused":
+        return (
+          <>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => updateCampaignStatus.mutate({ campaignId: campaign.id, newStatus: "running" })}
+            >
+              Resume
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => updateCampaignStatus.mutate({ campaignId: campaign.id, newStatus: "completed" })}
+            >
+              Complete
+            </Button>
+          </>
+        );
+      default:
+        return null;
+    }
+  };
+
   if (isLoading) {
     return <div>Loading...</div>;
   }
@@ -188,6 +291,9 @@ const Campaigns = () => {
                   )}
                 </div>
                 <div className="flex items-center gap-2">
+                  <div className="flex gap-2 mr-4">
+                    {getStatusActions(campaign)}
+                  </div>
                   <Button
                     variant="ghost"
                     size="icon"
@@ -217,10 +323,10 @@ const Campaigns = () => {
                       "text-sm capitalize px-2 py-1 rounded-full",
                       {
                         "bg-green-100 text-green-800": campaign.status === "running",
-                        "bg-yellow-100 text-yellow-800":
-                          campaign.status === "paused",
+                        "bg-yellow-100 text-yellow-800": campaign.status === "paused",
                         "bg-red-100 text-red-800": campaign.status === "completed",
-                        "bg-blue-100 text-blue-800": campaign.status === "draft",
+                        "bg-blue-100 text-blue-800": campaign.status === "scheduled",
+                        "bg-gray-100 text-gray-800": campaign.status === "draft",
                       }
                     )}
                   >
@@ -256,4 +362,3 @@ const Campaigns = () => {
 };
 
 export default Campaigns;
-
