@@ -82,6 +82,7 @@ export const handler: Handler = async (event) => {
     const webhookUrl = new URL(outboundCallWebhook);
     // Add each agent config parameter individually for better URL handling
     webhookUrl.searchParams.append('agentName', agent.name);
+    webhookUrl.searchParams.append('agentId', agent.id);
     webhookUrl.searchParams.append('agentDescription', agent.description || '');
     webhookUrl.searchParams.append('greeting', agent.greeting || '');
     webhookUrl.searchParams.append('goodbye', agent.goodbye || '');

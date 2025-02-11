@@ -45,6 +45,7 @@ export function CardActions({ campaign, onEditClick, onContactsClick }: CardActi
               agentId: campaign.agent.id,
               toNumber: contact.phone_number,
               agent: {
+                id: campaign.agent.id,
                 name: campaign.agent.name,
                 description: campaign.agent.description,
                 greeting: campaign.agent.greeting,
