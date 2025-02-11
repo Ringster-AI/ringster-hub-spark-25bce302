@@ -1,19 +1,15 @@
 
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
-import { Play, Pause, StopCircle, Calendar, Edit, Users, Phone } from "lucide-react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Campaign } from "@/types/database/campaigns";
 import { CreateCampaignDialog } from "@/components/campaigns/CreateCampaignDialog";
 import { EditCampaignDialog } from "@/components/campaigns/EditCampaignDialog";
 import { ContactsDialog } from "@/components/campaigns/ContactsDialog";
-import { cn } from "@/lib/utils";
 import { useState } from "react";
+import { CampaignList } from "@/components/campaigns/CampaignList";
 
 const Campaigns = () => {
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
   const [editingCampaign, setEditingCampaign] = useState<(Campaign & { agent: any }) | null>(null);
   const [viewingContacts, setViewingContacts] = useState<(Campaign & { agent: any }) | null>(null);
 
@@ -30,224 +26,6 @@ const Campaigns = () => {
     },
   });
 
-  const updateCampaignStatus = useMutation({
-    mutationFn: async ({ campaignId, newStatus }: { campaignId: string; newStatus: Campaign['status'] }) => {
-      const { error } = await supabase
-        .from("campaigns")
-        .update({ status: newStatus })
-        .eq("id", campaignId);
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["campaigns"] });
-      toast({
-        title: "Campaign updated",
-        description: "Campaign status has been updated successfully.",
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Error updating campaign",
-        description: error instanceof Error ? error.message : "Failed to update campaign status",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const handleTestCall = async (campaign: Campaign & { agent: any }) => {
-    try {
-      const { data: contacts, error: contactsError } = await supabase
-        .from("campaign_contacts")
-        .select("*")
-        .eq("campaign_id", campaign.id)
-        .limit(5);
-
-      if (contactsError) throw contactsError;
-      
-      if (!contacts || contacts.length === 0) {
-        toast({
-          title: "No contacts found",
-          description: "Please add contacts to the campaign before testing.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const outboundPayload = contacts.map(contact => ({
-        user: {
-          firstName: contact.first_name,
-          lastName: contact.last_name,
-          phoneNumber: contact.phone_number
-        },
-        assistant: {
-          firstMessage: campaign.agent.greeting || "",
-          transcriber: {
-            provider: "assembly-ai",
-            disablePartialTranscripts: true,
-            endUtteranceSilenceThreshold: 0,
-            wordBoost: []
-          },
-          model: {
-            provider: "anthropic",
-            model: "claude-2",
-            emotionRecognitionEnabled: false,
-            toolIds: [],
-            tools: [],
-            messages: [
-              {
-                role: "system",
-                content: campaign.agent.description || ""
-              }
-            ]
-          },
-          voice: {
-            provider: "11labs",
-            voiceId: campaign.agent.voice_id || ""
-          },
-          firstMessageMode: "assistant-waits-for-user",
-          hipaaEnabled: campaign.agent.hipaa_enabled || false,
-          clientMessages: [],
-          serverMessages: [],
-          backgroundSound: null,
-          name: campaign.agent.name,
-          voicemailDetection: {
-            provider: "twilio",
-            enabled: false
-          },
-          voicemailMessage: "",
-          analysisPlan: {
-            successEvaluationPlan: {
-              enabled: true
-            }
-          },
-          phoneNumber: {
-            twilioAccountSid: "",
-            twilioAuthToken: "",
-            twilioPhoneNumber: campaign.agent.phone_number || ""
-          },
-          customer: {
-            number: contact.phone_number
-          }
-        }
-      }));
-
-      const response = await fetch(import.meta.env.VITE_OUTBOUND_CALL_WEBHOOK || "", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(outboundPayload),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to trigger outbound call");
-      }
-
-      toast({
-        title: "Test calls initiated",
-        description: `Outbound calls have been triggered for ${contacts.length} contact(s).`,
-      });
-    } catch (error) {
-      console.error("Test call error:", error);
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to trigger test calls",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "running":
-        return <Play className="h-4 w-4 text-green-500" />;
-      case "paused":
-        return <Pause className="h-4 w-4 text-yellow-500" />;
-      case "completed":
-        return <StopCircle className="h-4 w-4 text-red-500" />;
-      default:
-        return <Calendar className="h-4 w-4 text-blue-500" />;
-    }
-  };
-
-  const getStatusActions = (campaign: Campaign & { agent: any }) => {
-    switch (campaign.status) {
-      case "draft":
-        return (
-          <>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => updateCampaignStatus.mutate({ campaignId: campaign.id, newStatus: "scheduled" })}
-              disabled={!campaign.scheduled_start}
-            >
-              Schedule
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => updateCampaignStatus.mutate({ campaignId: campaign.id, newStatus: "running" })}
-            >
-              Start Now
-            </Button>
-          </>
-        );
-      case "scheduled":
-        return (
-          <>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => updateCampaignStatus.mutate({ campaignId: campaign.id, newStatus: "running" })}
-            >
-              Start Now
-            </Button>
-          </>
-        );
-      case "running":
-        return (
-          <>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => updateCampaignStatus.mutate({ campaignId: campaign.id, newStatus: "paused" })}
-            >
-              Pause
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => updateCampaignStatus.mutate({ campaignId: campaign.id, newStatus: "completed" })}
-            >
-              Complete
-            </Button>
-          </>
-        );
-      case "paused":
-        return (
-          <>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => updateCampaignStatus.mutate({ campaignId: campaign.id, newStatus: "running" })}
-            >
-              Resume
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => updateCampaignStatus.mutate({ campaignId: campaign.id, newStatus: "completed" })}
-            >
-              Complete
-            </Button>
-          </>
-        );
-      default:
-        return null;
-    }
-  };
-
   if (isLoading) {
     return <div>Loading...</div>;
   }
@@ -259,97 +37,13 @@ const Campaigns = () => {
         <CreateCampaignDialog />
       </div>
 
-      {campaigns?.length === 0 ? (
-        <div className="text-center py-12">
-          <h3 className="text-lg font-semibold">No campaigns yet</h3>
-          <p className="text-muted-foreground">
-            Create your first campaign to get started
-          </p>
-        </div>
-      ) : (
-        <div className="grid gap-4">
-          {campaigns?.map((campaign) => (
-            <div
-              key={campaign.id}
-              className="border rounded-lg p-4 hover:shadow-md transition-shadow"
-            >
-              <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="font-semibold">{campaign.name}</h3>
-                  <p className="text-sm text-muted-foreground">
-                    {campaign.description || "No description"}
-                  </p>
-                  {campaign.agent && (
-                    <p className="text-sm text-muted-foreground mt-2">
-                      Agent: {campaign.agent.name}
-                    </p>
-                  )}
-                  {campaign.scheduled_start && (
-                    <p className="text-sm text-muted-foreground">
-                      Scheduled: {new Date(campaign.scheduled_start).toLocaleString()}
-                    </p>
-                  )}
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="flex gap-2 mr-4">
-                    {getStatusActions(campaign)}
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setViewingContacts(campaign)}
-                    title="View/Edit Contacts"
-                  >
-                    <Users className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setEditingCampaign(campaign)}
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleTestCall(campaign)}
-                    title="Test Outbound Call"
-                  >
-                    <Phone className="h-4 w-4" />
-                  </Button>
-                  {getStatusIcon(campaign.status)}
-                  <span
-                    className={cn(
-                      "text-sm capitalize px-2 py-1 rounded-full",
-                      {
-                        "bg-green-100 text-green-800": campaign.status === "running",
-                        "bg-yellow-100 text-yellow-800": campaign.status === "paused",
-                        "bg-red-100 text-red-800": campaign.status === "completed",
-                        "bg-blue-100 text-blue-800": campaign.status === "scheduled",
-                        "bg-gray-100 text-gray-800": campaign.status === "draft",
-                      }
-                    )}
-                  >
-                    {campaign.status}
-                  </span>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+      <CampaignList campaigns={campaigns || []} />
 
       <EditCampaignDialog
         campaign={editingCampaign!}
         open={!!editingCampaign}
         onOpenChange={(open) => !open && setEditingCampaign(null)}
-        onUpdate={() => {
-          setEditingCampaign(null);
-          toast({
-            title: "Campaign updated",
-            description: "Campaign has been updated successfully.",
-          });
-        }}
+        onUpdate={() => setEditingCampaign(null)}
       />
 
       <ContactsDialog
