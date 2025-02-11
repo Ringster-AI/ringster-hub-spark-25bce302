@@ -3,6 +3,7 @@ import { Handler } from '@netlify/functions';
 import { TwilioService } from './services/twilio-service';
 import { DatabaseService } from './services/database-service';
 import { createClient } from '@supabase/supabase-js';
+import { createVapiAssistantConfig } from './services/vapi-config';
 
 const supabaseUrl = process.env.SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -53,7 +54,7 @@ export const handler: Handler = async (event) => {
     // Get agent details from database to get the phone number
     const { data: agentData, error: agentError } = await supabase
       .from('agent_configs')
-      .select('phone_number')
+      .select('*')
       .eq('name', assistant.name)
       .single();
 
@@ -80,18 +81,37 @@ export const handler: Handler = async (event) => {
       throw new Error('OUTBOUND_CALL_WEBHOOK is not configured');
     }
 
-    // Create the webhook URL using URL object to ensure proper encoding
+    // Format the payload for Vapi
+    const vapiPayload = {
+      assistant: {
+        ...createVapiAssistantConfig(agentData),
+        firstMessageMode: "assistant-speaks-first",
+        phoneNumber: {
+          twilioAccountSid,
+          twilioAuthToken,
+          twilioPhoneNumber: agentData.phone_number
+        },
+      },
+      customer: {
+        number: user.phoneNumber,
+        name: `${user.firstName || ''} ${user.lastName || ''}`.trim()
+      },
+      phoneNumberId: agentData.twilio_sid || undefined
+    };
+
+    // Create the webhook URL
     const webhookUrl = new URL(outboundCallWebhook);
-    webhookUrl.searchParams.append('payload', JSON.stringify(payload));
+    webhookUrl.searchParams.append('payload', JSON.stringify(vapiPayload));
 
     console.log('Making outbound call with webhook URL:', webhookUrl.toString());
+    console.log('Vapi payload:', JSON.stringify(vapiPayload, null, 2));
 
     return {
       statusCode: 200,
       headers,
       body: JSON.stringify({
         message: 'Call initiated successfully',
-        callSid: 'dummy-sid', // Placeholder since we removed the actual call
+        callSid: 'dummy-sid',
       }),
     };
   } catch (error) {
