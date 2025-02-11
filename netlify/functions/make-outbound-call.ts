@@ -1,3 +1,4 @@
+
 import { Handler } from '@netlify/functions';
 import { TwilioService } from './services/twilio-service';
 import { DatabaseService } from './services/database-service';
@@ -79,18 +80,17 @@ export const handler: Handler = async (event) => {
       throw new Error('OUTBOUND_CALL_WEBHOOK is not configured');
     }
 
-    // Create the webhook URL with the payload as a Base64 encoded parameter
-    // This prevents any URL encoding issues and keeps the URL length manageable
-    const encodedPayload = Buffer.from(JSON.stringify(payload)).toString('base64');
-    const webhookUrl = `${outboundCallWebhook}?data=${encodedPayload}`;
+    // Create the webhook URL using URL object to ensure proper encoding
+    const webhookUrl = new URL(outboundCallWebhook);
+    webhookUrl.searchParams.append('payload', JSON.stringify(payload));
 
-    console.log('Making outbound call with webhook URL:', webhookUrl);
+    console.log('Making outbound call with webhook URL:', webhookUrl.toString());
 
     // Initiate the call using Twilio
     const call = await twilioService.makeOutboundCall(
       agentData.phone_number,
       user.phoneNumber,
-      webhookUrl
+      webhookUrl.toString()
     );
 
     return {
