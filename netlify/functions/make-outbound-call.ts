@@ -91,7 +91,8 @@ export const handler: Handler = async (event) => {
       customer: {
         number: user.phoneNumber,
         firstName: user.firstName || '',
-        lastName: user.lastName || ''
+        lastName: user.lastName || '',
+        ...user.metadata // Include all metadata from the CSV
       },
       phoneNumberId: agentData.twilio_sid || undefined
     };
