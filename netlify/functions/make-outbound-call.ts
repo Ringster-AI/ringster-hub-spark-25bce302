@@ -39,9 +39,10 @@ export const handler: Handler = async (event) => {
   }
 
   try {
-    const { agentId, toNumber, agent } = JSON.parse(event.body || '{}');
+    const payload = JSON.parse(event.body || '{}');
+    const { user, assistant } = payload;
 
-    if (!agentId || !toNumber) {
+    if (!assistant || !user || !user.phoneNumber) {
       return {
         statusCode: 400,
         headers,
@@ -49,11 +50,11 @@ export const handler: Handler = async (event) => {
       };
     }
 
-    // Get agent details from database
+    // Get agent details from database to get the phone number
     const { data: agentData, error: agentError } = await supabase
       .from('agent_configs')
-      .select('*')
-      .eq('id', agentId)
+      .select('phone_number')
+      .eq('name', assistant.name)
       .single();
 
     if (agentError || !agentData) {
@@ -73,28 +74,21 @@ export const handler: Handler = async (event) => {
       };
     }
 
-    // Include the agent configuration in the URL parameters
+    // Include the complete payload in the URL parameters
     const outboundCallWebhook = process.env.OUTBOUND_CALL_WEBHOOK;
     if (!outboundCallWebhook) {
       throw new Error('OUTBOUND_CALL_WEBHOOK is not configured');
     }
 
     const webhookUrl = new URL(outboundCallWebhook);
-    // Add each agent config parameter individually for better URL handling
-    webhookUrl.searchParams.append('agentName', agent.name);
-    webhookUrl.searchParams.append('agentId', agent.id);
-    webhookUrl.searchParams.append('agentDescription', agent.description || '');
-    webhookUrl.searchParams.append('greeting', agent.greeting || '');
-    webhookUrl.searchParams.append('goodbye', agent.goodbye || '');
-    webhookUrl.searchParams.append('voiceId', agent.voice_id || '');
-    webhookUrl.searchParams.append('voiceProvider', agent.voice?.provider || '11labs');
-    webhookUrl.searchParams.append('transcriberProvider', agent.transcriber?.provider || 'deepgram');
-    webhookUrl.searchParams.append('transcriberModel', agent.transcriber?.model || 'nova-2');
-    webhookUrl.searchParams.append('transcriberLanguage', agent.transcriber?.language || 'en');
-    webhookUrl.searchParams.append('agentType', agent.agent_type || 'outbound');
+    webhookUrl.searchParams.append('payload', JSON.stringify(payload));
 
     // Initiate the call using Twilio
-    const call = await twilioService.makeOutboundCall(agentData.phone_number, toNumber, webhookUrl.toString());
+    const call = await twilioService.makeOutboundCall(
+      agentData.phone_number, 
+      user.phoneNumber, 
+      webhookUrl.toString()
+    );
 
     return {
       statusCode: 200,

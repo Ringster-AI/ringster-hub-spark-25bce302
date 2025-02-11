@@ -36,34 +36,70 @@ export function CardActions({ campaign, onEditClick, onContactsClick }: CardActi
       // Make calls through our Netlify function
       const results = await Promise.all(
         contacts.map(async (contact) => {
+          const payload = {
+            user: {
+              firstName: contact.first_name,
+              lastName: contact.last_name,
+              phoneNumber: contact.phone_number
+            },
+            assistant: {
+              firstMessage: campaign.agent.greeting || "",
+              transcriber: campaign.agent.advanced_config?.transcriber || {
+                provider: "assembly-ai",
+                disablePartialTranscripts: true,
+                endUtteranceSilenceThreshold: 0,
+                wordBoost: []
+              },
+              model: {
+                provider: "openai",
+                model: "gpt-3.5-turbo",
+                emotionRecognitionEnabled: false,
+                toolIds: [],
+                tools: [],
+                messages: [
+                  {
+                    role: "system",
+                    content: campaign.agent.description || ""
+                  }
+                ]
+              },
+              voice: campaign.agent.advanced_config?.voice || {
+                provider: "11labs",
+                voiceId: campaign.agent.voice_id || "9BWtsMINqrJLrRacOk9x"
+              },
+              firstMessageMode: "assistant-waits-for-user",
+              hipaaEnabled: false,
+              clientMessages: [],
+              serverMessages: [],
+              backgroundSound: null,
+              name: campaign.agent.name,
+              voicemailDetection: {
+                provider: "twilio",
+                enabled: false
+              },
+              voicemailMessage: "",
+              analysisPlan: {
+                successEvaluationPlan: {
+                  enabled: true
+                }
+              },
+              phoneNumber: {
+                twilioAccountSid: "",
+                twilioAuthToken: "",
+                twilioPhoneNumber: ""
+              },
+              customer: {
+                number: contact.phone_number
+              }
+            }
+          };
+
           const response = await fetch('/.netlify/functions/make-outbound-call', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-              agentId: campaign.agent.id,
-              toNumber: contact.phone_number,
-              agent: {
-                id: campaign.agent.id,
-                name: campaign.agent.name,
-                description: campaign.agent.description,
-                greeting: campaign.agent.greeting,
-                goodbye: campaign.agent.goodbye,
-                voice_id: campaign.agent.voice_id,
-                advanced_config: campaign.agent.advanced_config,
-                agent_type: campaign.agent.agent_type,
-                voice: campaign.agent.advanced_config?.voice || {
-                  provider: "11labs",
-                  voiceId: campaign.agent.voice_id
-                },
-                transcriber: campaign.agent.advanced_config?.transcriber || {
-                  provider: "deepgram",
-                  model: "nova-2",
-                  language: "en"
-                }
-              }
-            }),
+            body: JSON.stringify(payload),
           });
 
           if (!response.ok) {
