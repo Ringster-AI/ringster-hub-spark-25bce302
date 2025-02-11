@@ -56,8 +56,8 @@ export function ContactsDialog({ campaign, open, onOpenChange }: ContactsDialogP
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[900px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-[900px] h-[90vh] flex flex-col p-0">
+        <DialogHeader className="p-6 pb-2">
           <DialogTitle>Contacts - {campaign.name}</DialogTitle>
           {contacts && contacts.length > 0 && (
             <Button
@@ -71,7 +71,11 @@ export function ContactsDialog({ campaign, open, onOpenChange }: ContactsDialogP
             </Button>
           )}
         </DialogHeader>
-        <ContactList campaignId={campaign.id} />
+        <div className="flex-1 overflow-hidden p-6 pt-2">
+          <div className="h-full overflow-auto">
+            <ContactList campaignId={campaign.id} />
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   );
