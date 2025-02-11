@@ -95,19 +95,30 @@ export const handler: Handler = async (event) => {
       phoneNumberId: agentData.twilio_sid || undefined
     };
 
-    // Create the webhook URL
-    const webhookUrl = new URL(outboundCallWebhook);
-    webhookUrl.searchParams.append('payload', JSON.stringify(vapiPayload));
+    console.log('Making outbound call with payload:', JSON.stringify(vapiPayload, null, 2));
 
-    console.log('Making outbound call with webhook URL:', webhookUrl.toString());
-    console.log('Vapi payload:', JSON.stringify(vapiPayload, null, 2));
+    // Send POST request to webhook
+    const response = await fetch(outboundCallWebhook, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(vapiPayload),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Webhook responded with status: ${response.status}`);
+    }
+
+    const webhookResponse = await response.json();
+    console.log('Webhook response:', webhookResponse);
 
     return {
       statusCode: 200,
       headers,
       body: JSON.stringify({
         message: 'Call initiated successfully',
-        callSid: 'dummy-sid',
+        ...webhookResponse,
       }),
     };
   } catch (error) {
