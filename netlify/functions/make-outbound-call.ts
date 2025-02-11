@@ -1,7 +1,5 @@
 
 import { Handler } from '@netlify/functions';
-import { TwilioService } from './services/twilio-service';
-import { DatabaseService } from './services/database-service';
 import { createClient } from '@supabase/supabase-js';
 import { createVapiAssistantConfig } from './services/vapi-config';
 
@@ -11,8 +9,6 @@ const twilioAccountSid = process.env.TWILIO_ACCOUNT_SID!;
 const twilioAuthToken = process.env.TWILIO_AUTH_TOKEN!;
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
-const databaseService = new DatabaseService(supabase);
-const twilioService = new TwilioService(twilioAccountSid, twilioAuthToken);
 
 export const handler: Handler = async (event) => {
   // Set CORS headers
