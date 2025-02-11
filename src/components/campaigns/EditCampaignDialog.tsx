@@ -31,12 +31,14 @@ export const EditCampaignDialog = ({ campaign, open, onOpenChange, onUpdate }: E
       if (isLoading) return;
       onOpenChange(newOpen);
     }}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
-        <DialogTitle>Edit Campaign</DialogTitle>
-        <CampaignForm
-          initialData={campaign}
-          onSuccess={handleSuccess}
-        />
+      <DialogContent className="w-full max-w-3xl p-4 sm:p-6 mx-auto overflow-hidden">
+        <DialogTitle className="mb-4">Edit Campaign</DialogTitle>
+        <div className="overflow-y-auto max-h-[80vh] pr-2">
+          <CampaignForm
+            initialData={campaign}
+            onSuccess={handleSuccess}
+          />
+        </div>
       </DialogContent>
     </Dialog>
   );
