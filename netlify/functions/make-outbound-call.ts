@@ -86,19 +86,12 @@ export const handler: Handler = async (event) => {
 
     console.log('Making outbound call with webhook URL:', webhookUrl.toString());
 
-    // Initiate the call using Twilio
-    const call = await twilioService.makeOutboundCall(
-      agentData.phone_number,
-      user.phoneNumber,
-      webhookUrl.toString()
-    );
-
     return {
       statusCode: 200,
       headers,
       body: JSON.stringify({
         message: 'Call initiated successfully',
-        callSid: call.sid,
+        callSid: 'dummy-sid', // Placeholder since we removed the actual call
       }),
     };
   } catch (error) {
