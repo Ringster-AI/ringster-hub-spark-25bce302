@@ -82,9 +82,7 @@ export const handler: Handler = async (event) => {
 
     // Create the webhook URL using URL object to ensure proper encoding
     const webhookUrl = new URL(outboundCallWebhook);
-    // Encode the full payload as a single parameter
-    const encodedPayload = encodeURIComponent(JSON.stringify(payload));
-    webhookUrl.searchParams.set('payload', encodedPayload);
+    webhookUrl.searchParams.append('payload', JSON.stringify(payload));
 
     console.log('Making outbound call with webhook URL:', webhookUrl.toString());
 
