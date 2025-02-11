@@ -50,14 +50,18 @@ export class TwilioService {
 
     console.log(`Initiating outbound call from ${fromNumber} to ${toNumber}`);
     
-    // The webhook URLs for outbound calls should be different from inbound
-    const vapiWebhookBaseUrl = 'https://api.vapi.ai/call';
-    
+    // Use the webhook URL from environment variable
+    const outboundCallWebhook = process.env.OUTBOUND_CALL_WEBHOOK;
+    if (!outboundCallWebhook) {
+      throw new Error('OUTBOUND_CALL_WEBHOOK is not configured');
+    }
+
     const call = await this.client.calls.create({
       to: toNumber,
       from: fromNumber,
-      twiml: `<Response><Connect><Stream url="wss://api.vapi.ai/twilio/stream"/></Connect></Response>`,
-      statusCallback: `${vapiWebhookBaseUrl}/status`,
+      url: outboundCallWebhook,
+      method: 'POST',
+      statusCallback: `${outboundCallWebhook}/status`,
       statusCallbackMethod: 'POST',
       statusCallbackEvent: ['initiated', 'ringing', 'answered', 'completed'],
     });
