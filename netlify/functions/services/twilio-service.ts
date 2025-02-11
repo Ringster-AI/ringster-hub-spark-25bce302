@@ -46,11 +46,15 @@ export class TwilioService {
     console.log(`Initiating outbound call from ${fromNumber} to ${toNumber}`);
     console.log(`Using webhook URL: ${webhookUrl}`);
 
+    // Ensure we're using TwiML as the webhook response
     const call = await this.client.calls.create({
       to: toNumber,
       from: fromNumber,
       url: webhookUrl,
-      method: 'POST'
+      method: 'POST',
+      statusCallback: webhookUrl, // Add status callback to track call status
+      statusCallbackEvent: ['completed'], // Only track completion events
+      statusCallbackMethod: 'POST'
     });
     
     console.log(`Successfully initiated call with SID: ${call.sid}`);
