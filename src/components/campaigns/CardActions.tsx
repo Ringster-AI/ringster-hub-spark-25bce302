@@ -33,80 +33,35 @@ export function CardActions({ campaign, onEditClick, onContactsClick }: CardActi
         return;
       }
 
-      const outboundPayload = contacts.map(contact => ({
-        user: {
-          firstName: contact.first_name,
-          lastName: contact.last_name,
-          phoneNumber: contact.phone_number
-        },
-        assistant: {
-          firstMessage: campaign.agent.greeting || "",
-          transcriber: {
-            provider: "assembly-ai",
-            disablePartialTranscripts: true,
-            endUtteranceSilenceThreshold: 0,
-            wordBoost: []
-          },
-          model: {
-            provider: "anthropic",
-            model: "claude-2",
-            emotionRecognitionEnabled: false,
-            toolIds: [],
-            tools: [],
-            messages: [
-              {
-                role: "system",
-                content: campaign.agent.description || ""
-              }
-            ]
-          },
-          voice: {
-            provider: "11labs",
-            voiceId: campaign.agent.voice_id || ""
-          },
-          firstMessageMode: "assistant-waits-for-user",
-          hipaaEnabled: campaign.agent.hipaa_enabled || false,
-          clientMessages: [],
-          serverMessages: [],
-          backgroundSound: null,
-          name: campaign.agent.name,
-          voicemailDetection: {
-            provider: "twilio",
-            enabled: false
-          },
-          voicemailMessage: "",
-          analysisPlan: {
-            successEvaluationPlan: {
-              enabled: true
-            }
-          },
-          phoneNumber: {
-            twilioAccountSid: "",
-            twilioAuthToken: "",
-            twilioPhoneNumber: campaign.agent.phone_number || ""
-          },
-          customer: {
-            number: contact.phone_number
+      // Make calls through our Netlify function
+      const results = await Promise.all(
+        contacts.map(async (contact) => {
+          const response = await fetch('/.netlify/functions/make-outbound-call', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              agentId: campaign.agent.id,
+              toNumber: contact.phone_number
+            }),
+          });
+
+          if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to initiate call');
           }
-        }
-      }));
 
-      const response = await fetch(import.meta.env.VITE_OUTBOUND_CALL_WEBHOOK || "", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(outboundPayload),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to trigger outbound call");
-      }
+          return response.json();
+        })
+      );
 
       toast({
         title: "Test calls initiated",
         description: `Outbound calls have been triggered for ${contacts.length} contact(s).`,
       });
+
+      console.log('Call results:', results);
     } catch (error) {
       console.error("Test call error:", error);
       toast({
