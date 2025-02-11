@@ -73,14 +73,24 @@ export const handler: Handler = async (event) => {
       };
     }
 
-    // Include the agent configuration in the querystring parameters
+    // Include the agent configuration in the URL parameters
     const outboundCallWebhook = process.env.OUTBOUND_CALL_WEBHOOK;
     if (!outboundCallWebhook) {
       throw new Error('OUTBOUND_CALL_WEBHOOK is not configured');
     }
 
     const webhookUrl = new URL(outboundCallWebhook);
-    webhookUrl.searchParams.append('agentConfig', JSON.stringify(agent));
+    // Add each agent config parameter individually for better URL handling
+    webhookUrl.searchParams.append('agentName', agent.name);
+    webhookUrl.searchParams.append('agentDescription', agent.description || '');
+    webhookUrl.searchParams.append('greeting', agent.greeting || '');
+    webhookUrl.searchParams.append('goodbye', agent.goodbye || '');
+    webhookUrl.searchParams.append('voiceId', agent.voice_id || '');
+    webhookUrl.searchParams.append('voiceProvider', agent.voice?.provider || '11labs');
+    webhookUrl.searchParams.append('transcriberProvider', agent.transcriber?.provider || 'deepgram');
+    webhookUrl.searchParams.append('transcriberModel', agent.transcriber?.model || 'nova-2');
+    webhookUrl.searchParams.append('transcriberLanguage', agent.transcriber?.language || 'en');
+    webhookUrl.searchParams.append('agentType', agent.agent_type || 'outbound');
 
     // Initiate the call using Twilio
     const call = await twilioService.makeOutboundCall(agentData.phone_number, toNumber, webhookUrl.toString());

@@ -51,6 +51,16 @@ export function CardActions({ campaign, onEditClick, onContactsClick }: CardActi
                 goodbye: campaign.agent.goodbye,
                 voice_id: campaign.agent.voice_id,
                 advanced_config: campaign.agent.advanced_config,
+                agent_type: campaign.agent.agent_type,
+                voice: campaign.agent.advanced_config?.voice || {
+                  provider: "11labs",
+                  voiceId: campaign.agent.voice_id
+                },
+                transcriber: campaign.agent.advanced_config?.transcriber || {
+                  provider: "deepgram",
+                  model: "nova-2",
+                  language: "en"
+                }
               }
             }),
           });
