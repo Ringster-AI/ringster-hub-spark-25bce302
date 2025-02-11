@@ -82,15 +82,16 @@ export const handler: Handler = async (event) => {
       assistant: {
         ...createVapiAssistantConfig(agentData),
         firstMessageMode: "assistant-speaks-first",
-        phoneNumber: {
-          twilioAccountSid,
-          twilioAuthToken,
-          twilioPhoneNumber: agentData.phone_number
-        },
+      },
+      phoneNumber: {
+        twilioAccountSid,
+        twilioAuthToken,
+        twilioPhoneNumber: agentData.phone_number
       },
       customer: {
         number: user.phoneNumber,
-        name: `${user.firstName || ''} ${user.lastName || ''}`.trim()
+        firstName: user.firstName || '',
+        lastName: user.lastName || ''
       },
       phoneNumberId: agentData.twilio_sid || undefined
     };
@@ -107,6 +108,8 @@ export const handler: Handler = async (event) => {
     });
 
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Webhook error response:', errorText);
       throw new Error(`Webhook responded with status: ${response.status}`);
     }
 
