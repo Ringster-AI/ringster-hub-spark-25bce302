@@ -131,6 +131,7 @@ export function CardActions({ campaign, onEditClick, onContactsClick }: CardActi
         variant="ghost"
         size="icon"
         onClick={onEditClick}
+        title="Edit Campaign"
       >
         <Edit className="h-4 w-4" />
       </Button>

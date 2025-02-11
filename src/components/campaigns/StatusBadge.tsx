@@ -22,7 +22,7 @@ export function StatusBadge({ status }: StatusBadgeProps) {
   };
 
   return (
-    <>
+    <div className="flex items-center gap-2">
       {getStatusIcon(status)}
       <span
         className={cn(
@@ -38,6 +38,6 @@ export function StatusBadge({ status }: StatusBadgeProps) {
       >
         {status}
       </span>
-    </>
+    </div>
   );
 }
