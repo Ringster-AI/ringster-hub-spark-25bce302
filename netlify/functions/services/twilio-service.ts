@@ -50,10 +50,7 @@ export class TwilioService {
       to: toNumber,
       from: fromNumber,
       url: webhookUrl,
-      method: 'POST',
-      statusCallback: `${webhookUrl}/status`,
-      statusCallbackMethod: 'POST',
-      statusCallbackEvent: ['initiated', 'ringing', 'answered', 'completed'],
+      method: 'POST'
     });
     
     console.log(`Successfully initiated call with SID: ${call.sid}`);
