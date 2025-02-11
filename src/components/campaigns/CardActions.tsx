@@ -20,7 +20,7 @@ export function CardActions({ campaign, onEditClick, onContactsClick }: CardActi
         .from("campaign_contacts")
         .select("*")
         .eq("campaign_id", campaign.id)
-        .limit(5);
+        .limit(1); // Changed to limit 1 for testing
 
       if (contactsError) throw contactsError;
       
@@ -33,95 +33,92 @@ export function CardActions({ campaign, onEditClick, onContactsClick }: CardActi
         return;
       }
 
-      // Make calls through our Netlify function
-      const results = await Promise.all(
-        contacts.map(async (contact) => {
-          const payload = {
-            user: {
-              firstName: contact.first_name,
-              lastName: contact.last_name,
-              phoneNumber: contact.phone_number
-            },
-            assistant: {
-              firstMessage: campaign.agent.greeting || "",
-              transcriber: campaign.agent.advanced_config?.transcriber || {
-                provider: "assembly-ai",
-                disablePartialTranscripts: true,
-                endUtteranceSilenceThreshold: 0,
-                wordBoost: []
-              },
-              model: {
-                provider: "openai",
-                model: "gpt-3.5-turbo",
-                emotionRecognitionEnabled: false,
-                toolIds: [],
-                tools: [],
-                messages: [
-                  {
-                    role: "system",
-                    content: campaign.agent.description || ""
-                  }
-                ]
-              },
-              voice: campaign.agent.advanced_config?.voice || {
-                provider: "11labs",
-                voiceId: campaign.agent.voice_id || "9BWtsMINqrJLrRacOk9x"
-              },
-              firstMessageMode: "assistant-waits-for-user",
-              hipaaEnabled: false,
-              clientMessages: [],
-              serverMessages: [],
-              backgroundSound: null,
-              name: campaign.agent.name,
-              voicemailDetection: {
-                provider: "twilio",
-                enabled: false
-              },
-              voicemailMessage: "",
-              analysisPlan: {
-                successEvaluationPlan: {
-                  enabled: true
-                }
-              },
-              phoneNumber: {
-                twilioAccountSid: "",
-                twilioAuthToken: "",
-                twilioPhoneNumber: ""
-              },
-              customer: {
-                number: contact.phone_number
+      // Make a single call through our Netlify function
+      const contact = contacts[0]; // Take just the first contact
+      const payload = {
+        user: {
+          firstName: contact.first_name,
+          lastName: contact.last_name,
+          phoneNumber: contact.phone_number
+        },
+        assistant: {
+          firstMessage: campaign.agent.greeting || "",
+          transcriber: campaign.agent.advanced_config?.transcriber || {
+            provider: "assembly-ai",
+            disablePartialTranscripts: true,
+            endUtteranceSilenceThreshold: 0,
+            wordBoost: []
+          },
+          model: {
+            provider: "openai",
+            model: "gpt-3.5-turbo",
+            emotionRecognitionEnabled: false,
+            toolIds: [],
+            tools: [],
+            messages: [
+              {
+                role: "system",
+                content: campaign.agent.description || ""
               }
+            ]
+          },
+          voice: campaign.agent.advanced_config?.voice || {
+            provider: "11labs",
+            voiceId: campaign.agent.voice_id || "9BWtsMINqrJLrRacOk9x"
+          },
+          firstMessageMode: "assistant-waits-for-user",
+          hipaaEnabled: false,
+          clientMessages: [],
+          serverMessages: [],
+          backgroundSound: null,
+          name: campaign.agent.name,
+          voicemailDetection: {
+            provider: "twilio",
+            enabled: false
+          },
+          voicemailMessage: "",
+          analysisPlan: {
+            successEvaluationPlan: {
+              enabled: true
             }
-          };
-
-          const response = await fetch('/.netlify/functions/make-outbound-call', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(payload),
-          });
-
-          if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.error || 'Failed to initiate call');
+          },
+          phoneNumber: {
+            twilioAccountSid: "",
+            twilioAuthToken: "",
+            twilioPhoneNumber: ""
+          },
+          customer: {
+            number: contact.phone_number
           }
+        }
+      };
 
-          return response.json();
-        })
-      );
-
-      toast({
-        title: "Test calls initiated",
-        description: `Outbound calls have been triggered for ${contacts.length} contact(s).`,
+      const response = await fetch('/.netlify/functions/make-outbound-call', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
       });
 
-      console.log('Call results:', results);
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to initiate call');
+      }
+
+      const result = await response.json();
+
+      toast({
+        title: "Test call initiated",
+        description: `Outbound call has been triggered for ${contact.first_name} ${contact.last_name}.`,
+      });
+
+      console.log('Call result:', result);
     } catch (error) {
       console.error("Test call error:", error);
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to trigger test calls",
+        description: error instanceof Error ? error.message : "Failed to trigger test call",
         variant: "destructive",
       });
     }
