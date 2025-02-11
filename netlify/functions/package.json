@@ -8,6 +8,7 @@
     "dev": "nodemon --exec ts-node index.ts"
   },
   "dependencies": {
+    "@netlify/functions": "^2.0.0",
     "@supabase/supabase-js": "^2.39.3",
     "axios": "^1.7.8",
     "cors": "^2.8.5",
