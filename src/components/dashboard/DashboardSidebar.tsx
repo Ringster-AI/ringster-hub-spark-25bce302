@@ -1,5 +1,4 @@
-
-import { Bot, Home, Settings, PieChart, Users, User, CreditCard, LogOut, Mic, Phone } from "lucide-react";
+import { Home, Bot, Phone, Mic, PieChart, Users, User, CreditCard, Settings, LogOut } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -11,21 +10,13 @@ import {
   SidebarMenuItem,
   SidebarFooter,
 } from "@/components/ui/sidebar";
+import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
-import { useToast } from "@/components/ui/use-toast";
-
-const menuItems = [
-  { title: "Overview", icon: Home, url: "/dashboard" },
-  { title: "AI Agents", icon: Bot, url: "/dashboard/agents" },
-  { title: "Campaigns", icon: Phone, url: "/dashboard/campaigns" },
-  { title: "Recordings", icon: Mic, url: "/dashboard/recordings" },
-  { title: "Analytics", icon: PieChart, url: "/dashboard/analytics" },
-  { title: "Team", icon: Users, url: "/dashboard/team" },
-  { title: "Profile", icon: User, url: "/dashboard/profile" },
-  { title: "Subscription", icon: CreditCard, url: "/dashboard/subscription" },
-  { title: "Settings", icon: Settings, url: "/dashboard/settings" },
-];
+import { useToast } from "@/hooks/use-toast";
+import { useAgentCount } from "@/components/agents/hooks/useAgentCount";
+import { Badge } from "@/components/ui/badge";
+import { useQuery } from "@tanstack/react-query";
 
 interface DashboardSidebarProps {
   className?: string;
@@ -34,6 +25,20 @@ interface DashboardSidebarProps {
 export const DashboardSidebar = ({ className = '' }: DashboardSidebarProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { data: agentCount = 0 } = useAgentCount(true);
+
+  // Get campaign count
+  const { data: campaignCount = 0 } = useQuery({
+    queryKey: ["campaigns-count"],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("campaigns")
+        .select("*", { count: "exact", head: true });
+      
+      if (error) throw error;
+      return count || 0;
+    },
+  });
 
   const handleLogout = async () => {
     try {
@@ -56,26 +61,127 @@ export const DashboardSidebar = ({ className = '' }: DashboardSidebarProps) => {
     <div className={`${className} h-full border-r`}>
       <SidebarContent>
         <div className="p-4">
-          <h1 className="text-2xl font-bold text-primary">Ringster</h1>
+          <img 
+            src="/lovable-uploads/059d2b53-6e4e-4788-a607-2344b4097212.png" 
+            alt="Ringster Logo" 
+            className="h-12 w-auto"
+          />
         </div>
+
+        {/* Main Menu Group */}
         <SidebarGroup>
-          <SidebarGroupLabel>Menu</SidebarGroupLabel>
+          <SidebarGroupLabel>Main Menu</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {menuItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <a href={item.url} className="flex items-center gap-2 text-foreground">
-                      <item.icon className="h-5 w-5" />
-                      <span>{item.title}</span>
-                    </a>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <a href="/dashboard" className="flex items-center gap-2 text-foreground">
+                    <Home className="h-5 w-5" />
+                    <span>Overview</span>
+                  </a>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <a href="/dashboard/agents" className="flex items-center justify-between text-foreground group w-full">
+                    <div className="flex items-center gap-2">
+                      <Bot className="h-5 w-5" />
+                      <span>AI Agents</span>
+                    </div>
+                    {agentCount > 0 && (
+                      <Badge variant="secondary" className="ml-auto">
+                        {agentCount}
+                      </Badge>
+                    )}
+                  </a>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <a href="/dashboard/campaigns" className="flex items-center justify-between text-foreground group w-full">
+                    <div className="flex items-center gap-2">
+                      <Phone className="h-5 w-5" />
+                      <span>Campaigns</span>
+                    </div>
+                    {campaignCount > 0 && (
+                      <Badge variant="secondary" className="ml-auto">
+                        {campaignCount}
+                      </Badge>
+                    )}
+                  </a>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        {/* Management Group */}
+        <SidebarGroup>
+          <SidebarGroupLabel>Management</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <a href="/dashboard/recordings" className="flex items-center gap-2 text-foreground">
+                    <Mic className="h-5 w-5" />
+                    <span>Recordings</span>
+                  </a>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <a href="/dashboard/analytics" className="flex items-center gap-2 text-foreground">
+                    <PieChart className="h-5 w-5" />
+                    <span>Analytics</span>
+                  </a>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <a href="/dashboard/team" className="flex items-center gap-2 text-foreground">
+                    <Users className="h-5 w-5" />
+                    <span>Team</span>
+                  </a>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        {/* Other Menu Group */}
+        <SidebarGroup>
+          <SidebarGroupLabel>Other Menu</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <a href="/dashboard/settings" className="flex items-center gap-2 text-foreground">
+                    <Settings className="h-5 w-5" />
+                    <span>Settings</span>
+                  </a>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <a href="/dashboard/profile" className="flex items-center gap-2 text-foreground">
+                    <User className="h-5 w-5" />
+                    <span>Profile</span>
+                  </a>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <a href="/dashboard/subscription" className="flex items-center gap-2 text-foreground">
+                    <CreditCard className="h-5 w-5" />
+                    <span>Subscription</span>
+                  </a>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+
       <SidebarFooter className="p-4">
         <SidebarMenuButton 
           onClick={handleLogout}
