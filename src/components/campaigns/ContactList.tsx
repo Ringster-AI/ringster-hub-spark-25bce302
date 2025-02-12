@@ -30,13 +30,13 @@ export function ContactList({ campaignId }: ContactListProps) {
           const contacts = results.data
             .filter((row: any) => row.firstName && row.lastName && row.phoneNumber)
             .map((row: any) => {
-              // Extract the standard fields
+              // Extract the required fields
               const { firstName, lastName, phoneNumber, ...rest } = row;
-              
-              // All other columns become metadata
-              const metadata = Object.keys(rest).reduce((acc, key) => {
-                if (rest[key]) { // Only include non-empty values
-                  acc[key.toLowerCase()] = rest[key];
+
+              // All other columns become customer data that will be passed to the assistant
+              const metadata = Object.entries(rest).reduce((acc, [key, value]) => {
+                if (value) { // Only include non-empty values
+                  acc[key] = value; // Keep original case for the keys
                 }
                 return acc;
               }, {} as Record<string, any>);

@@ -77,7 +77,7 @@ export const handler: Handler = async (event) => {
       throw new Error('OUTBOUND_CALL_WEBHOOK is not configured');
     }
 
-    // Format the payload for Vapi
+    // Format the payload for Vapi - pass through all customer metadata
     const vapiPayload = {
       assistant: {
         ...createVapiAssistantConfig(agentData),
@@ -92,7 +92,7 @@ export const handler: Handler = async (event) => {
         number: user.phoneNumber,
         firstName: user.firstName || '',
         lastName: user.lastName || '',
-        ...user.metadata // Include all metadata from the CSV
+        ...user.metadata // Include all metadata from the CSV directly
       },
       phoneNumberId: agentData.twilio_sid || undefined
     };
