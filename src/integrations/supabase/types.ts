@@ -510,6 +510,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      process_campaign_contacts: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       sync_user_subscription: {
         Args: {
           p_user_id: string
