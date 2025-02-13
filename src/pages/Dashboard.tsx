@@ -9,12 +9,14 @@ import Subscription from "./Dashboard/Subscription";
 import Settings from "./Dashboard/Settings";
 import Recordings from "./Dashboard/Recordings";
 import Campaigns from "./Dashboard/Campaigns";
+import Overview from "./Dashboard/Overview";
 
 const Dashboard = () => {
   return (
     <DashboardLayout>
       <Routes>
-        <Route path="/" element={<Navigate to="/dashboard/agents" replace />} />
+        <Route path="/" element={<Navigate to="/dashboard/overview" replace />} />
+        <Route path="/overview" element={<Overview />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/agents" element={<Agents />} />
         <Route path="/recordings" element={<Recordings />} />
