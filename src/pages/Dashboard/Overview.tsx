@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Bar, BarChart, Line, LineChart, Pie, PieChart } from "recharts";
 import { Calendar, Download, Phone } from "lucide-react";
@@ -10,6 +9,12 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/
 import { useSubscriptionFeatures } from "@/hooks/useSubscriptionFeatures";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+
+const defaultUsageStats = {
+  total_calls: 0,
+  total_minutes: 0,
+  total_transfers: 0
+};
 
 const Overview = () => {
   const { features } = useSubscriptionFeatures();
@@ -24,15 +29,15 @@ const Overview = () => {
         .select("*")
         .eq("year", today.getFullYear())
         .eq("month", today.getMonth() + 1)
-        .single();
+        .maybeSingle();
       
       if (error) throw error;
-      return data;
+      return data || defaultUsageStats;
     },
   });
 
   // Get recent call logs
-  const { data: recentCalls } = useQuery({
+  const { data: recentCalls = [] } = useQuery({
     queryKey: ["recent-calls"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -45,7 +50,7 @@ const Overview = () => {
         .limit(3);
       
       if (error) throw error;
-      return data;
+      return data || [];
     },
   });
 
