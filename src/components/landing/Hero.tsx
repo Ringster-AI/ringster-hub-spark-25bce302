@@ -27,20 +27,20 @@ export const Hero = () => {
             Never Miss a Customer Call Again—
             <span className="block">Let AI Agents Handle It for You</span>
           </h1>
-          <p className="mt-6 text-lg leading-8 text-white/90 max-w-2xl mx-auto">
+          <p className="mt-6 text-lg leading-8 text-white/90 max-w-2xl mx-auto bg-gradient-to-r from-white via-white/50 to-white bg-[length:200%_100%] animate-shine">
             Our AI agents work 24/7 to handle your calls, ensuring you never miss an opportunity.
           </p>
           
           <ul className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4 text-white/90 text-lg">
-            <li className="flex items-center gap-2">
+            <li className="flex items-center gap-2 bg-gradient-to-r from-white via-white/50 to-white bg-[length:200%_100%] animate-shine">
               <Phone className="h-5 w-5" />
               Answer calls 24/7
             </li>
-            <li className="flex items-center gap-2">
+            <li className="flex items-center gap-2 bg-gradient-to-r from-white via-white/50 to-white bg-[length:200%_100%] animate-shine">
               <ArrowUpRight className="h-5 w-5" />
               Reduce missed opportunities
             </li>
-            <li className="flex items-center gap-2">
+            <li className="flex items-center gap-2 bg-gradient-to-r from-white via-white/50 to-white bg-[length:200%_100%] animate-shine">
               <ArrowRight className="h-5 w-5" />
               Seamless call transfers
             </li>
