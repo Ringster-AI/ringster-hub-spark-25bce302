@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -80,19 +79,10 @@ export default {
             transform: "translateY(0)",
           },
         },
-        shine: {
-          "from": {
-            backgroundPosition: "200% 0"
-          },
-          "to": {
-            backgroundPosition: "-200% 0"
-          }
-        }
       },
       animation: {
         "fade-up": "fade-up 0.5s ease-out",
         "fade-down": "fade-down 0.5s ease-out",
-        "shine": "shine 4s linear infinite"
       },
     },
   },
