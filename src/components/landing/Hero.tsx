@@ -13,7 +13,7 @@ export const Hero = () => {
           muted 
           playsInline
           poster="/lovable-uploads/backgroundimage.png"
-          className="absolute inset-0 w-[120%] h-[120%] object-cover -translate-x-[10%] -translate-y-[10%]"
+          className="absolute inset-0 w-full h-full object-cover"
         >
           <source src="/lovable-uploads/backgroundvideo.mp4" type="video/mp4" />
         </video>
