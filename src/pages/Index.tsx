@@ -9,7 +9,7 @@ import { Building2, Home, Stethoscope } from "lucide-react";
 const Index = () => {
   return (
     <main>
-      <nav className="fixed w-full top-0 z-50 bg-gradient-to-br from-[#FF512F] to-[#DD2476]">
+      <nav className="fixed w-full top-0 z-50">
         <div className="container mx-auto px-6 py-4">
           <div className="flex justify-between items-center">
             <img 
