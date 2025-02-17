@@ -4,8 +4,21 @@ import { ArrowRight, Phone, ArrowUpRight } from "lucide-react";
 
 export const Hero = () => {
   return (
-    <div className="relative overflow-hidden bg-gradient-to-br from-[#FF512F] to-[#DD2476]">
-      <div className="absolute inset-0 bg-grid-white/[0.1] bg-grid-8" />
+    <div className="relative overflow-hidden">
+      {/* Video Background */}
+      <div className="absolute inset-0 w-full h-full overflow-hidden">
+        <video 
+          autoPlay 
+          loop 
+          muted 
+          playsInline
+          className="absolute inset-0 w-[120%] h-[120%] object-cover -translate-x-[10%] -translate-y-[10%]"
+        >
+          <source src="/lovable-uploads/0216(3).mp4" type="video/mp4" />
+        </video>
+        {/* Overlay to ensure text readability */}
+        <div className="absolute inset-0 bg-black/50" />
+      </div>
 
       <div className="container mx-auto px-4 py-24 sm:px-6 lg:px-8 relative">
         <div className="text-center animate-fade-down">
@@ -44,7 +57,7 @@ export const Hero = () => {
             <Button 
               variant="outline" 
               size="lg" 
-              className="border-white text-[#DD2476] bg-white hover:bg-white/10 hover:text-white"
+              className="border-white text-white bg-transparent hover:bg-white/10 hover:text-white"
               onClick={() => window.location.href = 'mailto:admin@ringster.live'}
             >
               Learn More
