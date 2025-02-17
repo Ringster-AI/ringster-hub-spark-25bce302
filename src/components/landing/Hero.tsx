@@ -4,15 +4,15 @@ import { ArrowRight, Phone, ArrowUpRight } from "lucide-react";
 
 export const Hero = () => {
   return (
-    <div className="relative overflow-hidden">
+    <div className="relative overflow-hidden min-h-screen">
       {/* Video Background */}
-      <div className="absolute inset-0 w-full h-full overflow-hidden">
+      <div className="absolute inset-0 w-full h-full overflow-hidden z-0">
         <video 
           autoPlay 
           loop 
           muted 
           playsInline
-          className="absolute inset-0 w-[120%] h-[120%] object-cover -translate-x-[10%] -translate-y-[10%]"
+          className="absolute inset-0 min-w-full min-h-full w-auto h-auto object-cover"
         >
           <source src="/lovable-uploads/0216(3).mp4" type="video/mp4" />
         </video>
@@ -20,7 +20,7 @@ export const Hero = () => {
         <div className="absolute inset-0 bg-black/50" />
       </div>
 
-      <div className="container mx-auto px-4 py-24 sm:px-6 lg:px-8 relative">
+      <div className="container mx-auto px-4 py-24 sm:px-6 lg:px-8 relative z-10">
         <div className="text-center animate-fade-down">
           <h1 className="text-4xl font-bold tracking-tight text-white sm:text-6xl">
             Never Miss a Customer Call Again—
