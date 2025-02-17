@@ -36,7 +36,7 @@ const Index = () => {
           </div>
         </div>
       </nav>
-      <div className="pt-20">
+      <div>
         <Hero />
         <Features />
         

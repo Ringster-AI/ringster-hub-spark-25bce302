@@ -5,7 +5,7 @@ import { ShinyText } from "@/components/ui/shiny-text";
 
 export const Hero = () => {
   return (
-    <div className="relative overflow-hidden min-h-[calc(100vh-88px)]">
+    <div className="relative overflow-hidden min-h-screen">
       {/* Video Background with Image Fallback */}
       <div className="absolute inset-0 w-full h-full">
         <video 
