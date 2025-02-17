@@ -1,6 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Phone, ArrowUpRight } from "lucide-react";
+import { ShinyText } from "@/components/ui/shiny-text";
 
 export const Hero = () => {
   return (
@@ -27,9 +28,13 @@ export const Hero = () => {
             Never Miss a Customer Call Again—
             <span className="block">Let AI Agents Handle It for You</span>
           </h1>
-          <p className="mt-6 text-lg leading-8 text-white/90 max-w-2xl mx-auto">
-            Our AI agents work 24/7 to handle your calls, ensuring you never miss an opportunity.
-          </p>
+          <div className="mt-6 text-lg leading-8 max-w-2xl mx-auto">
+            <ShinyText 
+              text="Our AI agents work 24/7 to handle your calls, ensuring you never miss an opportunity."
+              className="text-white/90"
+              speed={3}
+            />
+          </div>
           
           <ul className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4 text-white/90 text-lg">
             <li className="flex items-center gap-2">
