@@ -72,11 +72,10 @@ export const Hero = () => {
 
           <div className="mt-16 text-center">
             <p className="text-white/90 font-medium mb-4">Trusted by 100+ businesses</p>
-            <div className="flex justify-center items-center gap-8 opacity-70">
-              {/* Replace with actual client logos */}
-              <div className="w-24 h-12 bg-white/20 rounded-lg"></div>
-              <div className="w-24 h-12 bg-white/20 rounded-lg"></div>
-              <div className="w-24 h-12 bg-white/20 rounded-lg"></div>
+            <div className="flex justify-center items-center gap-8">
+              <img src="/lovable-uploads/agorapulse.svg" alt="Agorapulse" className="h-12 w-auto opacity-70" />
+              <img src="/lovable-uploads/LG.svg" alt="LG" className="h-12 w-auto opacity-70" />
+              <img src="/lovable-uploads/tcl.svg" alt="TCL" className="h-12 w-auto opacity-70" />
             </div>
           </div>
         </div>
