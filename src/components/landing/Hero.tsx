@@ -57,7 +57,7 @@ export const Hero = () => {
           <div className="mt-10 flex items-center justify-center gap-x-6">
             <Button 
               size="lg" 
-              className="group bg-white text-[#DD2476] hover:bg-white/90 hover:text-[#DD2476] shadow-lg text-lg px-8 py-6"
+              className="group bg-white text-[#9b87f5] hover:bg-white/90 hover:text-[#9b87f5] shadow-lg text-lg px-8 py-6"
               onClick={() => navigate('/signup')}
             >
               Get Started
