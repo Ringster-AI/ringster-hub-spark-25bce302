@@ -1,12 +1,14 @@
-
 import { Hero } from "@/components/landing/Hero";
 import { Features } from "@/components/landing/Features";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Building2, Home, Stethoscope } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const Index = () => {
+  const navigate = useNavigate();
+
   return (
     <main>
       <nav className="fixed w-full top-0 z-50">
@@ -21,14 +23,14 @@ const Index = () => {
               <Button 
                 variant="ghost" 
                 className="text-white hover:bg-white/10"
-                onClick={() => window.location.href = '/login'}
+                onClick={() => navigate('/login')}
               >
                 Login
               </Button>
               <Button 
                 variant="outline" 
                 className="text-[#DD2476] bg-white border-white hover:bg-white/90 hover:text-[#DD2476]"
-                onClick={() => window.location.href = '/signup'}
+                onClick={() => navigate('/signup')}
               >
                 Sign Up
               </Button>

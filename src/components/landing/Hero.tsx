@@ -2,8 +2,11 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Phone, ArrowUpRight } from "lucide-react";
 import { ShinyText } from "@/components/ui/shiny-text";
+import { useNavigate } from "react-router-dom";
 
 export const Hero = () => {
+  const navigate = useNavigate();
+
   return (
     <div className="relative overflow-hidden min-h-screen">
       {/* Video Background with Image Fallback */}
@@ -55,7 +58,7 @@ export const Hero = () => {
             <Button 
               size="lg" 
               className="group bg-white text-[#DD2476] hover:bg-white/90 hover:text-[#DD2476] shadow-lg text-lg px-8 py-6"
-              onClick={() => window.location.href = '/login'}
+              onClick={() => navigate('/signup')}
             >
               Get Started
               <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
