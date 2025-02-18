@@ -67,7 +67,7 @@ export const Hero = () => {
               variant="outline" 
               size="lg" 
               className="border-white text-white bg-transparent hover:bg-white/10 hover:text-white"
-              onClick={() => window.location.href = 'mailto:admin@ringster.live'}
+              onClick={() => navigate('/contact')}
             >
               Learn More
             </Button>

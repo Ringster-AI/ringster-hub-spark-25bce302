@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -5,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import Index from "./pages/Index";
+import Contact from "./pages/Contact";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
@@ -25,7 +27,6 @@ const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
         if (error) {
           console.error('Auth error:', error);
           if (error.message.includes('refresh_token_not_found')) {
-            // Clear any stale auth state
             await supabase.auth.signOut();
             toast({
               title: "Session expired",
@@ -82,6 +83,7 @@ function App() {
         <Router>
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/contact" element={<Contact />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/dashboard/*" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
