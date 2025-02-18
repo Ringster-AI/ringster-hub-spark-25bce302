@@ -84,6 +84,8 @@ const Signup = () => {
     const isValid = currentFields.every(field => form.getValues(field as any));
     
     if (isValid) {
+      // Set work email to match the email from step 1
+      form.setValue('company.workEmail', form.getValues('email'));
       setStep(step + 1);
     } else {
       toast.error("Please fill in all required fields");
