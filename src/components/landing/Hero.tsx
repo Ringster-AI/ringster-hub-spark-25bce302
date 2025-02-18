@@ -28,8 +28,8 @@ export const Hero = () => {
       <div className="container mx-auto px-4 py-24 sm:px-6 lg:px-8 relative">
         <div className="text-center animate-fade-down">
           <h1 className="text-4xl font-bold tracking-tight text-white sm:text-6xl">
-            Never Miss a Customer Call Again—
-            <span className="block">Let AI Agents Handle It for You</span>
+            We Help Small Business—
+            <span className="block">Never Miss a Customer Call Again</span>
           </h1>
           <div className="mt-6 text-lg leading-8 max-w-2xl mx-auto">
             <ShinyText 
