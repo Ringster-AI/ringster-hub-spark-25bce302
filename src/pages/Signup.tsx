@@ -44,7 +44,13 @@ const Signup = () => {
         },
       });
 
-      if (signUpError) throw signUpError;
+      if (signUpError) {
+        if (signUpError.message.includes("already registered")) {
+          toast.error("This email is already registered. Please sign in instead.");
+          return;
+        }
+        throw signUpError;
+      }
 
       // Create organization entry
       const { error: orgError } = await supabase
@@ -60,9 +66,13 @@ const Signup = () => {
 
       toast.success("Account created successfully!");
       navigate("/dashboard");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Signup error:", error);
-      toast.error("Failed to create account. Please try again.");
+      if (error.message) {
+        toast.error(error.message);
+      } else {
+        toast.error("Failed to create account. Please try again.");
+      }
     } finally {
       setIsLoading(false);
     }
