@@ -1,3 +1,4 @@
+
 import { Home, Bot, Phone, Mic, PieChart, Users, User, CreditCard, Settings, LogOut } from "lucide-react";
 import {
   Sidebar,
@@ -17,6 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAgentCount } from "@/components/agents/hooks/useAgentCount";
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface DashboardSidebarProps {
   className?: string;
@@ -40,6 +42,24 @@ export const DashboardSidebar = ({ className = '' }: DashboardSidebarProps) => {
     },
   });
 
+  // Get user profile
+  const { data: profile } = useQuery({
+    queryKey: ["profile"],
+    queryFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) throw new Error("No user found");
+
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", session.user.id)
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+  });
+
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
@@ -60,12 +80,36 @@ export const DashboardSidebar = ({ className = '' }: DashboardSidebarProps) => {
   return (
     <div className={`${className} h-full border-r`}>
       <SidebarContent>
-        <div className="p-4">
+        <div className="p-6">
           <img 
             src="/lovable-uploads/059d2b53-6e4e-4788-a607-2344b4097212.png" 
             alt="Ringster Logo" 
-            className="h-12 w-auto"
+            className="h-16 w-auto cursor-pointer"
+            onClick={() => navigate('/dashboard')}
           />
+        </div>
+
+        {/* User Profile Section */}
+        <div className="px-4 mb-6">
+          <button 
+            onClick={() => navigate('/dashboard/profile')}
+            className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-sidebar-accent transition-colors"
+          >
+            <Avatar className="h-10 w-10">
+              <AvatarImage src={profile?.avatar_url ?? undefined} />
+              <AvatarFallback>
+                {profile?.full_name?.charAt(0) || profile?.username?.charAt(0) || "?"}
+              </AvatarFallback>
+            </Avatar>
+            <div className="text-left">
+              <div className="font-medium text-sm truncate">
+                {profile?.full_name || profile?.username || "User"}
+              </div>
+              <div className="text-xs text-muted-foreground truncate">
+                {profile?.email || "No email"}
+              </div>
+            </div>
+          </button>
         </div>
 
         {/* Main Menu Group */}
@@ -75,7 +119,7 @@ export const DashboardSidebar = ({ className = '' }: DashboardSidebarProps) => {
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <a href="/dashboard" className="flex items-center gap-2 text-foreground">
+                  <a href="/dashboard" className="flex items-center gap-2 text-foreground px-6">
                     <Home className="h-5 w-5" />
                     <span>Overview</span>
                   </a>
@@ -83,7 +127,7 @@ export const DashboardSidebar = ({ className = '' }: DashboardSidebarProps) => {
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <a href="/dashboard/agents" className="flex items-center justify-between text-foreground group w-full">
+                  <a href="/dashboard/agents" className="flex items-center justify-between text-foreground group w-full px-6">
                     <div className="flex items-center gap-2">
                       <Bot className="h-5 w-5" />
                       <span>AI Agents</span>
@@ -98,7 +142,7 @@ export const DashboardSidebar = ({ className = '' }: DashboardSidebarProps) => {
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <a href="/dashboard/campaigns" className="flex items-center justify-between text-foreground group w-full">
+                  <a href="/dashboard/campaigns" className="flex items-center justify-between text-foreground group w-full px-6">
                     <div className="flex items-center gap-2">
                       <Phone className="h-5 w-5" />
                       <span>Campaigns</span>
@@ -122,7 +166,7 @@ export const DashboardSidebar = ({ className = '' }: DashboardSidebarProps) => {
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <a href="/dashboard/recordings" className="flex items-center gap-2 text-foreground">
+                  <a href="/dashboard/recordings" className="flex items-center gap-2 text-foreground px-6">
                     <Mic className="h-5 w-5" />
                     <span>Recordings</span>
                   </a>
@@ -130,7 +174,7 @@ export const DashboardSidebar = ({ className = '' }: DashboardSidebarProps) => {
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <a href="/dashboard/analytics" className="flex items-center gap-2 text-foreground">
+                  <a href="/dashboard/analytics" className="flex items-center gap-2 text-foreground px-6">
                     <PieChart className="h-5 w-5" />
                     <span>Analytics</span>
                   </a>
@@ -138,7 +182,7 @@ export const DashboardSidebar = ({ className = '' }: DashboardSidebarProps) => {
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <a href="/dashboard/team" className="flex items-center gap-2 text-foreground">
+                  <a href="/dashboard/team" className="flex items-center gap-2 text-foreground px-6">
                     <Users className="h-5 w-5" />
                     <span>Team</span>
                   </a>
@@ -155,7 +199,7 @@ export const DashboardSidebar = ({ className = '' }: DashboardSidebarProps) => {
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <a href="/dashboard/settings" className="flex items-center gap-2 text-foreground">
+                  <a href="/dashboard/settings" className="flex items-center gap-2 text-foreground px-6">
                     <Settings className="h-5 w-5" />
                     <span>Settings</span>
                   </a>
@@ -163,15 +207,7 @@ export const DashboardSidebar = ({ className = '' }: DashboardSidebarProps) => {
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <a href="/dashboard/profile" className="flex items-center gap-2 text-foreground">
-                    <User className="h-5 w-5" />
-                    <span>Profile</span>
-                  </a>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <a href="/dashboard/subscription" className="flex items-center gap-2 text-foreground">
+                  <a href="/dashboard/subscription" className="flex items-center gap-2 text-foreground px-6">
                     <CreditCard className="h-5 w-5" />
                     <span>Subscription</span>
                   </a>
@@ -185,7 +221,7 @@ export const DashboardSidebar = ({ className = '' }: DashboardSidebarProps) => {
       <SidebarFooter className="p-4">
         <SidebarMenuButton 
           onClick={handleLogout}
-          className="w-full flex items-center gap-2 text-destructive hover:text-destructive"
+          className="w-full flex items-center gap-2 text-destructive hover:text-destructive px-6"
         >
           <LogOut className="h-5 w-5" />
           <span>Logout</span>
