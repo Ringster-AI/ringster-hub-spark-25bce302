@@ -3,20 +3,12 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { SignupFormValues, ORGANIZATION_SIZES } from "@/types/auth";
+import { SignupFormValues } from "@/types/auth";
+import { SignupHeader } from "@/components/auth/SignupHeader";
+import { SignupStepOne } from "@/components/auth/SignupStepOne";
+import { SignupStepTwo } from "@/components/auth/SignupStepTwo";
 
 const Signup = () => {
   const [step, setStep] = useState(1);
@@ -95,127 +87,17 @@ const Signup = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 to-gray-800 p-4">
       <div className="w-full max-w-md space-y-8 bg-white p-8 rounded-xl shadow-2xl">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold tracking-tight">
-            {step === 1 ? "Create your account" : "Tell us about your company"}
-          </h2>
-          <p className="text-sm text-gray-600 mt-2">
-            Step {step} of 2
-          </p>
-        </div>
+        <SignupHeader step={step} />
 
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           {step === 1 ? (
-            <>
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    {...form.register("email")}
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    {...form.register("password")}
-                    required
-                  />
-                </div>
-              </div>
-
-              <Button
-                type="button"
-                className="w-full"
-                onClick={nextStep}
-              >
-                Continue
-              </Button>
-            </>
+            <SignupStepOne form={form} onNext={nextStep} />
           ) : (
-            <>
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="workEmail">Work Email*</Label>
-                  <Input
-                    id="workEmail"
-                    type="email"
-                    {...form.register("company.workEmail")}
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="companyName">Company Name*</Label>
-                  <Input
-                    id="companyName"
-                    {...form.register("company.name")}
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Phone Number</Label>
-                  <Input
-                    id="phone"
-                    type="tel"
-                    {...form.register("company.phone")}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="size">Organization Size*</Label>
-                  <Select
-                    onValueChange={(value) => form.setValue("company.size", value)}
-                    required
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select company size" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {ORGANIZATION_SIZES.map((size) => (
-                        <SelectItem key={size} value={size}>
-                          {size}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="additionalInfo">Additional Information</Label>
-                  <Textarea
-                    id="additionalInfo"
-                    {...form.register("company.additionalInfo")}
-                    placeholder="Tell us more about your needs..."
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <Button
-                  type="submit"
-                  className="w-full"
-                  disabled={isLoading}
-                >
-                  {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Create Account
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => setStep(1)}
-                >
-                  Back
-                </Button>
-              </div>
-            </>
+            <SignupStepTwo 
+              form={form} 
+              isLoading={isLoading} 
+              onBack={() => setStep(1)} 
+            />
           )}
         </form>
 
