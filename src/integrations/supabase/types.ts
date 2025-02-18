@@ -318,6 +318,44 @@ export type Database = {
           },
         ]
       }
+      organizations: {
+        Row: {
+          additional_info: string | null
+          created_at: string
+          id: string
+          name: string
+          size: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          additional_info?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          size: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          additional_info?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          size?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organizations_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
