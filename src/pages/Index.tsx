@@ -1,3 +1,4 @@
+
 import { Hero } from "@/components/landing/Hero";
 import { Features } from "@/components/landing/Features";
 import { Button } from "@/components/ui/button";
@@ -29,7 +30,7 @@ const Index = () => {
               </Button>
               <Button 
                 variant="outline" 
-                className="text-[#DD2476] bg-white border-white hover:bg-white/90 hover:text-[#DD2476]"
+                className="text-[#9b87f5] bg-white border-white hover:bg-white/90 hover:text-[#9b87f5]"
                 onClick={() => navigate('/signup')}
               >
                 Sign Up
