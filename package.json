@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "npm install @rollup/rollup-linux-x64-gnu && vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview"
@@ -73,7 +73,8 @@
     "tailwindcss-animate": "^1.0.7",
     "twilio": "^4.23.0",
     "vaul": "^0.9.3",
-    "zod": "^3.23.8"
+    "zod": "^3.23.8",
+    "@rollup/rollup-linux-x64-gnu": "4.6.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.0",
