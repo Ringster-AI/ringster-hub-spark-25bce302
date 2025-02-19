@@ -6,9 +6,10 @@ const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': '*',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Max-Age': '86400',
+  'Access-Control-Allow-Credentials': 'true',
 };
 
 interface FeedbackRequest {
@@ -17,9 +18,17 @@ interface FeedbackRequest {
 }
 
 const handler = async (req: Request): Promise<Response> => {
+  // Always log the request method and URL for debugging
+  console.log(`${req.method} request to ${req.url}`);
+
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+    return new Response('ok', { 
+      headers: {
+        ...corsHeaders,
+        'Content-Type': 'text/plain',
+      } 
+    });
   }
 
   try {
@@ -27,13 +36,16 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error(`HTTP method ${req.method} is not allowed`);
     }
 
+    // Log request headers for debugging
+    console.log('Request headers:', Object.fromEntries(req.headers.entries()));
+
     const { message, userEmail }: FeedbackRequest = await req.json();
 
     if (!message || !userEmail) {
       throw new Error('Missing required fields: message and userEmail are required');
     }
 
-    console.log('Sending feedback email from:', userEmail);
+    console.log('Attempting to send feedback email for:', userEmail);
 
     const emailResponse = await resend.emails.send({
       from: "Ringster Feedback <onboarding@resend.dev>",
@@ -65,7 +77,8 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(
       JSON.stringify({
         error: error.message || 'Internal server error',
-        details: error.toString()
+        details: error.toString(),
+        timestamp: new Date().toISOString()
       }),
       {
         status: error.status || 500,
