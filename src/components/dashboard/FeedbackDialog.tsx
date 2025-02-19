@@ -29,23 +29,32 @@ export const FeedbackDialog = () => {
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("No user found");
+      if (!user) {
+        toast.error("You must be logged in to send feedback");
+        return;
+      }
 
-      const { error } = await supabase.functions.invoke('send-feedback', {
+      console.log('Sending feedback...', { userEmail: user.email });
+      
+      const { data, error } = await supabase.functions.invoke('send-feedback', {
         body: {
           message: message.trim(),
           userEmail: user.email,
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw error;
+      }
 
+      console.log('Feedback sent successfully:', data);
       toast.success("Thank you for your feedback!");
       setMessage("");
       setIsOpen(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error sending feedback:", error);
-      toast.error("Failed to send feedback. Please try again.");
+      toast.error(error.message || "Failed to send feedback. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
