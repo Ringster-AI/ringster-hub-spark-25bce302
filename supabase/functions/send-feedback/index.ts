@@ -44,10 +44,9 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log('Attempting to send feedback email for:', userEmail);
 
-    // During development, send to the verified email address
     const emailResponse = await resend.emails.send({
-      from: "onboarding@resend.dev",
-      to: ["marcar82@gmail.com"], // Using the verified email address
+      from: "Ringster Feedback <feedback@ringster.ai>",
+      to: ["admin@ringster.ai"],
       subject: "New User Feedback",
       html: `
         <h2>New Feedback Received</h2>
