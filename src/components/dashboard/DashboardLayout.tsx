@@ -1,8 +1,10 @@
+
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { DashboardSidebar } from "./DashboardSidebar";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { FeedbackDialog } from "./FeedbackDialog";
 
 export const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   return (
@@ -34,6 +36,7 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
         </div>
 
         <main className="flex-1 p-6 bg-gray-50 md:ml-0">{children}</main>
+        <FeedbackDialog />
       </div>
     </SidebarProvider>
   );
