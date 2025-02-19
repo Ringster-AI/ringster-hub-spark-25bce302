@@ -18,10 +18,8 @@ interface FeedbackRequest {
 }
 
 const handler = async (req: Request): Promise<Response> => {
-  // Always log the request method and URL for debugging
   console.log(`${req.method} request to ${req.url}`);
 
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { 
       headers: {
@@ -36,7 +34,6 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error(`HTTP method ${req.method} is not allowed`);
     }
 
-    // Log request headers for debugging
     console.log('Request headers:', Object.fromEntries(req.headers.entries()));
 
     const { message, userEmail }: FeedbackRequest = await req.json();
@@ -47,9 +44,10 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log('Attempting to send feedback email for:', userEmail);
 
+    // During development, send to the verified email address
     const emailResponse = await resend.emails.send({
-      from: "Ringster Feedback <onboarding@resend.dev>",
-      to: ["admin@ringster.ai"],
+      from: "onboarding@resend.dev",
+      to: ["marcar82@gmail.com"], // Using the verified email address
       subject: "New User Feedback",
       html: `
         <h2>New Feedback Received</h2>
