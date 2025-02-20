@@ -1,8 +1,12 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "npm:resend@2.0.0";
+import { createClient } from 'npm:@supabase/supabase-js@2';
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -42,15 +46,26 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error('Missing required fields: message and userEmail are required');
     }
 
+    // Get user profile information
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('full_name, email')
+      .eq('email', userEmail)
+      .single();
+
+    if (profileError) {
+      console.error('Error fetching user profile:', profileError);
+    }
+
     console.log('Attempting to send feedback email for:', userEmail);
 
     const emailResponse = await resend.emails.send({
       from: "Ringster Feedback <feedback@ringster.ai>",
-      to: ["marcel.carr@gmail.com"],
+      to: ["admin@ringster.ai"],
       subject: "New User Feedback",
       html: `
         <h2>New Feedback Received</h2>
-        <p><strong>From:</strong> ${userEmail}</p>
+        <p><strong>From:</strong> ${profile?.full_name || 'Unknown'} (${userEmail})</p>
         <p><strong>Message:</strong></p>
         <p>${message}</p>
       `,
