@@ -46,7 +46,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     const emailResponse = await resend.emails.send({
       from: "Ringster Feedback <feedback@ringster.ai>",
-      to: ["admin@ringster.ai"],
+      to: ["marcel.carr@gmail.com"],
       subject: "New User Feedback",
       html: `
         <h2>New Feedback Received</h2>
