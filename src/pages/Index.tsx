@@ -1,4 +1,3 @@
-
 import { Hero } from "@/components/landing/Hero";
 import { Features } from "@/components/landing/Features";
 import { Button } from "@/components/ui/button";
@@ -20,22 +19,6 @@ const Index = () => {
               alt="Ringster Logo" 
               className="h-20 w-auto"
             />
-            <div className="flex gap-4">
-              <Button 
-                variant="ghost" 
-                className="text-white hover:bg-white/10"
-                onClick={() => navigate('/login')}
-              >
-                Login
-              </Button>
-              <Button 
-                variant="outline" 
-                className="text-[#9b87f5] bg-white border-white hover:bg-white/90 hover:text-[#9b87f5]"
-                onClick={() => navigate('/signup')}
-              >
-                Sign Up
-              </Button>
-            </div>
           </div>
         </div>
       </nav>

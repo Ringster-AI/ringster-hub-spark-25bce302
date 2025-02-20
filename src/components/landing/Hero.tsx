@@ -2,10 +2,11 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Phone, ArrowUpRight } from "lucide-react";
 import { ShinyText } from "@/components/ui/shiny-text";
-import { useNavigate } from "react-router-dom";
 
 export const Hero = () => {
-  const navigate = useNavigate();
+  const handleBookDemo = () => {
+    window.location.href = "https://cal.com/ringster-demo/ringster-demo";
+  };
 
   return (
     <div className="relative overflow-hidden min-h-screen">
@@ -58,16 +59,16 @@ export const Hero = () => {
             <Button 
               size="lg" 
               className="group bg-white text-[#9b87f5] hover:bg-white/90 hover:text-[#9b87f5] shadow-lg text-lg px-8 py-6"
-              onClick={() => navigate('/signup')}
+              onClick={handleBookDemo}
             >
-              Get Started
+              Book a Demo
               <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
             </Button>
             <Button 
               variant="outline" 
               size="lg" 
               className="border-white text-white bg-transparent hover:bg-white/10 hover:text-white"
-              onClick={() => navigate('/contact')}
+              onClick={() => window.location.href = "https://cal.com/ringster-demo/ringster-demo"}
             >
               Learn More
             </Button>
