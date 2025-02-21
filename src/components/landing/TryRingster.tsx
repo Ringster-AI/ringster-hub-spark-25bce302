@@ -11,14 +11,14 @@ export const TryRingster = () => {
   return (
     <section className="py-16 bg-white">
       <div className="container mx-auto px-6">
-        <Card className="overflow-hidden bg-gradient-to-r from-[#f8f9fa] to-white border-0 shadow-xl">
+        <Card className="overflow-hidden bg-gradient-to-r from-[#1A1F2C] to-[#222222] border-0 shadow-2xl">
           <CardContent className="p-8 md:p-12">
             <div className="grid md:grid-cols-2 gap-8 items-center">
               <div className="space-y-6">
-                <h2 className="text-3xl md:text-4xl font-bold text-[#1A1F2C]">
+                <h2 className="text-3xl md:text-4xl font-bold text-white">
                   Try Ringster
                 </h2>
-                <p className="text-xl text-gray-600">
+                <p className="text-xl text-gray-300">
                   Experience next level technology
                 </p>
                 <Button 
