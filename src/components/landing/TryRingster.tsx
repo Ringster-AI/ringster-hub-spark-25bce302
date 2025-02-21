@@ -13,7 +13,7 @@ export const TryRingster = () => {
       <div className="container mx-auto px-6">
         <Card className="overflow-hidden bg-gradient-to-r from-[#1A1F2C] to-[#222222] border-0 shadow-2xl">
           <CardContent className="p-8 md:p-12">
-            <div className="grid md:grid-cols-2 gap-8 items-center">
+            <div className="grid md:grid-cols-2 gap-4 items-center">
               <div className="space-y-6">
                 <h2 className="text-3xl md:text-4xl font-bold text-white">
                   Try Ringster
@@ -30,11 +30,11 @@ export const TryRingster = () => {
                   Dial +1 620-445-8363 Right now
                 </Button>
               </div>
-              <div className="flex justify-center md:justify-end">
+              <div className="flex justify-center md:justify-center">
                 <img
-                  src="/lovable-uploads/70ac5df6-aaa8-40b9-92e9-ea215cb8f4d7.png"
+                  src="/lovable-uploads/2bc59770-92ba-4abb-83fb-3f10afdb837e.png"
                   alt="Ringster AI Agent"
-                  className="rounded-lg shadow-lg w-64 h-64 object-cover"
+                  className="rounded-lg shadow-lg w-72 h-72 object-cover"
                 />
               </div>
             </div>
