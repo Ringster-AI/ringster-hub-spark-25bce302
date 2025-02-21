@@ -26,7 +26,7 @@ export const Hero = () => {
         <div className="absolute inset-0 bg-black/60" />
       </div>
 
-      <div className="container mx-auto px-4 py-24 sm:px-6 lg:px-8 relative">
+      <div className="container mx-auto px-4 py-20 sm:px-6 lg:px-8 relative">
         <div className="text-center animate-fade-down">
           <h1 className="text-4xl font-bold tracking-tight text-white sm:text-6xl animate-glow">
             We Help Small Business—
