@@ -1,5 +1,7 @@
+
 import { Hero } from "@/components/landing/Hero";
 import { Features } from "@/components/landing/Features";
+import { TryRingster } from "@/components/landing/TryRingster";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,6 +26,7 @@ const Index = () => {
       </nav>
       <div>
         <Hero />
+        <TryRingster />
         <Features />
         
         {/* Use Cases Section */}
