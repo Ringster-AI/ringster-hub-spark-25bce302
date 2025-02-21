@@ -19,7 +19,7 @@ export const TryRingster = () => {
                   Try Ringster
                 </h2>
                 <p className="text-xl text-gray-300">
-                  Experience next level technology
+                  Step Into the Future of Innovation
                 </p>
                 <Button 
                   size="lg" 
