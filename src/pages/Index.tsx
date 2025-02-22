@@ -7,11 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Building2, Home, Stethoscope } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 const Index = () => {
-  const navigate = useNavigate();
-
   return (
     <main>
       <nav className="fixed w-full top-0 z-50">
@@ -22,6 +20,14 @@ const Index = () => {
               alt="Ringster Logo" 
               className="h-20 w-auto"
             />
+            <div className="flex gap-6">
+              <Link to="/blog" className="text-gray-600 hover:text-[#DD2476] transition-colors">
+                Blog
+              </Link>
+              <Link to="/contact" className="text-gray-600 hover:text-[#DD2476] transition-colors">
+                Contact
+              </Link>
+            </div>
           </div>
         </div>
       </nav>

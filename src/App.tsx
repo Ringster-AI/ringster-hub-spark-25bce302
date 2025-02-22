@@ -6,10 +6,13 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import Index from "./pages/Index";
+import Blog from "./pages/Blog";
 import Contact from "./pages/Contact";
 import Dashboard from "./pages/Dashboard";
+import BlogAdmin from "./pages/Dashboard/BlogAdmin";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import Privacy from "./pages/Privacy";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -83,10 +86,16 @@ function App() {
         <Router>
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/blog" element={<Blog />} />
             <Route path="/contact" element={<Contact />} />
+            <Route path="/privacy" element={<Privacy />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
-            <Route path="/dashboard/*" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+            <Route path="/dashboard/*" element={
+              <PrivateRoute>
+                <Dashboard />
+              </PrivateRoute>
+            } />
           </Routes>
         </Router>
       </TooltipProvider>
