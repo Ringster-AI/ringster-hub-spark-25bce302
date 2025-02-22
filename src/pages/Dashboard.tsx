@@ -1,32 +1,25 @@
-
-import { Routes, Route, Navigate } from "react-router-dom";
-import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
-import Profile from "./Dashboard/Profile";
-import Agents from "./Dashboard/Agents";
-import Team from "./Dashboard/Team";
-import Analytics from "./Dashboard/Analytics";
-import Subscription from "./Dashboard/Subscription";
-import Settings from "./Dashboard/Settings";
-import Recordings from "./Dashboard/Recordings";
-import Campaigns from "./Dashboard/Campaigns";
-import Overview from "./Dashboard/Overview";
+import { useState } from "react";
+import { DashboardSidebar } from "@/components/layout/DashboardSidebar";
+import { Routes, Route } from "react-router-dom";
+import BlogAdmin from "./Dashboard/BlogAdmin";
+import NewBlogPost from "./Dashboard/NewBlogPost";
+import EditBlogPost from "./Dashboard/EditBlogPost";
 
 const Dashboard = () => {
   return (
-    <DashboardLayout>
-      <Routes>
-        <Route path="/" element={<Navigate to="/dashboard/overview" replace />} />
-        <Route path="/overview" element={<Overview />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/agents" element={<Agents />} />
-        <Route path="/recordings" element={<Recordings />} />
-        <Route path="/campaigns" element={<Campaigns />} />
-        <Route path="/team" element={<Team />} />
-        <Route path="/subscription" element={<Subscription />} />
-        <Route path="/analytics" element={<Analytics />} />
-        <Route path="/settings" element={<Settings />} />
-      </Routes>
-    </DashboardLayout>
+    <div className="flex h-screen">
+      <DashboardSidebar />
+      <div className="flex-1 overflow-auto">
+        <Routes>
+          <Route path="/" element={<div>Dashboard Home</div>} />
+          <Route path="/profile" element={<div>Profile</div>} />
+          <Route path="/settings" element={<div>Settings</div>} />
+          <Route path="/blog" element={<BlogAdmin />} />
+          <Route path="/blog/new" element={<NewBlogPost />} />
+          <Route path="/blog/edit/:id" element={<EditBlogPost />} />
+        </Routes>
+      </div>
+    </div>
   );
 };
 

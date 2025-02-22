@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -15,6 +14,7 @@ import Signup from "./pages/Signup";
 import Privacy from "./pages/Privacy";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import BlogPost from "./pages/BlogPost";
 
 const queryClient = new QueryClient();
 
@@ -77,7 +77,7 @@ const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
   return isAuthenticated ? children : <Navigate to="/login" replace />;
 };
 
-function App() {
+const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
@@ -96,11 +96,12 @@ function App() {
                 <Dashboard />
               </PrivateRoute>
             } />
+            <Route path="/blog/:slug" element={<BlogPost />} />
           </Routes>
         </Router>
       </TooltipProvider>
     </QueryClientProvider>
   );
-}
+};
 
 export default App;
