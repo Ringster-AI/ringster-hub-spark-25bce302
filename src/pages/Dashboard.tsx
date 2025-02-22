@@ -1,5 +1,6 @@
+
 import { useState } from "react";
-import { DashboardSidebar } from "@/components/layout/DashboardSidebar";
+import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { Routes, Route } from "react-router-dom";
 import BlogAdmin from "./Dashboard/BlogAdmin";
 import NewBlogPost from "./Dashboard/NewBlogPost";
