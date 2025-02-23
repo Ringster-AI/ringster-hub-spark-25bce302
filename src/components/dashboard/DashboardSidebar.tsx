@@ -1,24 +1,20 @@
-import { Home, Bot, Phone, Mic, PieChart, Users, User, CreditCard, Settings, LogOut } from "lucide-react";
+
+import { LogOut } from "lucide-react";
 import {
-  Sidebar,
   SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
   SidebarFooter,
+  SidebarMenuButton,
 } from "@/components/ui/sidebar";
-import { Card } from "@/components/ui/card";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useAgentCount } from "@/components/agents/hooks/useAgentCount";
-import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { UserProfile } from "./sidebar/UserProfile";
+import { MainMenu } from "./sidebar/MainMenu";
+import { ManagementMenu } from "./sidebar/ManagementMenu";
+import { OtherMenu } from "./sidebar/OtherMenu";
 
 interface DashboardSidebarProps {
   className?: string;
@@ -89,135 +85,10 @@ export const DashboardSidebar = ({ className = '' }: DashboardSidebarProps) => {
           />
         </div>
 
-        {/* User Profile Section */}
-        <div className="px-4 mb-6">
-          <Card className="shadow-md hover:shadow-lg transition-shadow">
-            <button 
-              onClick={() => navigate('/dashboard/profile')}
-              className="w-full flex items-center gap-3 p-4 rounded-lg hover:bg-accent/50 transition-colors"
-            >
-              <Avatar className="h-10 w-10">
-                <AvatarImage src={profile?.avatar_url ?? undefined} />
-                <AvatarFallback>
-                  {profile?.full_name?.charAt(0) || profile?.username?.charAt(0) || "?"}
-                </AvatarFallback>
-              </Avatar>
-              <div className="text-left">
-                <div className="font-medium text-sm truncate">
-                  {profile?.full_name || profile?.username || "User"}
-                </div>
-                <div className="text-xs text-muted-foreground truncate">
-                  {profile?.email || "No email"}
-                </div>
-              </div>
-            </button>
-          </Card>
-        </div>
-
-        {/* Main Menu Group */}
-        <SidebarGroup>
-          <SidebarGroupLabel>Main Menu</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <Link to="/dashboard" className="flex items-center gap-2 text-foreground px-6">
-                    <Home className="h-5 w-5" />
-                    <span>Overview</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <Link to="/dashboard/agents" className="flex items-center justify-between text-foreground group w-full px-6">
-                    <div className="flex items-center gap-2">
-                      <Bot className="h-5 w-5" />
-                      <span>AI Agents</span>
-                    </div>
-                    {agentCount > 0 && (
-                      <Badge variant="secondary" className="ml-auto">
-                        {agentCount}
-                      </Badge>
-                    )}
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <Link to="/dashboard/campaigns" className="flex items-center justify-between text-foreground group w-full px-6">
-                    <div className="flex items-center gap-2">
-                      <Phone className="h-5 w-5" />
-                      <span>Campaigns</span>
-                    </div>
-                    {campaignCount > 0 && (
-                      <Badge variant="secondary" className="ml-auto">
-                        {campaignCount}
-                      </Badge>
-                    )}
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        {/* Management Group */}
-        <SidebarGroup>
-          <SidebarGroupLabel>Management</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <Link to="/dashboard/recordings" className="flex items-center gap-2 text-foreground px-6">
-                    <Mic className="h-5 w-5" />
-                    <span>Recordings</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <Link to="/dashboard/analytics" className="flex items-center gap-2 text-foreground px-6">
-                    <PieChart className="h-5 w-5" />
-                    <span>Analytics</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <Link to="/dashboard/team" className="flex items-center gap-2 text-foreground px-6">
-                    <Users className="h-5 w-5" />
-                    <span>Team</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        {/* Other Menu Group */}
-        <SidebarGroup>
-          <SidebarGroupLabel>Other Menu</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <Link to="/dashboard/settings" className="flex items-center gap-2 text-foreground px-6">
-                    <Settings className="h-5 w-5" />
-                    <span>Settings</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <Link to="/dashboard/subscription" className="flex items-center gap-2 text-foreground px-6">
-                    <CreditCard className="h-5 w-5" />
-                    <span>Subscription</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        <UserProfile profile={profile} />
+        <MainMenu agentCount={agentCount} campaignCount={campaignCount} />
+        <ManagementMenu />
+        <OtherMenu />
       </SidebarContent>
 
       <SidebarFooter className="p-4">
