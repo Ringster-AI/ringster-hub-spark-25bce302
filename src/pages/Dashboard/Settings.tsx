@@ -1,27 +1,13 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { PasswordResetForm } from "@/components/settings/PasswordResetForm";
 
 const Settings = () => {
   return (
-    <div className="max-w-2xl mx-auto py-8">
-      <div className="mb-8 space-y-4">
-        <h1 className="text-2xl font-bold">Settings</h1>
+    <div className="p-6">
+      <h1 className="text-3xl font-bold mb-6">Settings</h1>
+      <div className="max-w-2xl">
         <p className="text-muted-foreground">
-          Manage your account settings and preferences
+          Account settings and preferences coming soon.
         </p>
       </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Change Password</CardTitle>
-          <CardDescription>
-            Update your password to keep your account secure
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <PasswordResetForm />
-        </CardContent>
-      </Card>
     </div>
   );
 };
