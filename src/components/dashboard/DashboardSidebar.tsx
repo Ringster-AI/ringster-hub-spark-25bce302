@@ -1,4 +1,3 @@
-
 import { Home, Bot, Phone, Mic, PieChart, Users, User, CreditCard, Settings, LogOut } from "lucide-react";
 import {
   Sidebar,
@@ -14,7 +13,7 @@ import {
 import { Card } from "@/components/ui/card";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useAgentCount } from "@/components/agents/hooks/useAgentCount";
 import { Badge } from "@/components/ui/badge";
@@ -122,15 +121,15 @@ export const DashboardSidebar = ({ className = '' }: DashboardSidebarProps) => {
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <a href="/dashboard" className="flex items-center gap-2 text-foreground px-6">
+                  <Link to="/dashboard" className="flex items-center gap-2 text-foreground px-6">
                     <Home className="h-5 w-5" />
                     <span>Overview</span>
-                  </a>
+                  </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <a href="/dashboard/agents" className="flex items-center justify-between text-foreground group w-full px-6">
+                  <Link to="/dashboard/agents" className="flex items-center justify-between text-foreground group w-full px-6">
                     <div className="flex items-center gap-2">
                       <Bot className="h-5 w-5" />
                       <span>AI Agents</span>
@@ -140,12 +139,12 @@ export const DashboardSidebar = ({ className = '' }: DashboardSidebarProps) => {
                         {agentCount}
                       </Badge>
                     )}
-                  </a>
+                  </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <a href="/dashboard/campaigns" className="flex items-center justify-between text-foreground group w-full px-6">
+                  <Link to="/dashboard/campaigns" className="flex items-center justify-between text-foreground group w-full px-6">
                     <div className="flex items-center gap-2">
                       <Phone className="h-5 w-5" />
                       <span>Campaigns</span>
@@ -155,7 +154,7 @@ export const DashboardSidebar = ({ className = '' }: DashboardSidebarProps) => {
                         {campaignCount}
                       </Badge>
                     )}
-                  </a>
+                  </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
@@ -169,26 +168,26 @@ export const DashboardSidebar = ({ className = '' }: DashboardSidebarProps) => {
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <a href="/dashboard/recordings" className="flex items-center gap-2 text-foreground px-6">
+                  <Link to="/dashboard/recordings" className="flex items-center gap-2 text-foreground px-6">
                     <Mic className="h-5 w-5" />
                     <span>Recordings</span>
-                  </a>
+                  </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <a href="/dashboard/analytics" className="flex items-center gap-2 text-foreground px-6">
+                  <Link to="/dashboard/analytics" className="flex items-center gap-2 text-foreground px-6">
                     <PieChart className="h-5 w-5" />
                     <span>Analytics</span>
-                  </a>
+                  </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <a href="/dashboard/team" className="flex items-center gap-2 text-foreground px-6">
+                  <Link to="/dashboard/team" className="flex items-center gap-2 text-foreground px-6">
                     <Users className="h-5 w-5" />
                     <span>Team</span>
-                  </a>
+                  </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
@@ -202,18 +201,18 @@ export const DashboardSidebar = ({ className = '' }: DashboardSidebarProps) => {
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <a href="/dashboard/settings" className="flex items-center gap-2 text-foreground px-6">
+                  <Link to="/dashboard/settings" className="flex items-center gap-2 text-foreground px-6">
                     <Settings className="h-5 w-5" />
                     <span>Settings</span>
-                  </a>
+                  </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <a href="/dashboard/subscription" className="flex items-center gap-2 text-foreground px-6">
+                  <Link to="/dashboard/subscription" className="flex items-center gap-2 text-foreground px-6">
                     <CreditCard className="h-5 w-5" />
                     <span>Subscription</span>
-                  </a>
+                  </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
