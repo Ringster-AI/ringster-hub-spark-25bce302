@@ -15,6 +15,7 @@ import Team from "./Dashboard/Team";
 import Settings from "./Dashboard/Settings";
 import Subscription from "./Dashboard/Subscription";
 import Profile from "./Dashboard/Profile";
+import { FeedbackDialog } from "@/components/dashboard/FeedbackDialog";
 
 const Dashboard = () => {
   return (
@@ -37,6 +38,7 @@ const Dashboard = () => {
             <Route path="/blog/edit/:id" element={<EditBlogPost />} />
           </Routes>
         </div>
+        <FeedbackDialog />
       </div>
     </SidebarProvider>
   );
