@@ -1,5 +1,4 @@
 
-import { useState } from "react";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { Routes, Route } from "react-router-dom";
 import BlogAdmin from "./Dashboard/BlogAdmin";
@@ -20,9 +19,9 @@ import { FeedbackDialog } from "@/components/dashboard/FeedbackDialog";
 const Dashboard = () => {
   return (
     <SidebarProvider>
-      <div className="flex h-screen">
+      <div className="flex h-screen overflow-hidden">
         <DashboardSidebar />
-        <div className="flex-1 overflow-auto">
+        <div className="flex-1">
           <Routes>
             <Route path="/" element={<Overview />} />
             <Route path="/agents" element={<Agents />} />
