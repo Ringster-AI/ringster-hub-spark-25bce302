@@ -72,7 +72,7 @@ export const Hero = () => {
                 </DialogHeader>
                 <div className="w-full aspect-[4/3] relative">
                   <iframe 
-                    src="https://calendar.google.com/calendar/embed?src=473a0ecfecdf5053a6e766c67d08160d0357be0e8d9b63cd11fb5f4cd441d1e1%40group.calendar.google.com&ctz=America%2FNew_York" 
+                    src="https://calendar.google.com/calendar/appointments/schedules/AcZssZ355HlDqVqRqMSqIYLk2GYEIx1ZJK0W_im36D6KoxxRRUaiIXZ4SSwJcj0XcPnJdVlpMX5uzWxp?gv=true" 
                     className="w-full h-full absolute inset-0"
                     frameBorder="0" 
                     scrolling="no"
