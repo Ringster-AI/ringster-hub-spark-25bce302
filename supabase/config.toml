@@ -1,4 +1,5 @@
 
 project_id = "your-project-id"
+
 [functions.add-to-waitlist]
 verify_jwt = false
