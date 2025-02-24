@@ -4,9 +4,54 @@ import { ArrowRight, Phone, ArrowUpRight } from "lucide-react";
 import { ShinyText } from "@/components/ui/shiny-text";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useState } from "react";
+import { Input } from "@/components/ui/input";
+import { useToast } from "@/components/ui/use-toast";
+import { createClient } from "@supabase/supabase-js";
 
 export const Hero = () => {
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const [email, setEmail] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast();
+  const supabase = createClient(
+    import.meta.env.VITE_SUPABASE_URL,
+    import.meta.env.VITE_SUPABASE_ANON_KEY
+  );
+
+  const handleWaitlistSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) {
+      toast({
+        title: "Error",
+        description: "Please enter your email address",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const { error } = await supabase.functions.invoke('add-to-waitlist', {
+        body: { email }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success!",
+        description: "You've been added to our waitlist. We'll be in touch soon!",
+      });
+      setEmail("");
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to join waitlist. Please try again later.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="relative overflow-hidden min-h-screen">
@@ -90,13 +135,23 @@ export const Hero = () => {
             </Button>
           </div>
 
-          <div className="mt-16 text-center">
-            <p className="text-white/90 font-medium mb-4">Trusted by 100+ businesses</p>
-            <div className="flex justify-center items-center gap-8">
-              <img src="/lovable-uploads/agorapulse.svg" alt="Agorapulse" className="h-12 w-auto opacity-70" />
-              <img src="/lovable-uploads/LG.svg" alt="LG" className="h-12 w-auto opacity-70" />
-              <img src="/lovable-uploads/tcl.svg" alt="TCL" className="h-12 w-auto opacity-70" />
-            </div>
+          <div className="mt-16">
+            <form onSubmit={handleWaitlistSubmit} className="flex flex-col sm:flex-row items-center justify-center gap-4 max-w-md mx-auto">
+              <Input
+                type="email"
+                placeholder="Enter your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="flex-1 border-[#9b87f5] bg-white/10 text-white placeholder:text-white/70"
+              />
+              <Button 
+                type="submit"
+                className="bg-[#9b87f5] hover:bg-[#9b87f5]/90 text-white px-8"
+                disabled={isSubmitting}
+              >
+                Join Waitlist
+              </Button>
+            </form>
           </div>
         </div>
       </div>
