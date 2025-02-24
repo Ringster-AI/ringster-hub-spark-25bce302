@@ -2,11 +2,11 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Phone, ArrowUpRight } from "lucide-react";
 import { ShinyText } from "@/components/ui/shiny-text";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { useState } from "react";
 
 export const Hero = () => {
-  const handleBookDemo = () => {
-    window.location.href = "https://cal.com/ringster-demo/ringster-demo";
-  };
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   return (
     <div className="relative overflow-hidden min-h-screen">
@@ -56,19 +56,35 @@ export const Hero = () => {
           </ul>
 
           <div className="mt-10 flex items-center justify-center gap-x-6">
-            <Button 
-              size="lg" 
-              className="group bg-white text-[#9b87f5] hover:bg-white/90 hover:text-[#9b87f5] shadow-lg text-lg px-8 py-6"
-              onClick={handleBookDemo}
-            >
-              Book a Demo
-              <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-            </Button>
+            <Dialog open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+              <DialogTrigger asChild>
+                <Button 
+                  size="lg" 
+                  className="group bg-white text-[#9b87f5] hover:bg-white/90 hover:text-[#9b87f5] shadow-lg text-lg px-8 py-6"
+                >
+                  Book a Demo
+                  <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-4xl">
+                <DialogHeader>
+                  <DialogTitle>Schedule Your Demo</DialogTitle>
+                </DialogHeader>
+                <div className="w-full aspect-[4/3] relative">
+                  <iframe 
+                    src="https://calendar.google.com/calendar/embed?src=473a0ecfecdf5053a6e766c67d08160d0357be0e8d9b63cd11fb5f4cd441d1e1%40group.calendar.google.com&ctz=America%2FNew_York" 
+                    className="w-full h-full absolute inset-0"
+                    frameBorder="0" 
+                    scrolling="no"
+                  />
+                </div>
+              </DialogContent>
+            </Dialog>
             <Button 
               variant="outline" 
               size="lg" 
               className="border-white text-white bg-transparent hover:bg-white/10 hover:text-white"
-              onClick={() => window.location.href = "https://cal.com/ringster-demo/ringster-demo"}
+              onClick={() => setIsCalendarOpen(true)}
             >
               Learn More
             </Button>
