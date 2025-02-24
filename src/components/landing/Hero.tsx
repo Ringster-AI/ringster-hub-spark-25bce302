@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Phone, ArrowUpRight } from "lucide-react";
 import { ShinyText } from "@/components/ui/shiny-text";
@@ -6,17 +5,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
-import { createClient } from "@supabase/supabase-js";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Hero = () => {
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
-  const supabase = createClient(
-    import.meta.env.VITE_SUPABASE_URL,
-    import.meta.env.VITE_SUPABASE_ANON_KEY
-  );
 
   const handleWaitlistSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,7 +50,6 @@ export const Hero = () => {
 
   return (
     <div className="relative overflow-hidden min-h-screen">
-      {/* Video Background with Image Fallback */}
       <div className="absolute inset-0 w-full h-full">
         <video 
           autoPlay 
@@ -67,7 +61,6 @@ export const Hero = () => {
         >
           <source src="/lovable-uploads/backgroundvideo.mp4" type="video/mp4" />
         </video>
-        {/* Dark overlay for better text readability */}
         <div className="absolute inset-0 bg-black/60" />
       </div>
 
