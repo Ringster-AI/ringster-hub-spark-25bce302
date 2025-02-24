@@ -86,7 +86,6 @@ const Subscription = () => {
 
       <div className="flex-1 overflow-auto">
         <div className="p-6 pt-0">
-          <h2 className="text-2xl font-bold mb-6">Available Plans</h2>
           <PricingPlans />
         </div>
       </div>
