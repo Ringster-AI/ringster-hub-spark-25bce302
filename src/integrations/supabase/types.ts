@@ -512,6 +512,44 @@ export type Database = {
         }
         Relationships: []
       }
+      tool_call_logs: {
+        Row: {
+          agent_id: string
+          id: string
+          parameters: Json
+          result: Json | null
+          status: string
+          timestamp: string
+          tool_name: string
+        }
+        Insert: {
+          agent_id: string
+          id?: string
+          parameters: Json
+          result?: Json | null
+          status: string
+          timestamp?: string
+          tool_name: string
+        }
+        Update: {
+          agent_id?: string
+          id?: string
+          parameters?: Json
+          result?: Json | null
+          status?: string
+          timestamp?: string
+          tool_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_agent"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agent_configs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       usage_summary: {
         Row: {
           created_at: string | null
