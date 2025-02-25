@@ -14,7 +14,7 @@ serve(async (req) => {
 
   try {
     const { email } = await req.json();
-    console.log('Received email:', email);
+    console.log('Processing email submission:', email);
     
     if (!email) {
       console.error('No email provided');
@@ -27,24 +27,59 @@ serve(async (req) => {
       );
     }
 
-    // For testing purposes, just return success without SendGrid integration
-    // We can add SendGrid integration once we confirm the function is working
+    const SENDGRID_API_KEY = Deno.env.get('SENDGRID_API_KEY');
+    const SENDGRID_LIST_ID = Deno.env.get('SENDGRID_LIST_ID');
+
+    console.log('Checking SendGrid configuration...');
+    console.log('API Key exists:', !!SENDGRID_API_KEY);
+    console.log('List ID exists:', !!SENDGRID_LIST_ID);
+
+    if (!SENDGRID_API_KEY || !SENDGRID_LIST_ID) {
+      console.error('SendGrid configuration missing');
+      return new Response(
+        JSON.stringify({ error: 'Server configuration error' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log('Sending request to SendGrid...');
+    // Add contact to SendGrid
+    const response = await fetch('https://api.sendgrid.com/v3/marketing/contacts', {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${SENDGRID_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        list_ids: [SENDGRID_LIST_ID],
+        contacts: [{
+          email: email
+        }]
+      })
+    });
+
+    const responseText = await response.text();
+    console.log('SendGrid API Response:', response.status, responseText);
+
+    if (!response.ok) {
+      console.error('SendGrid API error:', responseText);
+      throw new Error('Failed to add contact to SendGrid');
+    }
+
+    console.log('Successfully added contact to SendGrid');
     return new Response(
       JSON.stringify({ 
         success: true,
-        message: 'Email received successfully',
-        email: email
+        message: 'Successfully added to waitlist'
       }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error) {
     console.error('Error in add-to-waitlist function:', error);
     return new Response(
       JSON.stringify({ 
-        error: 'Internal server error',
+        error: 'Failed to add to waitlist',
         details: error.message 
       }),
       { 
