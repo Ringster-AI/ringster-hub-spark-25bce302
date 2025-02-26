@@ -116,7 +116,7 @@ export const Hero = () => {
                   <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-4xl">
+              <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>Schedule Your Demo</DialogTitle>
                 </DialogHeader>
@@ -125,7 +125,7 @@ export const Hero = () => {
                     src="https://calendar.google.com/calendar/appointments/schedules/AcZssZ355HlDqVqRqMSqIYLk2GYEIx1ZJK0W_im36D6KoxxRRUaiIXZ4SSwJcj0XcPnJdVlpMX5uzWxp?gv=true" 
                     className="w-full h-full absolute inset-0"
                     frameBorder="0" 
-                    scrolling="no"
+                    scrolling="yes"
                   />
                 </div>
               </DialogContent>
