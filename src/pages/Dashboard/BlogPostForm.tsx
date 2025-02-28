@@ -15,6 +15,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -288,6 +289,9 @@ const BlogPostForm = ({ initialData }: BlogPostFormProps) => {
               <FormControl>
                 <Textarea {...field} />
               </FormControl>
+              <FormDescription>
+                This is a short summary of your post. You can use Markdown here.
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -302,6 +306,16 @@ const BlogPostForm = ({ initialData }: BlogPostFormProps) => {
               <FormControl>
                 <Textarea className="min-h-[300px]" {...field} />
               </FormControl>
+              <FormDescription>
+                You can use Markdown formatting:
+                <ul className="list-disc list-inside text-sm text-gray-500 mt-2">
+                  <li># Heading 1, ## Heading 2, ### Heading 3</li>
+                  <li>**bold text**, *italic text*</li>
+                  <li>- List item, 1. Numbered list</li>
+                  <li>[Link text](url)</li>
+                  <li>` code `</li>
+                </ul>
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}

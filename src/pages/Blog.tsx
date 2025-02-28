@@ -5,6 +5,7 @@ import { BlogPost } from "@/types/blog";
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "react-router-dom";
+import ReactMarkdown from "react-markdown";
 
 const Blog = () => {
   const { data: posts, isLoading } = useQuery({
@@ -38,13 +39,6 @@ const Blog = () => {
     );
   }
 
-  // Helper function to format the blog content with proper styling
-  const formatContent = (content: string) => {
-    // Simple formatting - converts new lines to break tags
-    // This preserves basic paragraph structure
-    return content.replace(/\n/g, '<br />');
-  };
-
   return (
     <main className="min-h-screen bg-white">
       <div className="container mx-auto px-6 py-32">
@@ -71,12 +65,9 @@ const Blog = () => {
                   {post.title}
                 </h2>
                 {post.excerpt && (
-                  <div 
-                    className="mt-2 text-gray-600 line-clamp-3 blog-excerpt"
-                    dangerouslySetInnerHTML={{ 
-                      __html: formatContent(post.excerpt) 
-                    }}
-                  />
+                  <div className="mt-2 text-gray-600 line-clamp-3 blog-excerpt">
+                    <ReactMarkdown>{post.excerpt}</ReactMarkdown>
+                  </div>
                 )}
                 <div className="mt-4 text-sm text-gray-500">
                   {post.published_at && format(new Date(post.published_at), 'MMMM d, yyyy')}

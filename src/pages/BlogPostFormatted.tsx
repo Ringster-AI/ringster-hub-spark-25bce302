@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { BlogPost } from "@/types/blog";
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
+import ReactMarkdown from "react-markdown";
 
 const BlogPostFormatted = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -22,25 +23,6 @@ const BlogPostFormatted = () => {
       return data as BlogPost;
     },
   });
-
-  // Function to convert text to formatted HTML 
-  const formatContent = (content: string) => {
-    if (!content) return "";
-
-    // Replace line breaks with <br> tags
-    let formattedContent = content.replace(/\n\n/g, '</p><p>');
-    formattedContent = formattedContent.replace(/\n/g, '<br />');
-    
-    // Wrap in paragraph tags if not already
-    if (!formattedContent.startsWith('<p>')) {
-      formattedContent = '<p>' + formattedContent;
-    }
-    if (!formattedContent.endsWith('</p>')) {
-      formattedContent = formattedContent + '</p>';
-    }
-
-    return formattedContent;
-  };
 
   if (isLoading) {
     return (
@@ -85,12 +67,9 @@ const BlogPostFormatted = () => {
           )}
         </div>
 
-        <div 
-          className="prose prose-lg max-w-none"
-          dangerouslySetInnerHTML={{ 
-            __html: formatContent(post.content) 
-          }}
-        />
+        <div className="prose prose-lg max-w-none">
+          <ReactMarkdown>{post.content}</ReactMarkdown>
+        </div>
       </article>
     </main>
   );
