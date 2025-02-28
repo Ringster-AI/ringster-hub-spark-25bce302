@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 
 const formSchema = z.object({
@@ -39,6 +39,26 @@ const BlogPostForm = ({ initialData }: BlogPostFormProps) => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [uploading, setUploading] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+
+  // Get the current user ID on component mount
+  useEffect(() => {
+    const getUserId = async () => {
+      const { data } = await supabase.auth.getUser();
+      if (data.user) {
+        setUserId(data.user.id);
+      } else {
+        toast({
+          title: "Authentication Error",
+          description: "You must be logged in to create or edit blog posts.",
+          variant: "destructive",
+        });
+        navigate("/login");
+      }
+    };
+
+    getUserId();
+  }, [navigate, toast]);
 
   const form = useForm<BlogPostFormData>({
     resolver: zodResolver(formSchema),
@@ -52,23 +72,49 @@ const BlogPostForm = ({ initialData }: BlogPostFormProps) => {
     },
   });
 
+  // Generate a URL-friendly slug from the title
+  const generateSlug = (title: string) => {
+    return title
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '');
+  };
+
+  // Update the slug when the title changes
+  useEffect(() => {
+    const subscription = form.watch((value, { name }) => {
+      if (name === 'title' && value.title && !initialData) {
+        form.setValue('slug', generateSlug(value.title as string));
+      }
+    });
+    
+    return () => subscription.unsubscribe();
+  }, [form, initialData]);
+
   const mutation = useMutation({
     mutationFn: async (values: BlogPostFormData) => {
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) throw new Error("Not authenticated");
+      if (!userId) {
+        throw new Error("Not authenticated");
+      }
 
       const postData = {
         ...values,
         published_at: values.status === "published" ? new Date().toISOString() : null,
-        author_id: userData.user.id,
+        author_id: userId,
       };
+
+      console.log("Submitting post data:", postData);
 
       if (initialData) {
         const { error } = await supabase
           .from("blog_posts")
           .update(postData)
           .eq("id", initialData.id);
-        if (error) throw error;
+        
+        if (error) {
+          console.error("Error updating post:", error);
+          throw error;
+        }
         return initialData.id;
       } else {
         const { data, error } = await supabase
@@ -76,7 +122,11 @@ const BlogPostForm = ({ initialData }: BlogPostFormProps) => {
           .insert(postData)
           .select()
           .single();
-        if (error) throw error;
+        
+        if (error) {
+          console.error("Error creating post:", error);
+          throw error;
+        }
         return data.id;
       }
     },
@@ -89,6 +139,7 @@ const BlogPostForm = ({ initialData }: BlogPostFormProps) => {
       navigate("/dashboard/blog");
     },
     onError: (error) => {
+      console.error("Mutation error:", error);
       toast({
         title: "Error",
         description: error.message,
@@ -133,8 +184,25 @@ const BlogPostForm = ({ initialData }: BlogPostFormProps) => {
   };
 
   const onSubmit = (values: BlogPostFormData) => {
+    if (!userId) {
+      toast({
+        title: "Authentication Error",
+        description: "You must be logged in to create or edit blog posts.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     mutation.mutate(values);
   };
+
+  if (!userId) {
+    return (
+      <div className="p-6 text-center">
+        <p>Please log in to create or edit blog posts.</p>
+      </div>
+    );
+  }
 
   return (
     <Form {...form}>
@@ -242,7 +310,7 @@ const BlogPostForm = ({ initialData }: BlogPostFormProps) => {
         />
 
         <div className="flex gap-4">
-          <Button type="submit" disabled={mutation.isPending}>
+          <Button type="submit" disabled={mutation.isPending || !userId}>
             {initialData ? "Update" : "Create"} Post
           </Button>
           <Button
