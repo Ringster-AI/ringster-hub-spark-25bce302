@@ -92,7 +92,7 @@ const BlogPostForm = ({ initialData }: BlogPostFormProps) => {
     return () => subscription.unsubscribe();
   }, [form, initialData]);
 
-  // Form submission function using Supabase Edge Function
+  // Form submission function
   const handleSubmit = async (values: BlogPostFormData) => {
     if (!userId) {
       toast({
@@ -122,27 +122,22 @@ const BlogPostForm = ({ initialData }: BlogPostFormProps) => {
         throw new Error("Authentication token not available");
       }
 
-      // Create or update post using Edge Function to bypass RLS
-      const response = await fetch(
-        `${window.location.origin}/.netlify/functions/supabase-functions/blog-operations`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            operation: initialData ? "update" : "create",
-            postData,
-            postId: initialData?.id,
-          }),
-        }
-      );
-
-      const responseData = await response.json();
-      
-      if (!response.ok || responseData.error) {
-        throw new Error(responseData.error || "Failed to save blog post");
+      // Use direct Supabase client for blog posts operations
+      if (initialData) {
+        // Update existing post
+        const { error } = await supabase
+          .from("blog_posts")
+          .update(postData)
+          .eq("id", initialData.id);
+          
+        if (error) throw error;
+      } else {
+        // Create new post
+        const { error } = await supabase
+          .from("blog_posts")
+          .insert(postData);
+          
+        if (error) throw error;
       }
 
       // Success handling
