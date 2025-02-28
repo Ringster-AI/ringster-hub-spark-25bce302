@@ -45,13 +45,38 @@ const BlogPostForm = ({ initialData }: BlogPostFormProps) => {
   // Get the current user ID on component mount
   useEffect(() => {
     const getUserId = async () => {
-      const { data } = await supabase.auth.getUser();
-      if (data.user) {
-        setUserId(data.user.id);
-      } else {
+      try {
+        const { data, error } = await supabase.auth.getUser();
+        console.log("Auth user data:", data);
+        
+        if (error) {
+          console.error("Auth error:", error);
+          toast({
+            title: "Authentication Error",
+            description: error.message || "Failed to get user information",
+            variant: "destructive",
+          });
+          navigate("/login");
+          return;
+        }
+        
+        if (data.user) {
+          console.log("User authenticated with ID:", data.user.id);
+          setUserId(data.user.id);
+        } else {
+          console.log("No authenticated user found");
+          toast({
+            title: "Authentication Error",
+            description: "You must be logged in to create or edit blog posts.",
+            variant: "destructive",
+          });
+          navigate("/login");
+        }
+      } catch (err) {
+        console.error("Unexpected error during auth check:", err);
         toast({
-          title: "Authentication Error",
-          description: "You must be logged in to create or edit blog posts.",
+          title: "Error",
+          description: "An unexpected error occurred. Please try again.",
           variant: "destructive",
         });
         navigate("/login");
@@ -95,6 +120,7 @@ const BlogPostForm = ({ initialData }: BlogPostFormProps) => {
   // Form submission function
   const handleSubmit = async (values: BlogPostFormData) => {
     if (!userId) {
+      console.error("No user ID available for submission");
       toast({
         title: "Authentication Error",
         description: "You must be logged in to create or edit blog posts.",
@@ -114,23 +140,43 @@ const BlogPostForm = ({ initialData }: BlogPostFormProps) => {
 
       console.log("Submitting post data:", postData);
 
+      // Verify we have a valid session before proceeding
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !sessionData.session) {
+        console.error("Session verification failed:", sessionError);
+        throw new Error("Your session has expired. Please log in again.");
+      }
+      
+      console.log("Session verified, proceeding with submission");
+
       // Use direct Supabase client for blog posts operations
       if (initialData) {
         // Update existing post
-        const { error } = await supabase
+        console.log("Updating existing post with ID:", initialData.id);
+        const { error, data } = await supabase
           .from("blog_posts")
           .update(postData)
-          .eq("id", initialData.id);
+          .eq("id", initialData.id)
+          .select();
           
-        if (error) throw error;
+        if (error) {
+          console.error("Update error:", error);
+          throw error;
+        }
+        
+        console.log("Updated post:", data);
       } else {
         // Create new post
+        console.log("Creating new post");
         const { error, data } = await supabase
           .from("blog_posts")
           .insert(postData)
           .select();
           
-        if (error) throw error;
+        if (error) {
+          console.error("Insert error:", error);
+          throw error;
+        }
         
         console.log("Created post:", data);
       }
