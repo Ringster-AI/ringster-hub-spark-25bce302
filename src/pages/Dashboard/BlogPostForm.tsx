@@ -114,14 +114,6 @@ const BlogPostForm = ({ initialData }: BlogPostFormProps) => {
 
       console.log("Submitting post data:", postData);
 
-      // Get auth token for request authorization
-      const { data: authData } = await supabase.auth.getSession();
-      const token = authData.session?.access_token;
-
-      if (!token) {
-        throw new Error("Authentication token not available");
-      }
-
       // Use direct Supabase client for blog posts operations
       if (initialData) {
         // Update existing post
@@ -133,11 +125,14 @@ const BlogPostForm = ({ initialData }: BlogPostFormProps) => {
         if (error) throw error;
       } else {
         // Create new post
-        const { error } = await supabase
+        const { error, data } = await supabase
           .from("blog_posts")
-          .insert(postData);
+          .insert(postData)
+          .select();
           
         if (error) throw error;
+        
+        console.log("Created post:", data);
       }
 
       // Success handling
