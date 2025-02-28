@@ -92,7 +92,7 @@ const BlogPostForm = ({ initialData }: BlogPostFormProps) => {
     return () => subscription.unsubscribe();
   }, [form, initialData]);
 
-  // Direct form submission function using REST endpoint to bypass Supabase RLS
+  // Form submission function using Supabase Edge Function
   const handleSubmit = async (values: BlogPostFormData) => {
     if (!userId) {
       toast({
@@ -122,38 +122,27 @@ const BlogPostForm = ({ initialData }: BlogPostFormProps) => {
         throw new Error("Authentication token not available");
       }
 
-      // Create or update post using direct fetch to bypass RLS recursion
-      let response;
-      
-      if (initialData) {
-        // Update existing post
-        response = await fetch(`https://owzerqaududhfwngyqbp.supabase.co/rest/v1/blog_posts?id=eq.${initialData.id}`, {
-          method: 'PATCH',
+      // Create or update post using Edge Function to bypass RLS
+      const response = await fetch(
+        `${window.location.origin}/.netlify/functions/supabase-functions/blog-operations`,
+        {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-            'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im93emVycWF1ZHVkaGZ3bmd5cWJwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzU0MjgzMjYsImV4cCI6MjA1MTAwNDMyNn0.FgkO0e2Ey77Og15q-pdL4r6Mlz6t9ExJZCm2eXcAhMo',
-            'Prefer': 'return=representation'
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
           },
-          body: JSON.stringify(postData)
-        });
-      } else {
-        // Create new post
-        response = await fetch(`https://owzerqaududhfwngyqbp.supabase.co/rest/v1/blog_posts`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-            'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im93emVycWF1ZHVkaGZ3bmd5cWJwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzU0MjgzMjYsImV4cCI6MjA1MTAwNDMyNn0.FgkO0e2Ey77Og15q-pdL4r6Mlz6t9ExJZCm2eXcAhMo',
-            'Prefer': 'return=representation'
-          },
-          body: JSON.stringify(postData)
-        });
-      }
+          body: JSON.stringify({
+            operation: initialData ? "update" : "create",
+            postData,
+            postId: initialData?.id,
+          }),
+        }
+      );
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to save blog post");
+      const responseData = await response.json();
+      
+      if (!response.ok || responseData.error) {
+        throw new Error(responseData.error || "Failed to save blog post");
       }
 
       // Success handling
