@@ -40,6 +40,7 @@ const BlogPostForm = ({ initialData }: BlogPostFormProps) => {
   const queryClient = useQueryClient();
   const [uploading, setUploading] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Get the current user ID on component mount
   useEffect(() => {
@@ -91,12 +92,20 @@ const BlogPostForm = ({ initialData }: BlogPostFormProps) => {
     return () => subscription.unsubscribe();
   }, [form, initialData]);
 
-  const mutation = useMutation({
-    mutationFn: async (values: BlogPostFormData) => {
-      if (!userId) {
-        throw new Error("Not authenticated");
-      }
+  // Direct form submission function that doesn't use react-query mutation
+  const handleSubmit = async (values: BlogPostFormData) => {
+    if (!userId) {
+      toast({
+        title: "Authentication Error",
+        description: "You must be logged in to create or edit blog posts.",
+        variant: "destructive",
+      });
+      return;
+    }
 
+    setIsSubmitting(true);
+
+    try {
       const postData = {
         ...values,
         published_at: values.status === "published" ? new Date().toISOString() : null,
@@ -105,18 +114,26 @@ const BlogPostForm = ({ initialData }: BlogPostFormProps) => {
 
       console.log("Submitting post data:", postData);
 
+      let result;
+      
       if (initialData) {
-        const { error } = await supabase
+        // Update existing post
+        const { data, error } = await supabase
           .from("blog_posts")
           .update(postData)
-          .eq("id", initialData.id);
+          .eq("id", initialData.id)
+          .select()
+          .single();
         
         if (error) {
           console.error("Error updating post:", error);
           throw error;
         }
-        return initialData.id;
+        
+        result = data;
+        
       } else {
+        // Create new post with direct insert
         const { data, error } = await supabase
           .from("blog_posts")
           .insert(postData)
@@ -127,26 +144,33 @@ const BlogPostForm = ({ initialData }: BlogPostFormProps) => {
           console.error("Error creating post:", error);
           throw error;
         }
-        return data.id;
+        
+        result = data;
       }
-    },
-    onSuccess: () => {
+
+      // Success handling
       queryClient.invalidateQueries({ queryKey: ["admin-blog-posts"] });
+      
       toast({
         title: `Post ${initialData ? "updated" : "created"} successfully`,
         description: "Your blog post has been saved.",
       });
+      
       navigate("/dashboard/blog");
-    },
-    onError: (error) => {
-      console.error("Mutation error:", error);
+      
+    } catch (error: any) {
+      console.error("Submission error:", error);
+      
       toast({
         title: "Error",
-        description: error.message,
+        description: error.message || "An error occurred while saving the post",
         variant: "destructive",
       });
-    },
-  });
+      
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -183,19 +207,6 @@ const BlogPostForm = ({ initialData }: BlogPostFormProps) => {
     }
   };
 
-  const onSubmit = (values: BlogPostFormData) => {
-    if (!userId) {
-      toast({
-        title: "Authentication Error",
-        description: "You must be logged in to create or edit blog posts.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    mutation.mutate(values);
-  };
-
   if (!userId) {
     return (
       <div className="p-6 text-center">
@@ -206,7 +217,7 @@ const BlogPostForm = ({ initialData }: BlogPostFormProps) => {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
         <FormField
           control={form.control}
           name="title"
@@ -310,7 +321,7 @@ const BlogPostForm = ({ initialData }: BlogPostFormProps) => {
         />
 
         <div className="flex gap-4">
-          <Button type="submit" disabled={mutation.isPending || !userId}>
+          <Button type="submit" disabled={isSubmitting || !userId}>
             {initialData ? "Update" : "Create"} Post
           </Button>
           <Button
