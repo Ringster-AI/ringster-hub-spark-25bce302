@@ -72,7 +72,7 @@ export const Hero = () => {
           </h1>
           <div className="mt-6 text-lg leading-8 max-w-2xl mx-auto">
             <ShinyText 
-              text="Our AI agents work 24/7 to handle your calls, ensuring you never miss an opportunity."
+              text="24/7 AI-powered call handling for small businesses, freelancers, and entrepreneurs—answering calls, booking appointments, and capturing leads so you don’t have to."
               className="text-white/90"
               speed={3}
             />
