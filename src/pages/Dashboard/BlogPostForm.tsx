@@ -1,12 +1,5 @@
 
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
-import { useToast } from "@/hooks/use-toast";
-import { BlogPost, BlogPostFormData } from "@/types/blog";
+import { BlogPost } from "@/types/blog";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -19,227 +12,18 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useState, useEffect } from "react";
-import { Badge } from "@/components/ui/badge";
-
-const formSchema = z.object({
-  title: z.string().min(1, "Title is required"),
-  slug: z.string().min(1, "Slug is required"),
-  content: z.string().min(1, "Content is required"),
-  excerpt: z.string().optional(),
-  featured_image: z.string().optional(),
-  status: z.enum(["draft", "published"]),
-});
+import ImageUpload from "@/components/blog/ImageUpload";
+import StatusSelector from "@/components/blog/StatusSelector";
+import MarkdownHelp from "@/components/blog/MarkdownHelp";
+import FormActions from "@/components/blog/FormActions";
+import { useBlogPost } from "@/hooks/useBlogPost";
 
 interface BlogPostFormProps {
   initialData?: BlogPost;
 }
 
 const BlogPostForm = ({ initialData }: BlogPostFormProps) => {
-  const { toast } = useToast();
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
-  const [uploading, setUploading] = useState(false);
-  const [userId, setUserId] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Get the current user ID on component mount
-  useEffect(() => {
-    const getUserId = async () => {
-      try {
-        const { data, error } = await supabase.auth.getUser();
-        console.log("Auth user data:", data);
-        
-        if (error) {
-          console.error("Auth error:", error);
-          toast({
-            title: "Authentication Error",
-            description: error.message || "Failed to get user information",
-            variant: "destructive",
-          });
-          navigate("/login");
-          return;
-        }
-        
-        if (data.user) {
-          console.log("User authenticated with ID:", data.user.id);
-          setUserId(data.user.id);
-        } else {
-          console.log("No authenticated user found");
-          toast({
-            title: "Authentication Error",
-            description: "You must be logged in to create or edit blog posts.",
-            variant: "destructive",
-          });
-          navigate("/login");
-        }
-      } catch (err) {
-        console.error("Unexpected error during auth check:", err);
-        toast({
-          title: "Error",
-          description: "An unexpected error occurred. Please try again.",
-          variant: "destructive",
-        });
-        navigate("/login");
-      }
-    };
-
-    getUserId();
-  }, [navigate, toast]);
-
-  const form = useForm<BlogPostFormData>({
-    resolver: zodResolver(formSchema),
-    defaultValues: initialData || {
-      title: "",
-      slug: "",
-      content: "",
-      excerpt: "",
-      featured_image: "",
-      status: "draft",
-    },
-  });
-
-  // Generate a URL-friendly slug from the title
-  const generateSlug = (title: string) => {
-    return title
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/(^-|-$)/g, '');
-  };
-
-  // Update the slug when the title changes
-  useEffect(() => {
-    const subscription = form.watch((value, { name }) => {
-      if (name === 'title' && value.title && !initialData) {
-        form.setValue('slug', generateSlug(value.title as string));
-      }
-    });
-    
-    return () => subscription.unsubscribe();
-  }, [form, initialData]);
-
-  // Form submission function
-  const handleSubmit = async (values: BlogPostFormData) => {
-    if (!userId) {
-      console.error("No user ID available for submission");
-      toast({
-        title: "Authentication Error",
-        description: "You must be logged in to create or edit blog posts.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    try {
-      const postData = {
-        ...values,
-        published_at: values.status === "published" ? new Date().toISOString() : null,
-        author_id: userId,
-      };
-
-      console.log("Submitting post data:", postData);
-
-      // Verify we have a valid session before proceeding
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-      if (sessionError || !sessionData.session) {
-        console.error("Session verification failed:", sessionError);
-        throw new Error("Your session has expired. Please log in again.");
-      }
-      
-      console.log("Session verified, proceeding with submission");
-
-      // Use direct Supabase client for blog posts operations
-      if (initialData) {
-        // Update existing post
-        console.log("Updating existing post with ID:", initialData.id);
-        const { error, data } = await supabase
-          .from("blog_posts")
-          .update(postData)
-          .eq("id", initialData.id)
-          .select();
-          
-        if (error) {
-          console.error("Update error:", error);
-          throw error;
-        }
-        
-        console.log("Updated post:", data);
-      } else {
-        // Create new post
-        console.log("Creating new post");
-        const { error, data } = await supabase
-          .from("blog_posts")
-          .insert(postData)
-          .select();
-          
-        if (error) {
-          console.error("Insert error:", error);
-          throw error;
-        }
-        
-        console.log("Created post:", data);
-      }
-
-      // Success handling
-      queryClient.invalidateQueries({ queryKey: ["admin-blog-posts"] });
-      
-      toast({
-        title: `Post ${initialData ? "updated" : "created"} successfully`,
-        description: "Your blog post has been saved.",
-      });
-      
-      navigate("/dashboard/blog");
-      
-    } catch (error: any) {
-      console.error("Submission error:", error);
-      
-      toast({
-        title: "Error",
-        description: error.message || "An error occurred while saving the post",
-        variant: "destructive",
-      });
-      
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setUploading(true);
-    try {
-      const fileExt = file.name.split(".").pop();
-      const filePath = `${crypto.randomUUID()}.${fileExt}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from("blog-images")
-        .upload(filePath, file);
-
-      if (uploadError) throw uploadError;
-
-      const { data: publicUrl } = supabase.storage
-        .from("blog-images")
-        .getPublicUrl(filePath);
-
-      form.setValue("featured_image", publicUrl.publicUrl);
-      toast({
-        title: "Image uploaded",
-        description: "Your image has been uploaded successfully.",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Upload failed",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setUploading(false);
-    }
-  };
+  const { form, handleSubmit, isSubmitting, userId } = useBlogPost(initialData);
 
   if (!userId) {
     return (
@@ -306,79 +90,33 @@ const BlogPostForm = ({ initialData }: BlogPostFormProps) => {
               <FormControl>
                 <Textarea className="min-h-[300px]" {...field} />
               </FormControl>
-              <FormDescription>
-                You can use Markdown formatting:
-                <ul className="list-disc list-inside text-sm text-gray-500 mt-2">
-                  <li># Heading 1, ## Heading 2, ### Heading 3</li>
-                  <li>**bold text**, *italic text*</li>
-                  <li>- List item, 1. Numbered list</li>
-                  <li>[Link text](url)</li>
-                  <li>` code `</li>
-                </ul>
-              </FormDescription>
+              <MarkdownHelp />
               <FormMessage />
             </FormItem>
           )}
         />
-
-        <div className="space-y-4">
-          <FormLabel>Featured Image</FormLabel>
-          <div className="flex items-center gap-4">
-            <Input
-              type="file"
-              accept="image/*"
-              onChange={handleImageUpload}
-              disabled={uploading}
-            />
-            {form.watch("featured_image") && (
-              <img
-                src={form.watch("featured_image")}
-                alt="Preview"
-                className="w-20 h-20 object-cover rounded"
-              />
-            )}
-          </div>
-        </div>
 
         <FormField
           control={form.control}
-          name="status"
+          name="featured_image"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Status</FormLabel>
-              <div className="flex gap-4">
-                <Button
-                  type="button"
-                  variant={field.value === "draft" ? "default" : "outline"}
-                  onClick={() => field.onChange("draft")}
-                >
-                  <Badge variant="secondary">Draft</Badge>
-                </Button>
-                <Button
-                  type="button"
-                  variant={field.value === "published" ? "default" : "outline"}
-                  onClick={() => field.onChange("published")}
-                >
-                  <Badge>Published</Badge>
-                </Button>
-              </div>
+              <ImageUpload 
+                imageUrl={field.value} 
+                onImageUploaded={(url) => form.setValue("featured_image", url)} 
+              />
               <FormMessage />
             </FormItem>
           )}
         />
 
-        <div className="flex gap-4">
-          <Button type="submit" disabled={isSubmitting || !userId}>
-            {initialData ? "Update" : "Create"} Post
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => navigate("/dashboard/blog")}
-          >
-            Cancel
-          </Button>
-        </div>
+        <StatusSelector control={form.control} />
+
+        <FormActions 
+          isSubmitting={isSubmitting} 
+          isEdit={Boolean(initialData)} 
+          isUserAuthenticated={Boolean(userId)} 
+        />
       </form>
     </Form>
   );
