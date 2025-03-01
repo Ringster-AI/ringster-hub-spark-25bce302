@@ -3,6 +3,7 @@ import { Hero } from "@/components/landing/Hero";
 import { Features } from "@/components/landing/Features";
 import { TryRingster } from "@/components/landing/TryRingster";
 import { Footer } from "@/components/landing/Footer";
+import { SoundFamiliar } from "@/components/landing/SoundFamiliar";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -34,6 +35,7 @@ const Index = () => {
       <div>
         <Hero />
         <TryRingster />
+        <SoundFamiliar />
         <Features />
         
         {/* Use Cases Section */}
