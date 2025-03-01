@@ -100,7 +100,79 @@ export default {
         "fade-down": "fade-down 0.5s ease-out",
         "shine": "shine 5s linear infinite"
       },
+      typography: {
+        DEFAULT: {
+          css: {
+            maxWidth: 'none',
+            color: 'inherit',
+            a: {
+              color: '#3182ce',
+              textDecoration: 'underline',
+              fontWeight: '500',
+            },
+            h1: {
+              fontWeight: '700',
+              fontSize: '2.25em',
+              marginTop: '1.5em',
+              marginBottom: '0.8em',
+            },
+            h2: {
+              fontWeight: '600',
+              fontSize: '1.75em',
+              marginTop: '1.5em',
+              marginBottom: '0.8em',
+            },
+            h3: {
+              fontWeight: '600',
+              fontSize: '1.5em',
+              marginTop: '1.5em',
+              marginBottom: '0.8em',
+            },
+            blockquote: {
+              fontWeight: '400',
+              fontStyle: 'italic',
+              borderLeftWidth: '0.25rem',
+              borderLeftColor: '#e2e8f0',
+              paddingLeft: '1rem',
+            },
+            code: {
+              color: '#1a202c',
+              backgroundColor: '#edf2f7',
+              borderRadius: '0.25rem',
+              padding: '0.1rem 0.25rem',
+            },
+            pre: {
+              backgroundColor: '#1a202c',
+              color: '#e2e8f0',
+              overflow: 'auto',
+              padding: '1rem',
+              borderRadius: '0.375rem',
+            },
+            'pre code': {
+              backgroundColor: 'transparent',
+              color: 'inherit',
+              padding: '0',
+            },
+            strong: {
+              fontWeight: '600',
+              color: 'inherit',
+            },
+            ul: {
+              listStyleType: 'disc',
+              paddingLeft: '1.5em',
+            },
+            ol: {
+              listStyleType: 'decimal',
+              paddingLeft: '1.5em',
+            },
+            li: {
+              marginTop: '0.5em',
+              marginBottom: '0.5em',
+            },
+          },
+        },
+      },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [require("tailwindcss-animate"), require('@tailwindcss/typography')],
 } satisfies Config;

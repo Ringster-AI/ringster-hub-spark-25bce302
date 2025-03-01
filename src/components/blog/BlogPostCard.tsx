@@ -29,7 +29,7 @@ const BlogPostCard = ({ post }: BlogPostCardProps) => {
           {post.title}
         </h2>
         {post.excerpt && (
-          <div className="mt-2 text-gray-600 line-clamp-3 blog-excerpt">
+          <div className="mt-2 text-gray-600 line-clamp-3 prose prose-sm">
             <ReactMarkdown>{post.excerpt}</ReactMarkdown>
           </div>
         )}
