@@ -1,7 +1,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { CallRecording } from "./types";
+import { CallRecording, TranscriptSegment } from "./types";
 
 export const useRecordings = () => {
   return useQuery({
@@ -33,5 +33,31 @@ export const useRecordings = () => {
       // Cast to ensure type compatibility
       return (data as unknown) as CallRecording[];
     },
+  });
+};
+
+export const useTranscript = (callSid: string | undefined) => {
+  return useQuery({
+    queryKey: ['transcript', callSid],
+    queryFn: async () => {
+      if (!callSid) {
+        throw new Error('Call SID is required to fetch transcript');
+      }
+
+      try {
+        const response = await supabase.functions.invoke('get-vapi-call-data', {
+          body: { callId: callSid, action: 'transcript' }
+        });
+        
+        if (response.error) throw new Error(response.error.message);
+        
+        console.log('Transcript response:', response.data);
+        return response.data?.transcript || [];
+      } catch (error) {
+        console.error('Error fetching transcript:', error);
+        throw error;
+      }
+    },
+    enabled: !!callSid, // Only run query when callSid is available
   });
 };

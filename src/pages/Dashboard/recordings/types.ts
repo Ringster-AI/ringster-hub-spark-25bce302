@@ -16,3 +16,9 @@ export interface CallRecording {
     };
   };
 }
+
+export interface TranscriptSegment {
+  speaker: string;
+  text: string;
+  timestamp: string;
+}

@@ -1,6 +1,6 @@
 
 import { format } from "date-fns";
-import { Play, Download, MessageSquare } from "lucide-react";
+import { Play, Download, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -48,16 +48,9 @@ export const RecordingsTable = ({
     }
   };
 
-  const handleViewTranscript = (recording: CallRecording) => {
-    if (recording.transcript_url) {
-      window.open(recording.transcript_url, '_blank');
-    } else {
-      toast({
-        title: "Transcript unavailable",
-        description: "No transcript is available for this call.",
-        variant: "destructive"
-      });
-    }
+  const handleTranscript = (recording: CallRecording) => {
+    onSelectRecording(recording);
+    // The transcript loading is now handled within the RecordingDetails component
   };
 
   if (isLoading) {
@@ -125,11 +118,10 @@ export const RecordingsTable = ({
                     <Button 
                       variant="ghost" 
                       size="icon"
-                      onClick={() => handleViewTranscript(recording)}
-                      disabled={!recording.transcript_url}
-                      title={recording.transcript_url ? "View transcript" : "No transcript available"}
+                      onClick={() => handleTranscript(recording)}
+                      title="View transcript"
                     >
-                      <MessageSquare className="h-4 w-4" />
+                      <FileText className="h-4 w-4" />
                     </Button>
                   </TableCell>
                 </TableRow>
