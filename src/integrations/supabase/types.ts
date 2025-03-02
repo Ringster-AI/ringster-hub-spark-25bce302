@@ -471,10 +471,13 @@ export type Database = {
           features: Json
           id: string
           is_active: boolean | null
+          is_pay_as_you_go: boolean | null
           max_agents: number
           max_team_members: number
           minutes_allowance: number
           name: string
+          number_rental_fee: number | null
+          per_minute_rate: number | null
           price: number
           prod_id: string | null
           stripe_price_id: string | null
@@ -486,10 +489,13 @@ export type Database = {
           features?: Json
           id?: string
           is_active?: boolean | null
+          is_pay_as_you_go?: boolean | null
           max_agents: number
           max_team_members: number
           minutes_allowance: number
           name: string
+          number_rental_fee?: number | null
+          per_minute_rate?: number | null
           price: number
           prod_id?: string | null
           stripe_price_id?: string | null
@@ -501,10 +507,13 @@ export type Database = {
           features?: Json
           id?: string
           is_active?: boolean | null
+          is_pay_as_you_go?: boolean | null
           max_agents?: number
           max_team_members?: number
           minutes_allowance?: number
           name?: string
+          number_rental_fee?: number | null
+          per_minute_rate?: number | null
           price?: number
           prod_id?: string | null
           stripe_price_id?: string | null
