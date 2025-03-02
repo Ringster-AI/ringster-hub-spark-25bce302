@@ -26,6 +26,23 @@ interface CallAnalytics {
   callsByDay: Record<string, number>;
 }
 
+// Define a type for the call_logs and call_recordings to avoid deep nesting issues
+interface CallLog {
+  id: string;
+  call_sid: string;
+  status: string;
+  duration: number;
+  start_time: string;
+  end_time: string;
+  call_recordings: CallRecording[];
+}
+
+interface CallRecording {
+  id: string;
+  recording_url: string | null;
+  transcript_url: string | null;
+}
+
 export const vapiService = {
   /**
    * Fetches call details from Vapi.ai through our database
@@ -39,14 +56,14 @@ export const vapiService = {
           id,
           name,
           config:config->vapi_assistant_id,
-          call_logs(
+          call_logs!agent_id (
             id,
             call_sid,
             status,
             duration,
             start_time,
             end_time,
-            call_recordings(
+            call_recordings (
               id,
               recording_url,
               transcript_url
@@ -89,7 +106,7 @@ export const vapiService = {
         body: { callId, action: 'transcript' }
       });
       
-      if (response.error) throw new Error(response.error);
+      if (response.error) throw new Error(response.error.message);
       
       return response.data?.transcript || [];
     } catch (error) {
@@ -107,7 +124,7 @@ export const vapiService = {
         body: { callId, action: 'recording' }
       });
       
-      if (response.error) throw new Error(response.error);
+      if (response.error) throw new Error(response.error.message);
       
       return response.data?.url || '';
     } catch (error) {
