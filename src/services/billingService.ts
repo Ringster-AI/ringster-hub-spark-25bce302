@@ -20,6 +20,13 @@ interface BillingPlan {
   features: any;
 }
 
+interface AgentUsage {
+  id: string;
+  name: string;
+  minutesUsed: number;
+  totalMinutesUsed: number;
+}
+
 export const billingService = {
   /**
    * Fetches current billing plan details
@@ -90,6 +97,78 @@ export const billingService = {
     } catch (error) {
       console.error('Error fetching usage stats:', error);
       return [];
+    }
+  },
+
+  /**
+   * Fetches usage statistics for all agents
+   */
+  async getAgentUsageStats(): Promise<AgentUsage[]> {
+    try {
+      const { data, error } = await supabase
+        .from('agent_configs')
+        .select('id, name, minutes_used, total_minutes_used');
+      
+      if (error) throw error;
+      
+      return (data || []).map(agent => ({
+        id: agent.id,
+        name: agent.name,
+        minutesUsed: agent.minutes_used || 0,
+        totalMinutesUsed: agent.total_minutes_used || 0,
+      }));
+    } catch (error) {
+      console.error('Error fetching agent usage stats:', error);
+      return [];
+    }
+  },
+
+  /**
+   * Gets detailed billing data for analytics
+   */
+  async getBillingAnalytics() {
+    try {
+      const [plan, usage, agentUsage] = await Promise.all([
+        this.getCurrentPlan(),
+        this.getUsageStats(),
+        this.getAgentUsageStats()
+      ]);
+      
+      const usagePercentage = plan?.minutesAllowance ? 
+        Math.round((agentUsage.reduce((sum, agent) => sum + agent.minutesUsed, 0) / plan.minutesAllowance) * 100) : 0;
+      
+      return {
+        plan,
+        usage,
+        agentUsage,
+        usagePercentage,
+        remainingMinutes: plan?.minutesAllowance ? 
+          Math.max(0, plan.minutesAllowance - agentUsage.reduce((sum, agent) => sum + agent.minutesUsed, 0)) : 0
+      };
+    } catch (error) {
+      console.error('Error generating billing analytics:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Fetch data from the Netlify function
+   */
+  async getDetailedUsageData() {
+    try {
+      const user = (await supabase.auth.getUser()).data.user;
+      if (!user) throw new Error('User not authenticated');
+      
+      const response = await supabase.functions.invoke('get-usage-data', {
+        body: { userId: user.id }
+      });
+      
+      if (response.error) throw new Error(response.error);
+      
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching detailed usage data:', error);
+      throw error;
     }
   }
 };

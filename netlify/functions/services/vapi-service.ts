@@ -169,4 +169,76 @@ export class VapiService {
     console.log('Successfully imported Twilio number:', data);
     return data;
   }
+
+  async getCallTranscript(callId: string) {
+    console.log(`Retrieving transcript for call: ${callId}`);
+    
+    const response = await fetch(`https://api.vapi.ai/call/${callId}/transcript`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${this.apiKey}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Failed to retrieve call transcript:', errorText);
+      throw new Error(`Failed to retrieve call transcript: ${errorText}`);
+    }
+
+    const data = await response.json();
+    console.log('Successfully retrieved call transcript');
+    return data;
+  }
+
+  async getCallRecording(callId: string) {
+    console.log(`Retrieving recording for call: ${callId}`);
+    
+    const response = await fetch(`https://api.vapi.ai/call/${callId}/recording`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${this.apiKey}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Failed to retrieve call recording:', errorText);
+      throw new Error(`Failed to retrieve call recording: ${errorText}`);
+    }
+
+    const data = await response.json();
+    console.log('Successfully retrieved call recording URL');
+    return data;
+  }
+
+  async getConversationAnalytics(assistantId: string, dateRange?: { startDate: string; endDate: string }) {
+    console.log(`Retrieving conversation analytics for assistant: ${assistantId}`);
+    
+    let url = `https://api.vapi.ai/assistant/${assistantId}/analytics`;
+    
+    if (dateRange) {
+      url += `?start_date=${dateRange.startDate}&end_date=${dateRange.endDate}`;
+    }
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${this.apiKey}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Failed to retrieve conversation analytics:', errorText);
+      throw new Error(`Failed to retrieve conversation analytics: ${errorText}`);
+    }
+
+    const data = await response.json();
+    console.log('Successfully retrieved conversation analytics');
+    return data;
+  }
 }

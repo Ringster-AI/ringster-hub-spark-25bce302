@@ -3,10 +3,43 @@ import { useSubscriptionFeatures } from "@/hooks/useSubscriptionFeatures";
 import { SubscriptionBadge } from "@/components/subscription/SubscriptionBadge";
 import { PricingPlans } from "@/components/subscription/PricingPlans";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Clock, PhoneCall } from "lucide-react";
+import { Users, Clock, PhoneCall, BarChart } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { billingService } from "@/services/billingService";
+import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 const Subscription = () => {
-  const { features, subscription } = useSubscriptionFeatures();
+  const { features, subscription, isLoading } = useSubscriptionFeatures();
+  const [billingData, setBillingData] = useState<any>(null);
+  const [isLoadingBilling, setIsLoadingBilling] = useState(false);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const fetchBillingData = async () => {
+      try {
+        setIsLoadingBilling(true);
+        const data = await billingService.getDetailedUsageData();
+        setBillingData(data);
+      } catch (error) {
+        console.error("Error fetching billing data:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load billing data",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoadingBilling(false);
+      }
+    };
+
+    fetchBillingData();
+  }, [toast]);
+
+  const remainingMinutes = features.limits.minutesAllowance - (features.limits.minutesAllowance - features.limits.remainingMinutes);
+  const usagePercentage = features.limits.minutesAllowance > 0 ? 
+    Math.round(((features.limits.minutesAllowance - features.limits.remainingMinutes) / features.limits.minutesAllowance) * 100) : 0;
 
   return (
     <div className="h-full flex flex-col">
@@ -27,12 +60,28 @@ const Subscription = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-2xl font-bold">
-                  {features.limits.minutesAllowance - features.limits.remainingMinutes} / {features.limits.minutesAllowance}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Minutes remaining: {features.limits.remainingMinutes}
-                </p>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-2xl font-bold">
+                      {features.limits.minutesAllowance - features.limits.remainingMinutes} / {features.limits.minutesAllowance}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Minutes remaining: {features.limits.remainingMinutes}
+                    </p>
+                  </div>
+                  <div className="w-16 h-16">
+                    <CircularProgressbar
+                      value={usagePercentage}
+                      text={`${usagePercentage}%`}
+                      styles={buildStyles({
+                        textSize: '22px',
+                        pathColor: usagePercentage > 90 ? '#ef4444' : usagePercentage > 75 ? '#f59e0b' : '#9b87f5',
+                        textColor: '#64748b',
+                        trailColor: '#e2e8f0',
+                      })}
+                    />
+                  </div>
+                </div>
               </CardContent>
             </Card>
             
@@ -45,7 +94,7 @@ const Subscription = () => {
               </CardHeader>
               <CardContent>
                 <p className="text-2xl font-bold">
-                  {features.limits.maxAgents}
+                  {billingData?.agents?.length || 0} / {features.limits.maxAgents}
                 </p>
                 <p className="text-sm text-muted-foreground">
                   Maximum allowed agents
@@ -82,6 +131,64 @@ const Subscription = () => {
             </Card>
           )}
         </div>
+
+        {billingData?.agents && billingData.agents.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-lg font-semibold mb-4">Agent Usage</h2>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center text-lg font-medium gap-2">
+                  <BarChart className="h-5 w-5 text-[#9b87f5]" />
+                  Agent Minutes Used
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Agent</TableHead>
+                      <TableHead>Current Period</TableHead>
+                      <TableHead>All Time</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {billingData.agents.map((agent: any) => (
+                      <TableRow key={agent.id}>
+                        <TableCell>{agent.name}</TableCell>
+                        <TableCell>{agent.minutes_used || 0} minutes</TableCell>
+                        <TableCell>{agent.total_minutes_used || 0} minutes</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {billingData?.monthlySummary && (
+          <div className="mb-8">
+            <h2 className="text-lg font-semibold mb-4">Monthly Summary</h2>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                  <div>
+                    <p className="text-muted-foreground text-sm">Total Calls</p>
+                    <p className="text-2xl font-bold">{billingData.monthlySummary.total_calls || 0}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground text-sm">Total Minutes</p>
+                    <p className="text-2xl font-bold">{billingData.monthlySummary.total_minutes || 0}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground text-sm">Total Transfers</p>
+                    <p className="text-2xl font-bold">{billingData.monthlySummary.total_transfers || 0}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </div>
 
       <div className="flex-1 overflow-auto">
