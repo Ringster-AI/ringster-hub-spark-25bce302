@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { Play, Download, MessageSquare } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface CallRecording {
   id: string;
@@ -28,6 +28,7 @@ interface CallRecording {
 
 const Recordings = () => {
   const [selectedRecording, setSelectedRecording] = useState<CallRecording | null>(null);
+  const { toast } = useToast();
 
   const { data: recordings, isLoading, error } = useQuery({
     queryKey: ['recordings'],
@@ -35,7 +36,11 @@ const Recordings = () => {
       const { data, error } = await supabase
         .from('call_recordings')
         .select(`
-          *,
+          id,
+          call_log_id,
+          recording_url,
+          transcript_url,
+          created_at,
           call_log:call_log_id (
             call_sid,
             from_number,
@@ -61,20 +66,39 @@ const Recordings = () => {
     // If VAPI.ai - use their player via API
     // If Twilio - use their player or direct audio URL
     
+    if (!recording.recording_url) {
+      toast({
+        title: "No recording available",
+        description: "This call doesn't have a recording available to play.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     console.log("Playing recording:", recording);
   };
 
   const handleDownload = (recording: CallRecording) => {
-    // Future integration point for downloading recordings
     if (recording.recording_url) {
       window.open(recording.recording_url, '_blank');
+    } else {
+      toast({
+        title: "Download failed",
+        description: "No recording URL available for this call.",
+        variant: "destructive"
+      });
     }
   };
 
   const handleViewTranscript = (recording: CallRecording) => {
-    // Future integration point for viewing transcripts
     if (recording.transcript_url) {
       window.open(recording.transcript_url, '_blank');
+    } else {
+      toast({
+        title: "Transcript unavailable",
+        description: "No transcript is available for this call.",
+        variant: "destructive"
+      });
     }
   };
 
@@ -142,6 +166,7 @@ const Recordings = () => {
                             size="icon"
                             onClick={() => handlePlay(recording)}
                             disabled={!recording.recording_url}
+                            title={recording.recording_url ? "Play recording" : "No recording available"}
                           >
                             <Play className="h-4 w-4" />
                           </Button>
@@ -150,6 +175,7 @@ const Recordings = () => {
                             size="icon"
                             onClick={() => handleDownload(recording)}
                             disabled={!recording.recording_url}
+                            title={recording.recording_url ? "Download recording" : "No recording available"}
                           >
                             <Download className="h-4 w-4" />
                           </Button>
@@ -158,6 +184,7 @@ const Recordings = () => {
                             size="icon"
                             onClick={() => handleViewTranscript(recording)}
                             disabled={!recording.transcript_url}
+                            title={recording.transcript_url ? "View transcript" : "No transcript available"}
                           >
                             <MessageSquare className="h-4 w-4" />
                           </Button>

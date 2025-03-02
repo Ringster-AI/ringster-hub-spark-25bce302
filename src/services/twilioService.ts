@@ -70,7 +70,7 @@ export const twilioService = {
           call_log_id,
           recording_url,
           transcript_url,
-          call_log!inner(call_sid)
+          call_log:call_log_id(call_sid)
         `)
         .eq('call_log.call_sid', callSid);
       
