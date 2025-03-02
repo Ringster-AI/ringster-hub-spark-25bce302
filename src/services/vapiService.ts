@@ -66,7 +66,11 @@ export const vapiService = {
       
       if (agentError) throw agentError;
 
-      const vapi_assistant_id = agentData?.config?.vapi_assistant_id || '';
+      // Safely extract vapi_assistant_id from the config object
+      let vapiAssistantId = '';
+      if (agentData?.config && typeof agentData.config === 'object') {
+        vapiAssistantId = (agentData.config as any).vapi_assistant_id || '';
+      }
       
       // Then, get call logs in a separate query
       const { data: callLogs, error: callLogsError } = await supabase
@@ -105,7 +109,7 @@ export const vapiService = {
         const recording = recordingsMap[log.id] || { recording_url: null, transcript_url: null };
         
         return {
-          assistantId: vapi_assistant_id,
+          assistantId: vapiAssistantId,
           callId: log.call_sid,
           status: log.status || 'unknown',
           duration: log.duration || 0,
