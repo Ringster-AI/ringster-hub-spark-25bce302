@@ -1,6 +1,6 @@
 
-// Assuming this is part of the twilioService.ts file
-// Let's fix the query that's causing the error
+// Import the supabase client
+import { supabase } from "@/integrations/supabase/client";
 
 // Example of how the correct query should look:
 async function getRecordingByCallSid(callSid: string) {
