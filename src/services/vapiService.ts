@@ -26,15 +26,14 @@ interface CallAnalytics {
   callsByDay: Record<string, number>;
 }
 
-// Define a type for the call_logs and call_recordings to avoid deep nesting issues
+// Define basic types without circular references
 interface CallLog {
   id: string;
   call_sid: string;
-  status: string;
-  duration: number;
-  start_time: string;
-  end_time: string;
-  call_recordings: CallRecording[];
+  status: string | null;
+  duration: number | null;
+  start_time: string | null;
+  end_time: string | null;
 }
 
 interface CallRecording {
@@ -43,52 +42,77 @@ interface CallRecording {
   transcript_url: string | null;
 }
 
+// Define agent config with minimal properties needed
+interface AgentConfig {
+  id: string;
+  name: string;
+  config: {
+    vapi_assistant_id?: string;
+  } | null;
+}
+
 export const vapiService = {
   /**
    * Fetches call details from Vapi.ai through our database
    */
   async getCallDetails(agentId: string): Promise<VapiCallDetails[]> {
     try {
-      // This fetches from our synced database that stores Vapi call data
-      const { data, error } = await supabase
+      // First, get the agent config with vapi_assistant_id
+      const { data: agentData, error: agentError } = await supabase
         .from('agent_configs')
-        .select(`
-          id,
-          name,
-          config:config->vapi_assistant_id,
-          call_logs!agent_id (
-            id,
-            call_sid,
-            status,
-            duration,
-            start_time,
-            end_time,
-            call_recordings (
-              id,
-              recording_url,
-              transcript_url
-            )
-          )
-        `)
+        .select('id, name, config')
         .eq('id', agentId)
         .single();
       
-      if (error) throw error;
+      if (agentError) throw agentError;
+
+      const vapi_assistant_id = agentData?.config?.vapi_assistant_id || '';
       
-      if (!data || !data.call_logs) return [];
+      // Then, get call logs in a separate query
+      const { data: callLogs, error: callLogsError } = await supabase
+        .from('call_logs')
+        .select('id, call_sid, status, duration, start_time, end_time')
+        .eq('agent_id', agentId);
       
-      return data.call_logs.map((log: any) => {
-        const recording = log.call_recordings && log.call_recordings[0];
+      if (callLogsError) throw callLogsError;
+      
+      if (!callLogs || callLogs.length === 0) return [];
+      
+      // Create a map for storing recordings by call log id
+      const recordingsMap: Record<string, { recording_url: string | null, transcript_url: string | null }> = {};
+      
+      // Get recordings for all call logs
+      const callLogIds = callLogs.map(log => log.id);
+      const { data: recordings, error: recordingsError } = await supabase
+        .from('call_recordings')
+        .select('call_log_id, recording_url, transcript_url')
+        .in('call_log_id', callLogIds);
+      
+      if (recordingsError) throw recordingsError;
+      
+      // Populate recordings map
+      if (recordings) {
+        recordings.forEach(rec => {
+          recordingsMap[rec.call_log_id] = {
+            recording_url: rec.recording_url,
+            transcript_url: rec.transcript_url
+          };
+        });
+      }
+      
+      // Map the data to our VapiCallDetails interface
+      return callLogs.map(log => {
+        const recording = recordingsMap[log.id] || { recording_url: null, transcript_url: null };
         
         return {
-          assistantId: data.config || '',
+          assistantId: vapi_assistant_id,
           callId: log.call_sid,
           status: log.status || 'unknown',
           duration: log.duration || 0,
           startTime: log.start_time || '',
           endTime: log.end_time || '',
-          transcriptUrl: recording?.transcript_url,
-          recordingUrl: recording?.recording_url,
+          transcriptUrl: recording.transcript_url,
+          recordingUrl: recording.recording_url,
         };
       });
     } catch (error) {
@@ -141,7 +165,7 @@ export const vapiService = {
       // First get the vapi_assistant_id from the agent config
       const { data: agent, error: agentError } = await supabase
         .from('agent_configs')
-        .select('config:config->vapi_assistant_id')
+        .select('config')
         .eq('id', agentId)
         .single();
       
