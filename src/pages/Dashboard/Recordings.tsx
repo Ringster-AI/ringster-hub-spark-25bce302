@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -55,7 +56,9 @@ const Recordings = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data as CallRecording[];
+      
+      // Cast to ensure type compatibility
+      return (data as unknown) as CallRecording[];
     },
   });
 
