@@ -387,6 +387,66 @@ export type Database = {
           },
         ]
       }
+      demo_requests: {
+        Row: {
+          company_name: string
+          created_at: string | null
+          email: string
+          forwarded: boolean | null
+          full_name: string
+          id: string
+          message: string | null
+          phone: string
+          team_size: string | null
+        }
+        Insert: {
+          company_name: string
+          created_at?: string | null
+          email: string
+          forwarded?: boolean | null
+          full_name: string
+          id?: string
+          message?: string | null
+          phone: string
+          team_size?: string | null
+        }
+        Update: {
+          company_name?: string
+          created_at?: string | null
+          email?: string
+          forwarded?: boolean | null
+          full_name?: string
+          id?: string
+          message?: string | null
+          phone?: string
+          team_size?: string | null
+        }
+        Relationships: []
+      }
+      ebook_subscribers: {
+        Row: {
+          created_at: string | null
+          downloaded: boolean | null
+          email: string
+          id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          downloaded?: boolean | null
+          email: string
+          id?: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          downloaded?: boolean | null
+          email?: string
+          id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       organizations: {
         Row: {
           additional_info: string | null
