@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
@@ -49,7 +48,6 @@ export const DemoForm = ({ email }: DemoFormProps) => {
     setIsSubmitting(true);
     
     try {
-      // Forward demo request to webhook
       const webhookResponse = await supabase.functions.invoke('forward-demo-request', {
         body: {
           fullName: data.fullName,
@@ -69,7 +67,6 @@ export const DemoForm = ({ email }: DemoFormProps) => {
         throw new Error("Error sending request");
       }
       
-      // Show success state
       setIsSubmitted(true);
       toast.success("Demo request submitted successfully!");
     } catch (error) {
@@ -118,9 +115,9 @@ export const DemoForm = ({ email }: DemoFormProps) => {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 bg-white p-6 rounded-lg shadow-sm border border-gray-100">
       <div className="text-center mb-4">
-        <h3 className="text-2xl font-bold text-[#1A1F2C]">Schedule Your Personalized Demo</h3>
+        <h3 className="text-2xl font-bold text-[#1A1F2C]">Book Your Demo Call</h3>
         <p className="text-[#403E43] mt-2">
-          See how Ringster AI can transform your business communications
+          See how our AI technology can transform your business communications
         </p>
       </div>
       
@@ -280,11 +277,11 @@ export const DemoForm = ({ email }: DemoFormProps) => {
       </div>
       
       <div className="space-y-2">
-        <Label htmlFor="message">Tell us about your needs</Label>
+        <Label htmlFor="message">How can we help your business?</Label>
         <Textarea
           id="message"
           {...register("message")}
-          placeholder="What are you looking to accomplish with our solution?"
+          placeholder="Tell us about your business needs and goals"
           className="min-h-[100px]"
         />
       </div>

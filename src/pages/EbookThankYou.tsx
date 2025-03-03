@@ -91,7 +91,7 @@ const EbookThankYou = () => {
           </div>
           <h1 className="text-4xl font-bold text-[#1A1F2C] mb-4">Thank You!</h1>
           <p className="text-lg text-[#403E43]">
-            {email ? `We've received your request at ${email}.` : 'We\'ve received your request.'} Your ebook will be ready to download in just a moment.
+            {email ? `We've received your request at ${email}.` : 'We\'ve received your request.'} Your ebook will download in a minute.
           </p>
         </div>
 
@@ -108,7 +108,7 @@ const EbookThankYou = () => {
                       <span className="text-xl font-semibold">{formatTime(secondsRemaining)}</span>
                     </div>
                     <p className="text-center mb-4">
-                      Your download will be ready in <strong>{formatTime(secondsRemaining)}</strong>
+                      Your download will begin automatically in <strong>{formatTime(secondsRemaining)}</strong>
                     </p>
                     <Button disabled className="bg-gradient-to-r from-[#9b87f5] to-[#7E69AB] opacity-70">
                       Preparing Download...
@@ -138,7 +138,7 @@ const EbookThankYou = () => {
           <div>
             <Card className="bg-white shadow-xl border-0 h-full">
               <CardHeader>
-                <CardTitle className="text-2xl font-bold text-[#1A1F2C]">Get More Value</CardTitle>
+                <CardTitle className="text-2xl font-bold text-[#1A1F2C]">Book a Demo Call</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -148,7 +148,7 @@ const EbookThankYou = () => {
                     </div>
                     <div>
                       <h4 className="font-medium text-[#1A1F2C]">Download Your Ebook</h4>
-                      <p className="text-sm text-[#403E43]">Get instant access to our comprehensive guide</p>
+                      <p className="text-sm text-[#403E43]">Your ebook will download automatically</p>
                     </div>
                   </div>
                   <div className="flex items-start">
@@ -156,8 +156,8 @@ const EbookThankYou = () => {
                       <span className="font-bold text-[#9b87f5]">2</span>
                     </div>
                     <div>
-                      <h4 className="font-medium text-[#1A1F2C]">Book a Demo</h4>
-                      <p className="text-sm text-[#403E43]">See how our AI phone system works in real-time</p>
+                      <h4 className="font-medium text-[#1A1F2C]">Schedule a Demo</h4>
+                      <p className="text-sm text-[#403E43]">See how our AI solution can help your business</p>
                     </div>
                   </div>
                   <div className="flex items-start">
@@ -199,8 +199,8 @@ const EbookThankYou = () => {
           <div className="max-w-3xl mx-auto text-center">
             <div className="p-6 bg-white/50 rounded-lg">
               <Calendar className="h-12 w-12 text-[#9b87f5] mx-auto mb-4" />
-              <h3 className="text-xl font-bold mb-2">Want to see it in action?</h3>
-              <p className="mb-4">After downloading your ebook, you'll have the opportunity to book a personal demo with our team.</p>
+              <h3 className="text-xl font-bold mb-2">Ready to see it in action?</h3>
+              <p className="mb-4">After downloading your ebook, schedule a personal demo with our team to see how we can help your business.</p>
               <Button 
                 variant="outline" 
                 className="border-[#9b87f5] text-[#9b87f5]"
