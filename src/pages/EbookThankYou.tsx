@@ -8,12 +8,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { DemoForm } from "@/components/ebook/DemoForm";
 
-const DOWNLOAD_DELAY = 5 * 60 * 1000; // 5 minutes in milliseconds
 const DEMO_PDF_URL = "/ebook-ai-conversations.pdf"; // Path to your PDF in the public folder
 
 const EbookThankYou = () => {
-  const [secondsRemaining, setSecondsRemaining] = useState(DOWNLOAD_DELAY / 1000);
-  const [downloadReady, setDownloadReady] = useState(false);
+  const [downloadReady, setDownloadReady] = useState(true);
   const [email, setEmail] = useState<string | null>(null);
   const [showDemoForm, setShowDemoForm] = useState(false);
   const navigate = useNavigate();
@@ -27,21 +25,13 @@ const EbookThankYou = () => {
       return;
     }
     setEmail(subscriberEmail);
-
-    // Set up countdown timer
-    const interval = setInterval(() => {
-      setSecondsRemaining((prev) => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          setDownloadReady(true);
-          // We can't update the database as the tables don't exist yet
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(interval);
+    
+    // Auto-start download after a short delay
+    const timer = setTimeout(() => {
+      handleDownload();
+    }, 3000);
+    
+    return () => clearTimeout(timer);
   }, [navigate]);
 
   const handleDownload = () => {
@@ -62,12 +52,6 @@ const EbookThankYou = () => {
     setTimeout(() => {
       document.getElementById('demo-form')?.scrollIntoView({ behavior: 'smooth' });
     }, 500);
-  };
-
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
   };
 
   return (
@@ -102,35 +86,21 @@ const EbookThankYou = () => {
                 <CardTitle className="text-2xl font-bold text-[#1A1F2C]">Your Ebook Download</CardTitle>
               </CardHeader>
               <CardContent className="flex flex-col items-center">
-                {!downloadReady ? (
-                  <>
-                    <div className="w-24 h-24 rounded-full bg-[#F1F0FB] flex items-center justify-center mb-6">
-                      <span className="text-xl font-semibold">{formatTime(secondsRemaining)}</span>
-                    </div>
-                    <p className="text-center mb-4">
-                      Your download will begin automatically in <strong>{formatTime(secondsRemaining)}</strong>
-                    </p>
-                    <Button disabled className="bg-gradient-to-r from-[#9b87f5] to-[#7E69AB] opacity-70">
-                      Preparing Download...
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <div className="w-24 h-24 rounded-full bg-green-100 flex items-center justify-center mb-6">
-                      <Download className="h-12 w-12 text-green-600" />
-                    </div>
-                    <p className="text-center mb-6">
-                      Your ebook is ready to download now!
-                    </p>
-                    <Button 
-                      onClick={handleDownload}
-                      className="bg-gradient-to-r from-[#9b87f5] to-[#7E69AB] hover:opacity-90 transition-opacity"
-                    >
-                      Download Ebook
-                      <ArrowDown className="ml-2 h-4 w-4" />
-                    </Button>
-                  </>
-                )}
+                {/* This space is reserved for a future video */}
+                <div className="w-full h-48 bg-[#F1F0FB] rounded-lg flex items-center justify-center mb-6">
+                  <p className="text-center text-gray-500">Video coming soon</p>
+                </div>
+                
+                <p className="text-center mb-6">
+                  Your ebook is ready to download now!
+                </p>
+                <Button 
+                  onClick={handleDownload}
+                  className="bg-gradient-to-r from-[#9b87f5] to-[#7E69AB] hover:opacity-90 transition-opacity"
+                >
+                  Download Ebook
+                  <ArrowDown className="ml-2 h-4 w-4" />
+                </Button>
               </CardContent>
             </Card>
           </div>
@@ -141,7 +111,7 @@ const EbookThankYou = () => {
                 <CardTitle className="text-2xl font-bold text-[#1A1F2C]">Book a Demo Call</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
+                <div className="space-y-4 mb-6">
                   <div className="flex items-start">
                     <div className="flex-shrink-0 w-10 h-10 bg-[#F1F0FB] rounded-full flex items-center justify-center mr-4">
                       <span className="font-bold text-[#9b87f5]">1</span>
@@ -171,21 +141,18 @@ const EbookThankYou = () => {
                   </div>
                 </div>
                 
-                <div className="mt-6">
-                  <Button 
-                    onClick={() => {
-                      setShowDemoForm(true);
-                      setTimeout(() => {
-                        document.getElementById('demo-form')?.scrollIntoView({ behavior: 'smooth' });
-                      }, 100);
-                    }}
-                    className="w-full bg-gradient-to-r from-[#9b87f5] to-[#7E69AB] hover:opacity-90 transition-opacity"
-                    disabled={!downloadReady}
-                  >
-                    {downloadReady ? "Book a Demo Now" : "Download First to Book a Demo"}
-                    <Calendar className="ml-2 h-4 w-4" />
-                  </Button>
-                </div>
+                <Button 
+                  onClick={() => {
+                    setShowDemoForm(true);
+                    setTimeout(() => {
+                      document.getElementById('demo-form')?.scrollIntoView({ behavior: 'smooth' });
+                    }, 100);
+                  }}
+                  className="w-full bg-gradient-to-r from-[#9b87f5] to-[#7E69AB] hover:opacity-90 transition-opacity"
+                >
+                  Book a Demo Now
+                  <Calendar className="ml-2 h-4 w-4" />
+                </Button>
               </CardContent>
             </Card>
           </div>
@@ -204,7 +171,6 @@ const EbookThankYou = () => {
               <Button 
                 variant="outline" 
                 className="border-[#9b87f5] text-[#9b87f5]"
-                disabled={!downloadReady}
                 onClick={() => {
                   setShowDemoForm(true);
                   setTimeout(() => {
@@ -212,7 +178,7 @@ const EbookThankYou = () => {
                   }, 100);
                 }}
               >
-                {downloadReady ? "Book a Demo Now" : "Download First to Book a Demo"}
+                Book a Demo Now
               </Button>
             </div>
           </div>
