@@ -14,9 +14,10 @@ import {
 interface MainMenuProps {
   agentCount: number;
   campaignCount: number;
+  onLinkClick?: () => void;
 }
 
-export const MainMenu = ({ agentCount, campaignCount }: MainMenuProps) => {
+export const MainMenu = ({ agentCount, campaignCount, onLinkClick }: MainMenuProps) => {
   return (
     <SidebarGroup>
       <SidebarGroupLabel>Main Menu</SidebarGroupLabel>
@@ -24,7 +25,11 @@ export const MainMenu = ({ agentCount, campaignCount }: MainMenuProps) => {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
-              <Link to="/dashboard" className="flex items-center gap-2 text-foreground px-6">
+              <Link 
+                to="/dashboard" 
+                className="flex items-center gap-2 text-foreground px-6"
+                onClick={onLinkClick}
+              >
                 <Home className="h-5 w-5" />
                 <span>Overview</span>
               </Link>
@@ -32,7 +37,11 @@ export const MainMenu = ({ agentCount, campaignCount }: MainMenuProps) => {
           </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
-              <Link to="/dashboard/agents" className="flex items-center justify-between text-foreground group w-full px-6">
+              <Link 
+                to="/dashboard/agents" 
+                className="flex items-center justify-between text-foreground group w-full px-6"
+                onClick={onLinkClick}
+              >
                 <div className="flex items-center gap-2">
                   <Bot className="h-5 w-5" />
                   <span>AI Agents</span>
@@ -47,7 +56,11 @@ export const MainMenu = ({ agentCount, campaignCount }: MainMenuProps) => {
           </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
-              <Link to="/dashboard/campaigns" className="flex items-center justify-between text-foreground group w-full px-6">
+              <Link 
+                to="/dashboard/campaigns" 
+                className="flex items-center justify-between text-foreground group w-full px-6"
+                onClick={onLinkClick}
+              >
                 <div className="flex items-center gap-2">
                   <Phone className="h-5 w-5" />
                   <span>Campaigns</span>

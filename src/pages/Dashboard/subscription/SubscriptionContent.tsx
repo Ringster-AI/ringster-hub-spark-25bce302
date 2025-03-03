@@ -15,8 +15,8 @@ export const SubscriptionContent = () => {
     Math.round(((features.limits.minutesAllowance - features.limits.remainingMinutes) / features.limits.minutesAllowance) * 100) : 0;
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="p-4 md:p-6 shrink-0">
+    <div className="w-full">
+      <div className="p-4 md:p-6">
         <SubscriptionHeader />
 
         <CurrentPlanUsage 
@@ -32,10 +32,8 @@ export const SubscriptionContent = () => {
         )}
       </div>
 
-      <div className="flex-1 overflow-auto">
-        <div className="p-4 md:p-6 pt-0">
-          <PricingPlans />
-        </div>
+      <div className="p-4 md:p-6 pt-0">
+        <PricingPlans />
       </div>
     </div>
   );

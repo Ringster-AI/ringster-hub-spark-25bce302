@@ -10,7 +10,11 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 
-export const OtherMenu = () => {
+interface OtherMenuProps {
+  onLinkClick?: () => void;
+}
+
+export const OtherMenu = ({ onLinkClick }: OtherMenuProps) => {
   return (
     <SidebarGroup>
       <SidebarGroupLabel>Other Menu</SidebarGroupLabel>
@@ -18,7 +22,11 @@ export const OtherMenu = () => {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild tooltip="Settings">
-              <Link to="/dashboard/settings" className="flex items-center gap-2 text-foreground px-6">
+              <Link 
+                to="/dashboard/settings" 
+                className="flex items-center gap-2 text-foreground px-6"
+                onClick={onLinkClick}
+              >
                 <Settings className="h-5 w-5" />
                 <span>Settings</span>
               </Link>
@@ -26,7 +34,11 @@ export const OtherMenu = () => {
           </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton asChild tooltip="Subscription">
-              <Link to="/dashboard/subscription" className="flex items-center gap-2 text-foreground px-6">
+              <Link 
+                to="/dashboard/subscription" 
+                className="flex items-center gap-2 text-foreground px-6"
+                onClick={onLinkClick}
+              >
                 <CreditCard className="h-5 w-5" />
                 <span>Subscription</span>
               </Link>

@@ -4,6 +4,7 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarMenuButton,
+  useSidebar
 } from "@/components/ui/sidebar";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,6 +24,7 @@ interface DashboardSidebarProps {
 export const DashboardSidebar = ({ className = '' }: DashboardSidebarProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { setOpenMobile } = useSidebar();
   const { data: agentCount = 0 } = useAgentCount(true);
 
   // Get campaign count
@@ -73,6 +75,11 @@ export const DashboardSidebar = ({ className = '' }: DashboardSidebarProps) => {
     }
   };
 
+  const handleLinkClick = () => {
+    // Close the mobile sidebar when a link is clicked
+    setOpenMobile(false);
+  };
+
   return (
     <div className={`${className} h-full border-r`}>
       <SidebarContent>
@@ -81,14 +88,21 @@ export const DashboardSidebar = ({ className = '' }: DashboardSidebarProps) => {
             src="/lovable-uploads/059d2b53-6e4e-4788-a607-2344b4097212.png" 
             alt="Ringster Logo" 
             className="h-16 w-auto cursor-pointer"
-            onClick={() => navigate('/dashboard')}
+            onClick={() => {
+              navigate('/dashboard');
+              handleLinkClick();
+            }}
           />
         </div>
 
         <UserProfile profile={profile} />
-        <MainMenu agentCount={agentCount} campaignCount={campaignCount} />
-        <ManagementMenu />
-        <OtherMenu />
+        <MainMenu 
+          agentCount={agentCount} 
+          campaignCount={campaignCount} 
+          onLinkClick={handleLinkClick}
+        />
+        <ManagementMenu onLinkClick={handleLinkClick} />
+        <OtherMenu onLinkClick={handleLinkClick} />
       </SidebarContent>
 
       <SidebarFooter className="p-4">
