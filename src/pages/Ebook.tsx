@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -18,16 +17,6 @@ const Ebook = () => {
     setIsSubmitting(true);
 
     try {
-      // Store email in Supabase
-      const { error } = await supabase
-        .from('ebook_subscribers')
-        .insert({
-          email,
-          downloaded: false
-        });
-
-      if (error) throw error;
-
       // Add email to SendGrid
       const sendGridResponse = await supabase.functions.invoke('add-to-sendgrid', {
         body: { email }
@@ -35,6 +24,7 @@ const Ebook = () => {
 
       if (sendGridResponse.error) {
         console.error('Error adding to SendGrid:', sendGridResponse.error);
+        throw new Error("Error adding to SendGrid");
       }
       
       // Set email in session storage to use on thank you page

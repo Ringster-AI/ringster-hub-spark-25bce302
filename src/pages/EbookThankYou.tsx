@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -9,7 +8,7 @@ import { toast } from "sonner";
 import { DemoForm } from "@/components/ebook/DemoForm";
 
 const DOWNLOAD_DELAY = 5 * 60 * 1000; // 5 minutes in milliseconds
-const DEMO_PDF_URL = "/ebook-ai-conversations.pdf"; // Replace with actual PDF URL
+const DEMO_PDF_URL = "/ebook-ai-conversations.pdf"; // Path to your PDF in the public folder
 
 const EbookThankYou = () => {
   const [secondsRemaining, setSecondsRemaining] = useState(DOWNLOAD_DELAY / 1000);
@@ -34,16 +33,7 @@ const EbookThankYou = () => {
         if (prev <= 1) {
           clearInterval(interval);
           setDownloadReady(true);
-          // Update the database to mark email as downloaded
-          if (subscriberEmail) {
-            supabase
-              .from('ebook_subscribers')
-              .update({ downloaded: true })
-              .eq('email', subscriberEmail)
-              .then(({ error }) => {
-                if (error) console.error("Error updating download status:", error);
-              });
-          }
+          // We can't update the database as the tables don't exist yet
           return 0;
         }
         return prev - 1;
