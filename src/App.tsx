@@ -15,6 +15,8 @@ import Privacy from "./pages/Privacy";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import BlogPost from "./pages/BlogPost";
+import Ebook from "./pages/Ebook";
+import EbookThankYou from "./pages/EbookThankYou";
 
 const queryClient = new QueryClient();
 
@@ -77,7 +79,7 @@ const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
   return isAuthenticated ? children : <Navigate to="/login" replace />;
 };
 
-const App = () => {
+function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
@@ -86,22 +88,24 @@ const App = () => {
         <Router>
           <Routes>
             <Route path="/" element={<Index />} />
-            <Route path="/blog" element={<Blog />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/privacy" element={<Privacy />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path="/blog" element={<Blog />} />
+            <Route path="/blog/:slug" element={<BlogPost />} />
+            <Route path="/ebook" element={<Ebook />} />
+            <Route path="/ebook-thank-you" element={<EbookThankYou />} />
             <Route path="/dashboard/*" element={
               <PrivateRoute>
                 <Dashboard />
               </PrivateRoute>
             } />
-            <Route path="/blog/:slug" element={<BlogPost />} />
           </Routes>
         </Router>
       </TooltipProvider>
     </QueryClientProvider>
   );
-};
+}
 
 export default App;
