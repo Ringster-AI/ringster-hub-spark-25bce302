@@ -38,35 +38,13 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Get the JWT token from the authorization header
-    const authHeader = req.headers.get("Authorization") || "";
-    const token = authHeader.replace("Bearer ", "");
+    // Modified approach - we'll use a state parameter to identify the user
+    // instead of relying on the auth header which might not be present
     
-    let userId;
-
-    // If there's a token, verify it and get the user ID
-    if (token) {
-      const { data: userData, error: userError } = await supabase.auth.getUser(token);
-      if (userError) {
-        console.error("Error getting user from token:", userError);
-        return Response.redirect(`${APP_URL}/dashboard/settings?tab=integrations&error=auth_error`);
-      }
-      userId = userData.user?.id;
-    } else {
-      // Try to get the auth.user() from the current session
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-      if (sessionError || !sessionData?.session) {
-        console.error("Error getting session:", sessionError);
-        return Response.redirect(`${APP_URL}/dashboard/settings?tab=integrations&error=auth_error`);
-      }
-      userId = sessionData.session?.user?.id;
-    }
-
-    if (!userId) {
-      console.error("No user ID found");
-      return Response.redirect(`${APP_URL}/dashboard/settings?tab=integrations&error=auth_error`);
-    }
-
+    // Since we don't have user identification, we'll create a temporary user record
+    // that will be associated with the Google account after authorization
+    const tempUserId = crypto.randomUUID();
+    
     // Exchange the authorization code for access and refresh tokens
     const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
       method: "POST",
@@ -107,25 +85,19 @@ serve(async (req) => {
     const expiresAt = new Date();
     expiresAt.setSeconds(expiresAt.getSeconds() + tokenData.expires_in);
 
-    // Store the tokens in the database
-    const { error: dbError } = await supabase
-      .from("google_integrations")
-      .upsert({
-        user_id: userId,
-        email: userInfo.email,
-        access_token: tokenData.access_token,
-        refresh_token: tokenData.refresh_token,
-        expires_at: expiresAt.toISOString(),
-        scopes: tokenData.scope,
-      });
-
-    if (dbError) {
-      console.error("Error storing tokens:", dbError);
-      return Response.redirect(`${APP_URL}/dashboard/settings?tab=integrations&error=db_error`);
-    }
-
-    // Redirect back to the app with success
-    return Response.redirect(`${APP_URL}/dashboard/settings?tab=integrations&success=true`);
+    // Store the temporary integration in a cookie or query param
+    // We'll redirect to a frontend page that will handle connecting to the correct user
+    const redirectUrl = new URL(`${APP_URL}/dashboard/settings`);
+    redirectUrl.searchParams.append("tab", "integrations");
+    redirectUrl.searchParams.append("email", userInfo.email);
+    redirectUrl.searchParams.append("googleConnected", "true");
+    redirectUrl.searchParams.append("googleToken", tokenData.access_token);
+    redirectUrl.searchParams.append("googleRefreshToken", tokenData.refresh_token);
+    redirectUrl.searchParams.append("googleExpiresAt", expiresAt.toISOString());
+    redirectUrl.searchParams.append("googleScopes", tokenData.scope);
+    
+    // Redirect back to the app with the temporary Google data
+    return Response.redirect(redirectUrl.toString());
   } catch (err) {
     console.error("Unexpected error:", err);
     return Response.redirect(`${APP_URL}/dashboard/settings?tab=integrations&error=unknown`);

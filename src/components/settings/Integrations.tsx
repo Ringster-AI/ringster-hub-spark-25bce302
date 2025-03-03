@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { 
@@ -13,15 +12,7 @@ import { Mail, Calendar, Check, ExternalLink, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useSearchParams, useNavigate } from "react-router-dom";
-
-interface GoogleIntegration {
-  id: string;
-  user_id: string;
-  email: string;
-  scopes: string;
-  created_at: string;
-  updated_at: string;
-}
+import { GoogleIntegration } from "@/types/integrations";
 
 export function Integrations() {
   const { toast } = useToast();
@@ -33,11 +24,24 @@ export function Integrations() {
   const searchParams = useSearchParams()[0];
   const navigate = useNavigate();
   
-  // Check URL parameters for success or error messages
+  // Check URL parameters for success or error messages and Google data
   useEffect(() => {
     const success = searchParams.get('success');
     const error = searchParams.get('error');
     const tab = searchParams.get('tab');
+    
+    // Handle Google auth redirect data
+    const email = searchParams.get('email');
+    const googleConnected = searchParams.get('googleConnected');
+    const googleToken = searchParams.get('googleToken');
+    const googleRefreshToken = searchParams.get('googleRefreshToken');
+    const googleExpiresAt = searchParams.get('googleExpiresAt');
+    const googleScopes = searchParams.get('googleScopes');
+    
+    // If we have Google data from the redirect, store it
+    if (googleConnected === 'true' && email && googleToken) {
+      handleGoogleRedirectData(email, googleToken, googleRefreshToken || '', googleExpiresAt || '', googleScopes || '');
+    }
     
     // If there are URL parameters, show appropriate toast and clean URL
     if (success || error) {
@@ -69,6 +73,73 @@ export function Integrations() {
       }
     }
   }, [searchParams, toast, navigate]);
+  
+  // Handle Google redirect data by storing tokens in Supabase
+  const handleGoogleRedirectData = async (
+    email: string, 
+    accessToken: string, 
+    refreshToken: string,
+    expiresAt: string,
+    scopes: string
+  ) => {
+    try {
+      setIsConnecting(true);
+      
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+      
+      // Store the Google integration data
+      const { error: dbError } = await (supabase
+        .from('google_integrations' as any)
+        .upsert({
+          user_id: user.id,
+          email: email,
+          access_token: accessToken,
+          refresh_token: refreshToken,
+          expires_at: expiresAt,
+          scopes: scopes,
+        }) as any);
+      
+      if (dbError) {
+        throw dbError;
+      }
+      
+      // Update local state with the new integration
+      setGoogleIntegration({
+        id: '', // We don't know the ID yet, will be fetched on next load
+        user_id: user.id,
+        email,
+        access_token: accessToken,
+        refresh_token: refreshToken,
+        expires_at: expiresAt,
+        scopes,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      });
+      
+      toast({
+        title: "Integration Successful",
+        description: `Your Google account (${email}) has been successfully connected.`,
+      });
+      
+      // Clean up URL parameters
+      navigate("/dashboard/settings?tab=integrations", { replace: true });
+      
+    } catch (err: any) {
+      console.error("Error storing Google integration:", err);
+      toast({
+        variant: "destructive",
+        title: "Connection Failed",
+        description: err.message || "Failed to store your Google account information.",
+      });
+    } finally {
+      setIsConnecting(false);
+    }
+  };
   
   // Fetch existing integrations on component mount
   useEffect(() => {
