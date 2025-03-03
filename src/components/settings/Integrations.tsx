@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { 
@@ -76,10 +75,8 @@ export function Integrations() {
       try {
         setIsLoading(true);
         
-        // Use type assertion with 'as' to handle the type issue
-        // This is a workaround until Supabase types are updated
         const { data, error } = await supabase
-          .from('google_integrations' as any)
+          .from('google_integrations')
           .select('id, user_id, email, created_at, updated_at, scopes')
           .single();
         
@@ -135,11 +132,10 @@ export function Integrations() {
     try {
       setIsConnecting(true);
       
-      // Use type assertion with 'as' to handle the type issue
       const { error } = await supabase
-        .from('google_integrations' as any)
+        .from('google_integrations')
         .delete()
-        .is('user_id', 'not.null' as any);
+        .is('user_id', 'not.null');
       
       if (error) throw error;
       

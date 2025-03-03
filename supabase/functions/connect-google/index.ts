@@ -1,109 +1,72 @@
 
-import { serve } from "http/server";
-import { createClient } from "@supabase/supabase-js";
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.47.1";
 
-// These will be replaced with the actual environment variables on deployment
-const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || '';
-const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY') || '';
-const GOOGLE_CLIENT_ID = Deno.env.get('GOOGLE_CLIENT_ID') || '';
-const GOOGLE_CLIENT_SECRET = Deno.env.get('GOOGLE_CLIENT_SECRET') || '';
-const REDIRECT_URI = `${SUPABASE_URL}/functions/v1/google-callback`;
+const CLIENT_ID = Deno.env.get("GOOGLE_CLIENT_ID") || "";
+const REDIRECT_URI = `${Deno.env.get("SUPABASE_URL") || ""}/functions/v1/google-callback`;
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
 
 serve(async (req) => {
-  // Handle CORS for local development
+  // Handle CORS preflight request
   if (req.method === "OPTIONS") {
-    return new Response(null, {
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "POST",
-        "Access-Control-Allow-Headers": "Content-Type, Authorization",
-      },
-    });
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    // Handle POSTs only
-    if (req.method !== "POST") {
-      return new Response(JSON.stringify({ error: "Method not allowed" }), {
-        status: 405,
-        headers: {
-          "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*",
-        },
-      });
-    }
-
     // Create a Supabase client
-    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Get the JWT from the Authorization header
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: "Missing Authorization header" }), {
-        status: 401,
-        headers: {
-          "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*",
-        },
-      });
+    // Get the JWT token from the authorization header
+    const authHeader = req.headers.get("Authorization") || "";
+    const token = authHeader.replace("Bearer ", "");
+    
+    // Verify the token (optional but recommended)
+    if (token) {
+      const { data, error } = await supabase.auth.getUser(token);
+      if (error) {
+        console.error("Error verifying token:", error);
+        return new Response(
+          JSON.stringify({ error: "Unauthorized" }),
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      console.log("User authenticated:", data.user.id);
     }
 
-    // Verify JWT to get user info
-    const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
-
-    if (userError || !user) {
-      return new Response(JSON.stringify({ error: "Unauthorized", details: userError }), {
-        status: 401,
-        headers: {
-          "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*",
-        },
-      });
-    }
-
-    // Generate oauth URL for Google
+    // Generate OAuth URL
     const scopes = [
-      'https://www.googleapis.com/auth/userinfo.email',
-      'https://www.googleapis.com/auth/userinfo.profile',
-      'https://www.googleapis.com/auth/gmail.send',
-      'https://www.googleapis.com/auth/calendar',
+      "https://www.googleapis.com/auth/userinfo.email",
+      "https://www.googleapis.com/auth/userinfo.profile",
+      "https://www.googleapis.com/auth/gmail.send",
+      "https://www.googleapis.com/auth/calendar",
     ];
 
-    // Generate a random state to prevent CSRF
-    const state = crypto.randomUUID();
-    
-    // Store state in database temporarily 
-    await supabase.from('oauth_states').insert({
-      state,
-      user_id: user.id,
-      created_at: new Date()
-    });
+    const url = new URL("https://accounts.google.com/o/oauth2/v2/auth");
+    url.searchParams.append("client_id", CLIENT_ID);
+    url.searchParams.append("redirect_uri", REDIRECT_URI);
+    url.searchParams.append("response_type", "code");
+    url.searchParams.append("scope", scopes.join(" "));
+    url.searchParams.append("access_type", "offline");
+    url.searchParams.append("prompt", "consent");
 
-    const googleOAuthURL = new URL('https://accounts.google.com/o/oauth2/v2/auth');
-    googleOAuthURL.searchParams.append('client_id', GOOGLE_CLIENT_ID);
-    googleOAuthURL.searchParams.append('redirect_uri', REDIRECT_URI);
-    googleOAuthURL.searchParams.append('response_type', 'code');
-    googleOAuthURL.searchParams.append('scope', scopes.join(' '));
-    googleOAuthURL.searchParams.append('access_type', 'offline');
-    googleOAuthURL.searchParams.append('prompt', 'consent');
-    googleOAuthURL.searchParams.append('state', state);
-
-    return new Response(JSON.stringify({ url: googleOAuthURL.toString() }), {
-      status: 200,
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
+    return new Response(
+      JSON.stringify({ url: url.toString() }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  } catch (err) {
+    console.error("Error generating OAuth URL:", err);
+    return new Response(
+      JSON.stringify({ error: err.message }),
+      { 
+        status: 500, 
+        headers: { ...corsHeaders, "Content-Type": "application/json" } 
       }
-    });
-  } catch (error) {
-    console.error("Error:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
-      }
-    });
+    );
   }
 });
