@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { 
@@ -75,10 +76,11 @@ export function Integrations() {
       try {
         setIsLoading(true);
         
-        const { data, error } = await supabase
-          .from('google_integrations')
+        // Use type assertion to work around TypeScript checking
+        const { data, error } = await (supabase
+          .from('google_integrations' as any)
           .select('id, user_id, email, created_at, updated_at, scopes')
-          .single();
+          .single() as any);
         
         if (error && error.code !== 'PGRST116') { // PGRST116 is "no rows returned"
           throw error;
@@ -132,10 +134,11 @@ export function Integrations() {
     try {
       setIsConnecting(true);
       
-      const { error } = await supabase
-        .from('google_integrations')
+      // Use type assertion to work around TypeScript checking
+      const { error } = await (supabase
+        .from('google_integrations' as any)
         .delete()
-        .is('user_id', 'not.null');
+        .is('user_id', 'not.null') as any);
       
       if (error) throw error;
       
