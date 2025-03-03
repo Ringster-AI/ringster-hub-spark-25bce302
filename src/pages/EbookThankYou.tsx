@@ -1,8 +1,9 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowDown, Calendar, Check } from "lucide-react";
+import { ArrowDown, Calendar, Check, Download } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { DemoForm } from "@/components/ebook/DemoForm";
@@ -56,6 +57,11 @@ const EbookThankYou = () => {
     
     // Show demo form after download starts
     setShowDemoForm(true);
+    
+    // Scroll to demo form
+    setTimeout(() => {
+      document.getElementById('demo-form')?.scrollIntoView({ behavior: 'smooth' });
+    }, 500);
   };
 
   const formatTime = (seconds: number) => {
@@ -78,7 +84,7 @@ const EbookThankYou = () => {
         </div>
       </nav>
 
-      <div className="flex-1 container max-w-6xl mx-auto px-4 py-16">
+      <div className="flex-1 container max-w-6xl mx-auto px-4 py-12">
         <div className="max-w-3xl mx-auto text-center mb-12">
           <div className="inline-flex items-center justify-center rounded-full bg-green-100 p-2 mb-6">
             <Check className="h-6 w-6 text-green-600" />
@@ -111,7 +117,7 @@ const EbookThankYou = () => {
                 ) : (
                   <>
                     <div className="w-24 h-24 rounded-full bg-green-100 flex items-center justify-center mb-6">
-                      <Check className="h-12 w-12 text-green-600" />
+                      <Download className="h-12 w-12 text-green-600" />
                     </div>
                     <p className="text-center mb-6">
                       Your ebook is ready to download now!
@@ -132,32 +138,62 @@ const EbookThankYou = () => {
           <div>
             <Card className="bg-white shadow-xl border-0 h-full">
               <CardHeader>
-                <CardTitle className="text-2xl font-bold text-[#1A1F2C]">Watch Our Video</CardTitle>
+                <CardTitle className="text-2xl font-bold text-[#1A1F2C]">Get More Value</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="aspect-video bg-gray-200 rounded-lg flex items-center justify-center mb-4">
-                  {/* Replace this div with actual video component when available */}
-                  <p className="text-gray-500">Video will be placed here</p>
+                <div className="space-y-4">
+                  <div className="flex items-start">
+                    <div className="flex-shrink-0 w-10 h-10 bg-[#F1F0FB] rounded-full flex items-center justify-center mr-4">
+                      <span className="font-bold text-[#9b87f5]">1</span>
+                    </div>
+                    <div>
+                      <h4 className="font-medium text-[#1A1F2C]">Download Your Ebook</h4>
+                      <p className="text-sm text-[#403E43]">Get instant access to our comprehensive guide</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start">
+                    <div className="flex-shrink-0 w-10 h-10 bg-[#F1F0FB] rounded-full flex items-center justify-center mr-4">
+                      <span className="font-bold text-[#9b87f5]">2</span>
+                    </div>
+                    <div>
+                      <h4 className="font-medium text-[#1A1F2C]">Book a Demo</h4>
+                      <p className="text-sm text-[#403E43]">See how our AI phone system works in real-time</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start">
+                    <div className="flex-shrink-0 w-10 h-10 bg-[#F1F0FB] rounded-full flex items-center justify-center mr-4">
+                      <span className="font-bold text-[#9b87f5]">3</span>
+                    </div>
+                    <div>
+                      <h4 className="font-medium text-[#1A1F2C]">Transform Your Business</h4>
+                      <p className="text-sm text-[#403E43]">Implement AI-powered communication solutions</p>
+                    </div>
+                  </div>
                 </div>
-                <p className="text-center text-[#403E43]">
-                  Watch this quick overview of how our AI phone system works
-                </p>
+                
+                <div className="mt-6">
+                  <Button 
+                    onClick={() => {
+                      setShowDemoForm(true);
+                      setTimeout(() => {
+                        document.getElementById('demo-form')?.scrollIntoView({ behavior: 'smooth' });
+                      }, 100);
+                    }}
+                    className="w-full bg-gradient-to-r from-[#9b87f5] to-[#7E69AB] hover:opacity-90 transition-opacity"
+                    disabled={!downloadReady}
+                  >
+                    {downloadReady ? "Book a Demo Now" : "Download First to Book a Demo"}
+                    <Calendar className="ml-2 h-4 w-4" />
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </div>
         </div>
 
         {showDemoForm ? (
-          <div className="max-w-3xl mx-auto">
-            <h2 className="text-3xl font-bold text-[#1A1F2C] mb-6 text-center">Book a Personal Demo</h2>
-            <p className="text-center text-[#403E43] mb-8">
-              Want to see Ringster AI in action? Schedule a personalized demo with our team.
-            </p>
-            <Card className="bg-white shadow-xl border-0">
-              <CardContent className="pt-6">
-                <DemoForm email={email || ""} />
-              </CardContent>
-            </Card>
+          <div id="demo-form" className="max-w-4xl mx-auto scroll-mt-24">
+            <DemoForm email={email || ""} />
           </div>
         ) : (
           <div className="max-w-3xl mx-auto text-center">
@@ -169,7 +205,12 @@ const EbookThankYou = () => {
                 variant="outline" 
                 className="border-[#9b87f5] text-[#9b87f5]"
                 disabled={!downloadReady}
-                onClick={() => setShowDemoForm(true)}
+                onClick={() => {
+                  setShowDemoForm(true);
+                  setTimeout(() => {
+                    document.getElementById('demo-form')?.scrollIntoView({ behavior: 'smooth' });
+                  }, 100);
+                }}
               >
                 {downloadReady ? "Book a Demo Now" : "Download First to Book a Demo"}
               </Button>
