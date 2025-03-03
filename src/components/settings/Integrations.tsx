@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { 
@@ -14,10 +15,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSearchParams, useNavigate } from "react-router-dom";
 
 interface GoogleIntegration {
+  id: string;
+  user_id: string;
   email: string;
+  scopes: string;
   created_at: string;
   updated_at: string;
-  scopes: string;
 }
 
 export function Integrations() {
@@ -73,9 +76,11 @@ export function Integrations() {
       try {
         setIsLoading(true);
         
+        // Use type assertion with 'as' to handle the type issue
+        // This is a workaround until Supabase types are updated
         const { data, error } = await supabase
-          .from('google_integrations')
-          .select('email, created_at, updated_at, scopes')
+          .from('google_integrations' as any)
+          .select('id, user_id, email, created_at, updated_at, scopes')
           .single();
         
         if (error && error.code !== 'PGRST116') { // PGRST116 is "no rows returned"
@@ -83,7 +88,7 @@ export function Integrations() {
         }
         
         if (data) {
-          setGoogleIntegration(data);
+          setGoogleIntegration(data as GoogleIntegration);
         }
       } catch (err: any) {
         console.error('Error fetching integrations:', err);
@@ -130,10 +135,11 @@ export function Integrations() {
     try {
       setIsConnecting(true);
       
+      // Use type assertion with 'as' to handle the type issue
       const { error } = await supabase
-        .from('google_integrations')
+        .from('google_integrations' as any)
         .delete()
-        .is('user_id', 'not.null');
+        .is('user_id', 'not.null' as any);
       
       if (error) throw error;
       
