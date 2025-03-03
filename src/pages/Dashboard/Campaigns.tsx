@@ -27,12 +27,12 @@ const Campaigns = () => {
   });
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <div className="p-4">Loading...</div>;
   }
 
   return (
-    <div className="container mx-auto py-6">
-      <div className="flex justify-between items-center mb-6">
+    <div className="container mx-auto px-4 py-4 md:py-6">
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
         <h1 className="text-2xl font-bold">Campaigns</h1>
         <CreateCampaignDialog />
       </div>

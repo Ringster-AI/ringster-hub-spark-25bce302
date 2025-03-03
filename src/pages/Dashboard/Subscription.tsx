@@ -9,12 +9,14 @@ import { useToast } from "@/hooks/use-toast";
 import { billingService } from "@/services/billingService";
 import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const Subscription = () => {
   const { features, subscription, isLoading } = useSubscriptionFeatures();
   const [billingData, setBillingData] = useState<any>(null);
   const [isLoadingBilling, setIsLoadingBilling] = useState(false);
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     const fetchBillingData = async () => {
@@ -43,18 +45,18 @@ const Subscription = () => {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="p-6 shrink-0">
-        <div className="mb-6 flex items-center gap-4">
-          <h1 className="text-3xl font-bold">Subscription</h1>
+      <div className="p-4 md:p-6 shrink-0">
+        <div className="mb-4 md:mb-6 flex items-center gap-2 md:gap-4">
+          <h1 className="text-2xl md:text-3xl font-bold">Subscription</h1>
           <SubscriptionBadge />
         </div>
 
-        <div className="mb-8">
+        <div className="mb-6 md:mb-8">
           <h2 className="text-lg font-semibold mb-4">Current Plan Usage</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="flex items-center text-lg font-medium gap-2">
+                <CardTitle className="flex items-center text-base md:text-lg font-medium gap-2">
                   <Clock className="h-5 w-5 text-[#9b87f5]" />
                   Minutes Used
                 </CardTitle>
@@ -62,14 +64,14 @@ const Subscription = () => {
               <CardContent>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-2xl font-bold">
+                    <p className="text-xl md:text-2xl font-bold">
                       {features.limits.minutesAllowance - features.limits.remainingMinutes} / {features.limits.minutesAllowance}
                     </p>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-xs md:text-sm text-muted-foreground">
                       Minutes remaining: {features.limits.remainingMinutes}
                     </p>
                   </div>
-                  <div className="w-16 h-16">
+                  <div className="w-14 h-14 md:w-16 md:h-16">
                     <CircularProgressbar
                       value={usagePercentage}
                       text={`${usagePercentage}%`}
@@ -87,16 +89,16 @@ const Subscription = () => {
             
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="flex items-center text-lg font-medium gap-2">
+                <CardTitle className="flex items-center text-base md:text-lg font-medium gap-2">
                   <PhoneCall className="h-5 w-5 text-[#9b87f5]" />
                   Agents Created
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-2xl font-bold">
+                <p className="text-xl md:text-2xl font-bold">
                   {billingData?.agents?.length || 0} / {features.limits.maxAgents}
                 </p>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs md:text-sm text-muted-foreground">
                   Maximum allowed agents
                 </p>
               </CardContent>
@@ -104,16 +106,16 @@ const Subscription = () => {
             
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="flex items-center text-lg font-medium gap-2">
+                <CardTitle className="flex items-center text-base md:text-lg font-medium gap-2">
                   <Users className="h-5 w-5 text-[#9b87f5]" />
                   Team Members
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-2xl font-bold">
+                <p className="text-xl md:text-2xl font-bold">
                   {features.limits.maxTeamMembers}
                 </p>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs md:text-sm text-muted-foreground">
                   Maximum team size
                 </p>
               </CardContent>
@@ -123,7 +125,7 @@ const Subscription = () => {
           {features.expiresAt && (
             <Card className="mt-4">
               <CardContent className="pt-6">
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs md:text-sm text-muted-foreground">
                   Plan {features.willExpire ? "expires" : "expired"} on:{" "}
                   {new Date(features.expiresAt).toLocaleDateString()}
                 </p>
@@ -133,56 +135,70 @@ const Subscription = () => {
         </div>
 
         {billingData?.agents && billingData.agents.length > 0 && (
-          <div className="mb-8">
+          <div className="mb-6 md:mb-8 overflow-x-auto">
             <h2 className="text-lg font-semibold mb-4">Agent Usage</h2>
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="flex items-center text-lg font-medium gap-2">
+                <CardTitle className="flex items-center text-base md:text-lg font-medium gap-2">
                   <BarChart className="h-5 w-5 text-[#9b87f5]" />
                   Agent Minutes Used
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Agent</TableHead>
-                      <TableHead>Current Period</TableHead>
-                      <TableHead>All Time</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
+              <CardContent className="overflow-x-auto">
+                {isMobile ? (
+                  <div className="space-y-4">
                     {billingData.agents.map((agent: any) => (
-                      <TableRow key={agent.id}>
-                        <TableCell>{agent.name}</TableCell>
-                        <TableCell>{agent.minutes_used || 0} minutes</TableCell>
-                        <TableCell>{agent.total_minutes_used || 0} minutes</TableCell>
-                      </TableRow>
+                      <div key={agent.id} className="border rounded p-3">
+                        <p className="font-medium">{agent.name}</p>
+                        <div className="flex justify-between text-sm mt-1">
+                          <span>Current: {agent.minutes_used || 0} min</span>
+                          <span>All time: {agent.total_minutes_used || 0} min</span>
+                        </div>
+                      </div>
                     ))}
-                  </TableBody>
-                </Table>
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Agent</TableHead>
+                        <TableHead>Current Period</TableHead>
+                        <TableHead>All Time</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {billingData.agents.map((agent: any) => (
+                        <TableRow key={agent.id}>
+                          <TableCell>{agent.name}</TableCell>
+                          <TableCell>{agent.minutes_used || 0} minutes</TableCell>
+                          <TableCell>{agent.total_minutes_used || 0} minutes</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
               </CardContent>
             </Card>
           </div>
         )}
 
         {billingData?.monthlySummary && (
-          <div className="mb-8">
+          <div className="mb-6 md:mb-8">
             <h2 className="text-lg font-semibold mb-4">Monthly Summary</h2>
             <Card>
               <CardContent className="pt-6">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
                   <div>
-                    <p className="text-muted-foreground text-sm">Total Calls</p>
-                    <p className="text-2xl font-bold">{billingData.monthlySummary.total_calls || 0}</p>
+                    <p className="text-muted-foreground text-xs md:text-sm">Total Calls</p>
+                    <p className="text-xl md:text-2xl font-bold">{billingData.monthlySummary.total_calls || 0}</p>
                   </div>
                   <div>
-                    <p className="text-muted-foreground text-sm">Total Minutes</p>
-                    <p className="text-2xl font-bold">{billingData.monthlySummary.total_minutes || 0}</p>
+                    <p className="text-muted-foreground text-xs md:text-sm">Total Minutes</p>
+                    <p className="text-xl md:text-2xl font-bold">{billingData.monthlySummary.total_minutes || 0}</p>
                   </div>
                   <div>
-                    <p className="text-muted-foreground text-sm">Total Transfers</p>
-                    <p className="text-2xl font-bold">{billingData.monthlySummary.total_transfers || 0}</p>
+                    <p className="text-muted-foreground text-xs md:text-sm">Total Transfers</p>
+                    <p className="text-xl md:text-2xl font-bold">{billingData.monthlySummary.total_transfers || 0}</p>
                   </div>
                 </div>
               </CardContent>
@@ -192,7 +208,7 @@ const Subscription = () => {
       </div>
 
       <div className="flex-1 overflow-auto">
-        <div className="p-6 pt-0">
+        <div className="p-4 md:p-6 pt-0">
           <PricingPlans />
         </div>
       </div>
