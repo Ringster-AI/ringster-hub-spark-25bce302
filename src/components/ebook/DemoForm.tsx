@@ -39,9 +39,32 @@ export const DemoForm = ({ email }: DemoFormProps) => {
       // Store demo request in Supabase
       const { error } = await supabase
         .from('demo_requests')
-        .insert([data]);
+        .insert({
+          full_name: data.fullName,
+          email: data.email,
+          phone: data.phone,
+          company_name: data.companyName,
+          team_size: data.teamSize,
+          message: data.message
+        });
 
       if (error) throw error;
+      
+      // Forward demo request to webhook
+      const webhookResponse = await supabase.functions.invoke('forward-demo-request', {
+        body: {
+          fullName: data.fullName,
+          email: data.email,
+          phone: data.phone,
+          companyName: data.companyName,
+          teamSize: data.teamSize,
+          message: data.message
+        }
+      });
+      
+      if (webhookResponse.error) {
+        console.error("Error sending to webhook:", webhookResponse.error);
+      }
       
       // Show success state
       setIsSubmitted(true);

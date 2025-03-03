@@ -21,10 +21,22 @@ const Ebook = () => {
       // Store email in Supabase
       const { error } = await supabase
         .from('ebook_subscribers')
-        .insert([{ email, downloaded: false }]);
+        .insert({
+          email,
+          downloaded: false
+        });
 
       if (error) throw error;
 
+      // Add email to SendGrid
+      const sendGridResponse = await supabase.functions.invoke('add-to-sendgrid', {
+        body: { email }
+      });
+
+      if (sendGridResponse.error) {
+        console.error('Error adding to SendGrid:', sendGridResponse.error);
+      }
+      
       // Set email in session storage to use on thank you page
       sessionStorage.setItem("subscriberEmail", email);
       

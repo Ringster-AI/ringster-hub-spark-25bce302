@@ -1,5 +1,6 @@
 
 project_id = "owzerqaududhfwngyqbp"
-
-[functions.add-to-waitlist]
+[functions.add-to-sendgrid]
+verify_jwt = false
+[functions.forward-demo-request]
 verify_jwt = false
