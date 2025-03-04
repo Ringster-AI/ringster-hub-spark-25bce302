@@ -1,5 +1,4 @@
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
+
 import { 
   Card, 
   CardContent, 
@@ -9,227 +8,20 @@ import {
 } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Mail, Calendar, Check, ExternalLink, AlertCircle } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { useSearchParams, useNavigate } from "react-router-dom";
-import { GoogleIntegration } from "@/types/integrations";
+import { useGoogleIntegration } from "@/hooks/useGoogleIntegration";
+import { GoogleOAuthHandler } from "./GoogleOAuthHandler";
+import { IntegrationServiceCard } from "./IntegrationServiceCard";
 
 export function Integrations() {
-  const { toast } = useToast();
-  const [isConnecting, setIsConnecting] = useState(false);
-  const [googleIntegration, setGoogleIntegration] = useState<GoogleIntegration | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  
-  const searchParams = useSearchParams()[0];
-  const navigate = useNavigate();
-  
-  // Check URL parameters for success or error messages and Google data
-  useEffect(() => {
-    const success = searchParams.get('success');
-    const error = searchParams.get('error');
-    const tab = searchParams.get('tab');
-    
-    // Handle Google auth redirect data
-    const email = searchParams.get('email');
-    const googleConnected = searchParams.get('googleConnected');
-    const googleToken = searchParams.get('googleToken');
-    const googleRefreshToken = searchParams.get('googleRefreshToken');
-    const googleExpiresAt = searchParams.get('googleExpiresAt');
-    const googleScopes = searchParams.get('googleScopes');
-    
-    // If we have Google data from the redirect, store it
-    if (googleConnected === 'true' && email && googleToken) {
-      handleGoogleRedirectData(email, googleToken, googleRefreshToken || '', googleExpiresAt || '', googleScopes || '');
-    }
-    
-    // If there are URL parameters, show appropriate toast and clean URL
-    if (success || error) {
-      if (success) {
-        toast({
-          title: "Integration Successful",
-          description: "Your Google account has been successfully connected.",
-        });
-      }
-      
-      if (error) {
-        let errorMessage = "Failed to connect your Google account. Please try again.";
-        if (error === 'access_denied') {
-          errorMessage = "You denied access to your Google account.";
-        }
-        
-        toast({
-          variant: "destructive",
-          title: "Connection Failed",
-          description: errorMessage,
-        });
-      }
-      
-      // Clean up URL params but keep the tab
-      if (tab) {
-        navigate(`/dashboard/settings?tab=${tab}`, { replace: true });
-      } else {
-        navigate("/dashboard/settings", { replace: true });
-      }
-    }
-  }, [searchParams, toast, navigate]);
-  
-  // Handle Google redirect data by storing tokens in Supabase
-  const handleGoogleRedirectData = async (
-    email: string, 
-    accessToken: string, 
-    refreshToken: string,
-    expiresAt: string,
-    scopes: string
-  ) => {
-    try {
-      setIsConnecting(true);
-      
-      // Get current user
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        throw new Error('User not authenticated');
-      }
-      
-      // Store the Google integration data
-      const { error: dbError } = await (supabase
-        .from('google_integrations' as any)
-        .upsert({
-          user_id: user.id,
-          email: email,
-          access_token: accessToken,
-          refresh_token: refreshToken,
-          expires_at: expiresAt,
-          scopes: scopes,
-        }) as any);
-      
-      if (dbError) {
-        throw dbError;
-      }
-      
-      // Update local state with the new integration
-      setGoogleIntegration({
-        id: '', // We don't know the ID yet, will be fetched on next load
-        user_id: user.id,
-        email,
-        access_token: accessToken,
-        refresh_token: refreshToken,
-        expires_at: expiresAt,
-        scopes,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      });
-      
-      toast({
-        title: "Integration Successful",
-        description: `Your Google account (${email}) has been successfully connected.`,
-      });
-      
-      // Clean up URL parameters
-      navigate("/dashboard/settings?tab=integrations", { replace: true });
-      
-    } catch (err: any) {
-      console.error("Error storing Google integration:", err);
-      toast({
-        variant: "destructive",
-        title: "Connection Failed",
-        description: err.message || "Failed to store your Google account information.",
-      });
-    } finally {
-      setIsConnecting(false);
-    }
-  };
-  
-  // Fetch existing integrations on component mount
-  useEffect(() => {
-    async function fetchIntegrations() {
-      try {
-        setIsLoading(true);
-        
-        // Use type assertion to work around TypeScript checking
-        const { data, error } = await (supabase
-          .from('google_integrations' as any)
-          .select('id, user_id, email, created_at, updated_at, scopes')
-          .single() as any);
-        
-        if (error && error.code !== 'PGRST116') { // PGRST116 is "no rows returned"
-          throw error;
-        }
-        
-        if (data) {
-          setGoogleIntegration(data as GoogleIntegration);
-        }
-      } catch (err: any) {
-        console.error('Error fetching integrations:', err);
-        setError(err.message);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    
-    fetchIntegrations();
-  }, []);
-  
-  // Function to initiate Google OAuth flow
-  const connectGoogle = async () => {
-    try {
-      setIsConnecting(true);
-      
-      // Call the Supabase Edge Function to start the OAuth flow
-      const { data, error } = await supabase.functions.invoke('connect-google', {
-        method: 'POST',
-      });
-      
-      if (error) throw error;
-      
-      // Redirect to Google's OAuth page
-      if (data?.url) {
-        window.location.href = data.url;
-      } else {
-        throw new Error('No redirect URL received from server');
-      }
-    } catch (error: any) {
-      console.error('Error connecting Google account:', error);
-      toast({
-        variant: "destructive",
-        title: "Connection Failed",
-        description: error.message || "Failed to connect Google account. Please try again.",
-      });
-      setIsConnecting(false);
-    }
-  };
-  
-  // Function to disconnect Google account
-  const disconnectGoogle = async () => {
-    try {
-      setIsConnecting(true);
-      
-      // Use type assertion to work around TypeScript checking
-      const { error } = await (supabase
-        .from('google_integrations' as any)
-        .delete()
-        .is('user_id', 'not.null') as any);
-      
-      if (error) throw error;
-      
-      setGoogleIntegration(null);
-      
-      toast({
-        title: "Account Disconnected",
-        description: "Your Google account has been successfully disconnected.",
-      });
-    } catch (error: any) {
-      console.error('Error disconnecting Google account:', error);
-      toast({
-        variant: "destructive",
-        title: "Disconnection Failed",
-        description: error.message || "Failed to disconnect Google account. Please try again.",
-      });
-    } finally {
-      setIsConnecting(false);
-    }
-  };
+  const {
+    googleIntegration,
+    isConnecting,
+    isLoading,
+    error,
+    connectGoogle,
+    disconnectGoogle,
+    handleGoogleRedirectData
+  } = useGoogleIntegration();
   
   if (isLoading) {
     return (
@@ -248,6 +40,8 @@ export function Integrations() {
   
   return (
     <Card>
+      <GoogleOAuthHandler onGoogleRedirect={handleGoogleRedirectData} />
+      
       <CardHeader>
         <CardTitle>Integrations</CardTitle>
         <CardDescription>
@@ -276,73 +70,29 @@ export function Integrations() {
         )}
         
         <div className="space-y-4">
-          <div className="flex items-start justify-between border p-4 rounded-lg">
-            <div className="flex items-start space-x-4">
-              <div className="bg-primary/10 p-2 rounded-full">
-                <Mail className="h-6 w-6 text-primary" />
-              </div>
-              <div>
-                <h3 className="font-medium">Google Mail</h3>
-                <p className="text-sm text-muted-foreground">
-                  Allow your agents to send emails on your behalf
-                </p>
-                {googleConnected && googleIntegration.scopes.includes('gmail.send') && (
-                  <p className="text-xs text-green-600 mt-1">
-                    <Check className="inline h-3 w-3 mr-1" />
-                    Connected with {googleIntegration.email}
-                  </p>
-                )}
-              </div>
-            </div>
-            <Button
-              variant={googleConnected ? "outline" : "default"}
-              onClick={googleConnected ? disconnectGoogle : connectGoogle}
-              disabled={isConnecting}
-              className="min-w-[120px]"
-            >
-              {googleConnected ? (
-                isConnecting ? "Disconnecting..." : "Disconnect"
-              ) : isConnecting ? (
-                "Connecting..."
-              ) : (
-                "Connect"
-              )}
-            </Button>
-          </div>
+          <IntegrationServiceCard
+            icon={<Mail className="h-6 w-6 text-primary" />}
+            title="Google Mail"
+            description="Allow your agents to send emails on your behalf"
+            isConnected={googleConnected}
+            connectedEmail={googleIntegration?.email}
+            scopeCheck={googleIntegration?.scopes?.includes('gmail.send') ? 'gmail.send' : ''}
+            isConnecting={isConnecting}
+            onConnect={connectGoogle}
+            onDisconnect={disconnectGoogle}
+          />
           
-          <div className="flex items-start justify-between border p-4 rounded-lg">
-            <div className="flex items-start space-x-4">
-              <div className="bg-primary/10 p-2 rounded-full">
-                <Calendar className="h-6 w-6 text-primary" />
-              </div>
-              <div>
-                <h3 className="font-medium">Google Calendar</h3>
-                <p className="text-sm text-muted-foreground">
-                  Allow your agents to schedule appointments on your calendar
-                </p>
-                {googleConnected && googleIntegration.scopes.includes('calendar') && (
-                  <p className="text-xs text-green-600 mt-1">
-                    <Check className="inline h-3 w-3 mr-1" />
-                    Connected with {googleIntegration.email}
-                  </p>
-                )}
-              </div>
-            </div>
-            <Button
-              variant={googleConnected ? "outline" : "default"}
-              onClick={googleConnected ? disconnectGoogle : connectGoogle}
-              disabled={isConnecting}
-              className="min-w-[120px]"
-            >
-              {googleConnected ? (
-                isConnecting ? "Disconnecting..." : "Disconnect"
-              ) : isConnecting ? (
-                "Connecting..."
-              ) : (
-                "Connect"
-              )}
-            </Button>
-          </div>
+          <IntegrationServiceCard
+            icon={<Calendar className="h-6 w-6 text-primary" />}
+            title="Google Calendar"
+            description="Allow your agents to schedule appointments on your calendar"
+            isConnected={googleConnected}
+            connectedEmail={googleIntegration?.email}
+            scopeCheck={googleIntegration?.scopes?.includes('calendar') ? 'calendar' : ''}
+            isConnecting={isConnecting}
+            onConnect={connectGoogle}
+            onDisconnect={disconnectGoogle}
+          />
         </div>
         
         <div className="pt-4 border-t">
