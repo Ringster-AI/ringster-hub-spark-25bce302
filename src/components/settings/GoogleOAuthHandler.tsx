@@ -1,11 +1,12 @@
+
 import { useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 
 interface GoogleOAuthHandlerProps {
   onGoogleRedirect: (
-    email: string,
-    accessToken: string,
+    email: string, 
+    accessToken: string, 
     refreshToken: string,
     expiresAt: string,
     scopes: string
@@ -30,6 +31,14 @@ export function GoogleOAuthHandler({ onGoogleRedirect }: GoogleOAuthHandlerProps
     const googleExpiresAt = searchParams.get('googleExpiresAt');
     const googleScopes = searchParams.get('googleScopes');
     
+    console.log("OAuth redirect data:", { 
+      success, error, tab, email, googleConnected, 
+      hasToken: !!googleToken, 
+      hasRefreshToken: !!googleRefreshToken,
+      expiresAt: googleExpiresAt,
+      scopes: googleScopes
+    });
+    
     // If we have Google data from the redirect, store it
     if (googleConnected === 'true' && email && googleToken) {
       onGoogleRedirect(
@@ -38,7 +47,14 @@ export function GoogleOAuthHandler({ onGoogleRedirect }: GoogleOAuthHandlerProps
         googleRefreshToken || '', 
         googleExpiresAt || '', 
         googleScopes || ''
-      );
+      ).catch(err => {
+        console.error("Error handling Google redirect:", err);
+        toast({
+          variant: "destructive",
+          title: "Integration Failed",
+          description: "Failed to save Google integration data",
+        });
+      });
     }
     
     // If there are URL parameters, show appropriate toast and clean URL
@@ -54,6 +70,10 @@ export function GoogleOAuthHandler({ onGoogleRedirect }: GoogleOAuthHandlerProps
         let errorMessage = "Failed to connect your Google account. Please try again.";
         if (error === 'access_denied') {
           errorMessage = "You denied access to your Google account.";
+        } else if (error === 'server_config_error') {
+          errorMessage = "Server configuration error. Please contact support.";
+        } else if (error === 'token_error') {
+          errorMessage = "Failed to get access token from Google.";
         }
         
         toast({

@@ -1,6 +1,5 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.47.1";
 import { corsHeaders } from "../_shared/cors.ts";
 
 const CLIENT_ID = Deno.env.get("GOOGLE_CLIENT_ID");
@@ -23,37 +22,6 @@ serve(async (req) => {
       );
     }
 
-    // Create a Supabase client
-    const supabaseUrl = Deno.env.get("SUPABASE_URL");
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-    
-    if (!supabaseUrl || !supabaseKey) {
-      console.error("Supabase environment variables are not set");
-      return new Response(
-        JSON.stringify({ error: "Server configuration error: Missing Supabase credentials" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-    
-    const supabase = createClient(supabaseUrl, supabaseKey);
-
-    // Get authentication token from request header
-    const authHeader = req.headers.get("Authorization") || "";
-    const token = authHeader.replace("Bearer ", "");
-    
-    // Verify the token and get user (optional but recommended for security)
-    if (token) {
-      const { data, error } = await supabase.auth.getUser(token);
-      if (error) {
-        console.error("Error verifying token:", error);
-        return new Response(
-          JSON.stringify({ error: "Unauthorized: Invalid authentication token" }),
-          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      console.log("User authenticated:", data.user.id);
-    }
-
     // Generate OAuth URL with scopes
     const scopes = [
       "https://www.googleapis.com/auth/userinfo.email",
@@ -61,6 +29,18 @@ serve(async (req) => {
       "https://www.googleapis.com/auth/gmail.send",
       "https://www.googleapis.com/auth/calendar",
     ];
+
+    // Get the return URL from the request if provided
+    let returnUrl;
+    try {
+      const requestData = await req.json();
+      returnUrl = requestData.returnUrl;
+    } catch (e) {
+      // If no JSON body or no returnUrl, use default
+      returnUrl = `${APP_URL}/dashboard/settings?tab=integrations`;
+    }
+
+    console.log("Using return URL:", returnUrl);
 
     const url = new URL("https://accounts.google.com/o/oauth2/v2/auth");
     url.searchParams.append("client_id", CLIENT_ID);
@@ -71,7 +51,7 @@ serve(async (req) => {
     url.searchParams.append("prompt", "consent");
     
     // Add state parameter with return URL
-    url.searchParams.append("state", `return_to=${APP_URL}/dashboard/settings?tab=integrations`);
+    url.searchParams.append("state", `return_to=${encodeURIComponent(returnUrl)}`);
 
     return new Response(
       JSON.stringify({ url: url.toString() }),

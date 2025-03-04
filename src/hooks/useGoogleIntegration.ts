@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { GoogleIntegration } from "@/types/integrations";
 import { useToast } from "@/hooks/use-toast";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 export function useGoogleIntegration() {
   const { toast } = useToast();
@@ -12,6 +12,7 @@ export function useGoogleIntegration() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Fetch existing integrations on component mount
   useEffect(() => {
@@ -48,15 +49,20 @@ export function useGoogleIntegration() {
     try {
       setIsConnecting(true);
       
+      // Get current URL as return URL
+      const currentUrl = window.location.href;
+      
       // Call the Supabase Edge Function to start the OAuth flow
       const { data, error } = await supabase.functions.invoke('connect-google', {
         method: 'POST',
+        body: { returnUrl: currentUrl },
       });
       
       if (error) throw error;
       
       // Redirect to Google's OAuth page
       if (data?.url) {
+        console.log("Redirecting to Google OAuth:", data.url);
         window.location.href = data.url;
       } else {
         throw new Error('No redirect URL received from server');
@@ -121,6 +127,8 @@ export function useGoogleIntegration() {
         throw new Error('User not authenticated');
       }
       
+      console.log("Storing Google integration for user:", user.id, "with email:", email);
+      
       // Store the Google integration data
       const { error: dbError } = await (supabase
         .from('google_integrations' as any)
@@ -134,6 +142,7 @@ export function useGoogleIntegration() {
         }) as any);
       
       if (dbError) {
+        console.error("Database error storing integration:", dbError);
         throw dbError;
       }
       

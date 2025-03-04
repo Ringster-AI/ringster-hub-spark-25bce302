@@ -1,6 +1,5 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.47.1";
 import { corsHeaders } from "../_shared/cors.ts";
 
 const CLIENT_ID = Deno.env.get("GOOGLE_CLIENT_ID");
@@ -32,11 +31,20 @@ serve(async (req) => {
     const error = url.searchParams.get("error");
     const state = url.searchParams.get("state") || "";
     
+    console.log("Received OAuth callback with state:", state);
+    
     // Parse the return URL from state parameter or use default
     const returnUrlMatch = state.match(/return_to=([^&]+)/);
-    const returnUrl = returnUrlMatch 
+    let returnUrl = returnUrlMatch 
       ? decodeURIComponent(returnUrlMatch[1])
       : `${APP_URL}/dashboard/settings?tab=integrations`;
+      
+    // Fix the return URL if it has double dashboard paths
+    if (returnUrl.includes("/dashboard/settings/dashboard/settings")) {
+      returnUrl = returnUrl.replace("/dashboard/settings/dashboard/settings", "/dashboard/settings");
+    }
+
+    console.log("Return URL:", returnUrl);
 
     // Handle OAuth errors
     if (error) {
@@ -102,6 +110,8 @@ serve(async (req) => {
     
     redirectUrl.searchParams.append("googleExpiresAt", expiresAt.toISOString());
     redirectUrl.searchParams.append("googleScopes", tokenData.scope);
+    
+    console.log("Redirecting to:", redirectUrl.toString());
     
     // Redirect back to the app with the Google data
     return Response.redirect(redirectUrl.toString());
