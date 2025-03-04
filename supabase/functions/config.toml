@@ -2,7 +2,7 @@
 project_id = "owzerqaududhfwngyqbp"
 
 [connect-google]
-verify_jwt = true
+verify_jwt = false
 
 [google-callback]
 verify_jwt = false
