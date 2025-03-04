@@ -1,15 +1,12 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.47.1";
+import { corsHeaders } from "../_shared/cors.ts";
 
-const CLIENT_ID = Deno.env.get("GOOGLE_CLIENT_ID") || "";
-const CLIENT_SECRET = Deno.env.get("GOOGLE_CLIENT_SECRET") || "";
+const CLIENT_ID = Deno.env.get("GOOGLE_CLIENT_ID");
+const CLIENT_SECRET = Deno.env.get("GOOGLE_CLIENT_SECRET");
 const APP_URL = Deno.env.get("APP_URL") || "http://localhost:5173";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
 
 serve(async (req) => {
   // Handle CORS preflight request
@@ -18,33 +15,40 @@ serve(async (req) => {
   }
 
   try {
-    // Get the authorization code from the URL
+    // Validate environment variables
+    if (!CLIENT_ID || !CLIENT_SECRET) {
+      console.error("Missing Google OAuth credentials in environment variables");
+      return redirectWithError("server_config_error");
+    }
+
+    if (!SUPABASE_URL) {
+      console.error("Missing Supabase URL in environment variables");
+      return redirectWithError("server_config_error");
+    }
+
+    // Get the authorization code and state from the URL
     const url = new URL(req.url);
     const code = url.searchParams.get("code");
     const error = url.searchParams.get("error");
+    const state = url.searchParams.get("state") || "";
+    
+    // Parse the return URL from state parameter or use default
+    const returnUrlMatch = state.match(/return_to=([^&]+)/);
+    const returnUrl = returnUrlMatch 
+      ? decodeURIComponent(returnUrlMatch[1])
+      : `${APP_URL}/dashboard/settings?tab=integrations`;
 
+    // Handle OAuth errors
     if (error) {
       console.error("Error from Google OAuth:", error);
-      return Response.redirect(`${APP_URL}/dashboard/settings?tab=integrations&error=${error}`);
+      return Response.redirect(`${returnUrl}&error=${error}`);
     }
 
     if (!code) {
       console.error("No authorization code received");
-      return Response.redirect(`${APP_URL}/dashboard/settings?tab=integrations&error=no_code`);
+      return redirectWithError("no_code");
     }
 
-    // Create a Supabase client
-    const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
-    const supabase = createClient(supabaseUrl, supabaseKey);
-
-    // Modified approach - we'll use a state parameter to identify the user
-    // instead of relying on the auth header which might not be present
-    
-    // Since we don't have user identification, we'll create a temporary user record
-    // that will be associated with the Google account after authorization
-    const tempUserId = crypto.randomUUID();
-    
     // Exchange the authorization code for access and refresh tokens
     const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
       method: "POST",
@@ -55,7 +59,7 @@ serve(async (req) => {
         code,
         client_id: CLIENT_ID,
         client_secret: CLIENT_SECRET,
-        redirect_uri: `${supabaseUrl}/functions/v1/google-callback`,
+        redirect_uri: `${SUPABASE_URL}/functions/v1/google-callback`,
         grant_type: "authorization_code",
       }),
     });
@@ -64,7 +68,7 @@ serve(async (req) => {
 
     if (!tokenResponse.ok) {
       console.error("Error exchanging code for tokens:", tokenData);
-      return Response.redirect(`${APP_URL}/dashboard/settings?tab=integrations&error=token_error`);
+      return redirectWithError(tokenData.error || "token_error");
     }
 
     // Get user info from Google to get the email
@@ -78,28 +82,39 @@ serve(async (req) => {
 
     if (!userInfoResponse.ok) {
       console.error("Error getting user info:", userInfo);
-      return Response.redirect(`${APP_URL}/dashboard/settings?tab=integrations&error=userinfo_error`);
+      return redirectWithError("userinfo_error");
     }
 
     // Calculate token expiration time
     const expiresAt = new Date();
     expiresAt.setSeconds(expiresAt.getSeconds() + tokenData.expires_in);
 
-    // Store the temporary integration in a cookie or query param
-    // We'll redirect to a frontend page that will handle connecting to the correct user
-    const redirectUrl = new URL(`${APP_URL}/dashboard/settings`);
-    redirectUrl.searchParams.append("tab", "integrations");
+    // Build redirect URL with all OAuth data as query parameters
+    const redirectUrl = new URL(returnUrl);
+    redirectUrl.searchParams.append("success", "true");
     redirectUrl.searchParams.append("email", userInfo.email);
     redirectUrl.searchParams.append("googleConnected", "true");
     redirectUrl.searchParams.append("googleToken", tokenData.access_token);
-    redirectUrl.searchParams.append("googleRefreshToken", tokenData.refresh_token);
+    
+    if (tokenData.refresh_token) {
+      redirectUrl.searchParams.append("googleRefreshToken", tokenData.refresh_token);
+    }
+    
     redirectUrl.searchParams.append("googleExpiresAt", expiresAt.toISOString());
     redirectUrl.searchParams.append("googleScopes", tokenData.scope);
     
-    // Redirect back to the app with the temporary Google data
+    // Redirect back to the app with the Google data
     return Response.redirect(redirectUrl.toString());
   } catch (err) {
-    console.error("Unexpected error:", err);
-    return Response.redirect(`${APP_URL}/dashboard/settings?tab=integrations&error=unknown`);
+    console.error("Unexpected error in Google callback:", err);
+    return redirectWithError("server_error");
+  }
+  
+  // Helper function to redirect with error
+  function redirectWithError(errorCode: string) {
+    const errorUrl = new URL(`${APP_URL}/dashboard/settings`);
+    errorUrl.searchParams.append("tab", "integrations");
+    errorUrl.searchParams.append("error", errorCode);
+    return Response.redirect(errorUrl.toString());
   }
 });

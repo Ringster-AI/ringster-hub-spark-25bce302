@@ -1,14 +1,11 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.47.1";
+import { corsHeaders } from "../_shared/cors.ts";
 
-const CLIENT_ID = Deno.env.get("GOOGLE_CLIENT_ID") || "";
+const CLIENT_ID = Deno.env.get("GOOGLE_CLIENT_ID");
 const REDIRECT_URI = `${Deno.env.get("SUPABASE_URL") || ""}/functions/v1/google-callback`;
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+const APP_URL = Deno.env.get("APP_URL") || "http://localhost:5173";
 
 serve(async (req) => {
   // Handle CORS preflight request
@@ -17,29 +14,47 @@ serve(async (req) => {
   }
 
   try {
+    // Validate environmental variables
+    if (!CLIENT_ID) {
+      console.error("GOOGLE_CLIENT_ID environment variable is not set");
+      return new Response(
+        JSON.stringify({ error: "Server configuration error: Missing Google Client ID" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // Create a Supabase client
-    const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    
+    if (!supabaseUrl || !supabaseKey) {
+      console.error("Supabase environment variables are not set");
+      return new Response(
+        JSON.stringify({ error: "Server configuration error: Missing Supabase credentials" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Get the JWT token from the authorization header
+    // Get authentication token from request header
     const authHeader = req.headers.get("Authorization") || "";
     const token = authHeader.replace("Bearer ", "");
     
-    // Verify the token (optional but recommended)
+    // Verify the token and get user (optional but recommended for security)
     if (token) {
       const { data, error } = await supabase.auth.getUser(token);
       if (error) {
         console.error("Error verifying token:", error);
         return new Response(
-          JSON.stringify({ error: "Unauthorized" }),
+          JSON.stringify({ error: "Unauthorized: Invalid authentication token" }),
           { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
       console.log("User authenticated:", data.user.id);
     }
 
-    // Generate OAuth URL
+    // Generate OAuth URL with scopes
     const scopes = [
       "https://www.googleapis.com/auth/userinfo.email",
       "https://www.googleapis.com/auth/userinfo.profile",
@@ -54,6 +69,9 @@ serve(async (req) => {
     url.searchParams.append("scope", scopes.join(" "));
     url.searchParams.append("access_type", "offline");
     url.searchParams.append("prompt", "consent");
+    
+    // Add state parameter with return URL
+    url.searchParams.append("state", `return_to=${APP_URL}/dashboard/settings?tab=integrations`);
 
     return new Response(
       JSON.stringify({ url: url.toString() }),
@@ -62,7 +80,10 @@ serve(async (req) => {
   } catch (err) {
     console.error("Error generating OAuth URL:", err);
     return new Response(
-      JSON.stringify({ error: err.message }),
+      JSON.stringify({ 
+        error: "Failed to generate OAuth URL", 
+        details: err instanceof Error ? err.message : String(err) 
+      }),
       { 
         status: 500, 
         headers: { ...corsHeaders, "Content-Type": "application/json" } 
