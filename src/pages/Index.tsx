@@ -22,6 +22,9 @@ const Index = () => {
               className="h-20 w-auto"
             />
             <div className="flex gap-6">
+              <Link to="/about" className="text-gray-600 hover:text-[#DD2476] transition-colors">
+                About
+              </Link>
               <Link to="/blog" className="text-gray-600 hover:text-[#DD2476] transition-colors">
                 Blog
               </Link>
