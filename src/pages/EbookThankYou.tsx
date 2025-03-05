@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowDown, Calendar, Check, Download } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { DemoForm } from "@/components/ebook/DemoForm";
 
@@ -86,9 +85,14 @@ const EbookThankYou = () => {
                 <CardTitle className="text-2xl font-bold text-[#1A1F2C]">Your Ebook Download</CardTitle>
               </CardHeader>
               <CardContent className="flex flex-col items-center">
-                {/* This space is reserved for a future video */}
-                <div className="w-full h-48 bg-[#F1F0FB] rounded-lg flex items-center justify-center mb-6">
-                  <p className="text-center text-gray-500">Video coming soon</p>
+                {/* Loom video embed */}
+                <div className="w-full mb-6" style={{ position: "relative", paddingBottom: "56.25%", height: 0 }}>
+                  <iframe 
+                    src="https://www.loom.com/embed/574bf872e918468bb2143681a6187124?sid=31eca2ee-c456-4c1a-94dd-960d13110055" 
+                    frameBorder="0" 
+                    allowFullScreen 
+                    style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }}
+                  ></iframe>
                 </div>
                 
                 <p className="text-center mb-6">

@@ -453,6 +453,7 @@ export type Database = {
           created_at: string | null
           email: string
           expires_at: string
+          googleCalendarEnabled: boolean | null
           id: string
           refresh_token: string
           scopes: string
@@ -464,6 +465,7 @@ export type Database = {
           created_at?: string | null
           email: string
           expires_at: string
+          googleCalendarEnabled?: boolean | null
           id?: string
           refresh_token: string
           scopes: string
@@ -475,6 +477,7 @@ export type Database = {
           created_at?: string | null
           email?: string
           expires_at?: string
+          googleCalendarEnabled?: boolean | null
           id?: string
           refresh_token?: string
           scopes?: string
