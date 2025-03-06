@@ -387,6 +387,105 @@ export type Database = {
           },
         ]
       }
+      demo_requests: {
+        Row: {
+          company_name: string
+          created_at: string | null
+          email: string
+          forwarded: boolean | null
+          full_name: string
+          id: string
+          message: string | null
+          phone: string
+          team_size: string | null
+        }
+        Insert: {
+          company_name: string
+          created_at?: string | null
+          email: string
+          forwarded?: boolean | null
+          full_name: string
+          id?: string
+          message?: string | null
+          phone: string
+          team_size?: string | null
+        }
+        Update: {
+          company_name?: string
+          created_at?: string | null
+          email?: string
+          forwarded?: boolean | null
+          full_name?: string
+          id?: string
+          message?: string | null
+          phone?: string
+          team_size?: string | null
+        }
+        Relationships: []
+      }
+      ebook_subscribers: {
+        Row: {
+          created_at: string | null
+          downloaded: boolean | null
+          email: string
+          id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          downloaded?: boolean | null
+          email: string
+          id?: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          downloaded?: boolean | null
+          email?: string
+          id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      google_integrations: {
+        Row: {
+          access_token: string
+          created_at: string | null
+          email: string
+          expires_at: string
+          googleCalendarEnabled: boolean | null
+          id: string
+          refresh_token: string
+          scopes: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          access_token: string
+          created_at?: string | null
+          email: string
+          expires_at: string
+          googleCalendarEnabled?: boolean | null
+          id?: string
+          refresh_token: string
+          scopes: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          access_token?: string
+          created_at?: string | null
+          email?: string
+          expires_at?: string
+          googleCalendarEnabled?: boolean | null
+          id?: string
+          refresh_token?: string
+          scopes?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       organizations: {
         Row: {
           additional_info: string | null
@@ -471,10 +570,13 @@ export type Database = {
           features: Json
           id: string
           is_active: boolean | null
+          is_pay_as_you_go: boolean | null
           max_agents: number
           max_team_members: number
           minutes_allowance: number
           name: string
+          number_rental_fee: number | null
+          per_minute_rate: number | null
           price: number
           prod_id: string | null
           stripe_price_id: string | null
@@ -486,10 +588,13 @@ export type Database = {
           features?: Json
           id?: string
           is_active?: boolean | null
+          is_pay_as_you_go?: boolean | null
           max_agents: number
           max_team_members: number
           minutes_allowance: number
           name: string
+          number_rental_fee?: number | null
+          per_minute_rate?: number | null
           price: number
           prod_id?: string | null
           stripe_price_id?: string | null
@@ -501,16 +606,57 @@ export type Database = {
           features?: Json
           id?: string
           is_active?: boolean | null
+          is_pay_as_you_go?: boolean | null
           max_agents?: number
           max_team_members?: number
           minutes_allowance?: number
           name?: string
+          number_rental_fee?: number | null
+          per_minute_rate?: number | null
           price?: number
           prod_id?: string | null
           stripe_price_id?: string | null
           updated_at?: string | null
         }
         Relationships: []
+      }
+      tool_call_logs: {
+        Row: {
+          agent_id: string
+          id: string
+          parameters: Json
+          result: Json | null
+          status: string
+          timestamp: string
+          tool_name: string
+        }
+        Insert: {
+          agent_id: string
+          id?: string
+          parameters: Json
+          result?: Json | null
+          status: string
+          timestamp?: string
+          tool_name: string
+        }
+        Update: {
+          agent_id?: string
+          id?: string
+          parameters?: Json
+          result?: Json | null
+          status?: string
+          timestamp?: string
+          tool_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_agent"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agent_configs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       usage_summary: {
         Row: {
@@ -637,6 +783,13 @@ export type Database = {
           new_period_end: string
         }
         Returns: undefined
+      }
+      has_role: {
+        Args: {
+          user_id: string
+          role_name: string
+        }
+        Returns: boolean
       }
       is_admin: {
         Args: {

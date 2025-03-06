@@ -3,6 +3,7 @@ import { Hero } from "@/components/landing/Hero";
 import { Features } from "@/components/landing/Features";
 import { TryRingster } from "@/components/landing/TryRingster";
 import { Footer } from "@/components/landing/Footer";
+import { SoundFamiliar } from "@/components/landing/SoundFamiliar";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,6 +22,9 @@ const Index = () => {
               className="h-20 w-auto"
             />
             <div className="flex gap-6">
+              <Link to="/about" className="text-gray-600 hover:text-[#DD2476] transition-colors">
+                About
+              </Link>
               <Link to="/blog" className="text-gray-600 hover:text-[#DD2476] transition-colors">
                 Blog
               </Link>
@@ -34,6 +38,7 @@ const Index = () => {
       <div>
         <Hero />
         <TryRingster />
+        <SoundFamiliar />
         <Features />
         
         {/* Use Cases Section */}

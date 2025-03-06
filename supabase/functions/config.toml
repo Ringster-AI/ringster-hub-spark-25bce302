@@ -1,0 +1,11 @@
+
+project_id = "owzerqaududhfwngyqbp"
+
+[connect-google]
+verify_jwt = false
+
+[google-callback]
+verify_jwt = false
+
+[shared_schema]
+migrations_dir = "migrations"

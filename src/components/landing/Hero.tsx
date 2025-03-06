@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Phone, ArrowUpRight } from "lucide-react";
 import { ShinyText } from "@/components/ui/shiny-text";
@@ -12,6 +13,16 @@ export const Hero = () => {
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+
+  const handleBookDemo = () => {
+    // Track the 'Book Demo' event with Facebook Pixel
+    if (typeof window !== 'undefined' && (window as any).fbq) {
+      (window as any).fbq('track', 'Lead', {
+        content_name: 'Book Demo Click',
+        content_category: 'Demo Request'
+      });
+    }
+  };
 
   const handleWaitlistSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -99,12 +110,13 @@ export const Hero = () => {
                 <Button 
                   size="lg" 
                   className="group bg-white text-[#9b87f5] hover:bg-white/90 hover:text-[#9b87f5] shadow-lg text-lg px-8 py-6"
+                  onClick={handleBookDemo}
                 >
                   Book a Demo
                   <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-4xl">
+              <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>Schedule Your Demo</DialogTitle>
                 </DialogHeader>
@@ -113,7 +125,7 @@ export const Hero = () => {
                     src="https://calendar.google.com/calendar/appointments/schedules/AcZssZ355HlDqVqRqMSqIYLk2GYEIx1ZJK0W_im36D6KoxxRRUaiIXZ4SSwJcj0XcPnJdVlpMX5uzWxp?gv=true" 
                     className="w-full h-full absolute inset-0"
                     frameBorder="0" 
-                    scrolling="no"
+                    scrolling="yes"
                   />
                 </div>
               </DialogContent>

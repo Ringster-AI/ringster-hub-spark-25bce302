@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { BlogPost as BlogPostType } from "@/types/blog";
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
+import ReactMarkdown from "react-markdown";
 
 const BlogPost = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -67,10 +68,9 @@ const BlogPost = () => {
           </div>
         )}
 
-        <div 
-          className="prose prose-lg max-w-none"
-          dangerouslySetInnerHTML={{ __html: post.content }}
-        />
+        <div className="prose prose-lg max-w-none">
+          <ReactMarkdown>{post.content}</ReactMarkdown>
+        </div>
       </article>
     </main>
   );

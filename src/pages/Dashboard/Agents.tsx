@@ -111,7 +111,7 @@ const Agents = () => {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-96">
+      <div className="flex items-center justify-center h-64 md:h-96">
         <div className="animate-pulse">Loading agents...</div>
       </div>
     );
@@ -125,11 +125,11 @@ const Agents = () => {
   );
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6 p-4 md:p-6">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">AI Agents</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl md:text-3xl font-bold">AI Agents</h1>
+          <p className="text-muted-foreground text-sm md:text-base">
             Manage your AI agents and their configurations
           </p>
         </div>
@@ -139,7 +139,7 @@ const Agents = () => {
       {!agents || agents.length === 0 ? (
         <EmptyAgentState />
       ) : (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
           {agents.map((agent) => (
             <AgentCard
               key={agent.id}

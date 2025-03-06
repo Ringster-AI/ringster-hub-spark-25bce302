@@ -1,3 +1,4 @@
+
 export interface SubscriptionPlan {
   id: string;
   name: string;
@@ -9,6 +10,9 @@ export interface SubscriptionPlan {
   billing_interval?: string;
   stripe_price_id?: string;
   is_active?: boolean;
+  is_pay_as_you_go?: boolean;
+  per_minute_rate?: number | null;
+  number_rental_fee?: number | null;
 }
 
 export interface UserSubscription {
