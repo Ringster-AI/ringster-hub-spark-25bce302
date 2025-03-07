@@ -5,8 +5,23 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FeedbackDialog } from "./FeedbackDialog";
+import { useEffect, useState } from "react";
 
 export const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
+  
+  // Close mobile menu when window is resized to desktop size
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 768 && isSheetOpen) {
+        setIsSheetOpen(false);
+      }
+    };
+    
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [isSheetOpen]);
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
@@ -17,9 +32,9 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
 
         {/* Mobile Hamburger Menu */}
         <div className="md:hidden fixed top-4 left-4 z-50">
-          <Sheet>
+          <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
             <SheetTrigger asChild>
-              <Button variant="outline" size="icon">
+              <Button variant="outline" size="icon" className="bg-white/90">
                 <Menu className="h-5 w-5" />
                 <span className="sr-only">Toggle menu</span>
               </Button>
@@ -35,7 +50,7 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
           </Sheet>
         </div>
 
-        <main className="flex-1 p-6 bg-gray-50 md:ml-0">{children}</main>
+        <main className="flex-1 p-4 sm:p-6 bg-gray-50 md:ml-0 overflow-x-hidden">{children}</main>
         <FeedbackDialog />
       </div>
     </SidebarProvider>

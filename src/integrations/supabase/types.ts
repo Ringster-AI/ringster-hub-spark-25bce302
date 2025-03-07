@@ -21,6 +21,7 @@ export type Database = {
           hipaa_enabled: boolean | null
           id: string
           is_trial: boolean | null
+          is_web_only: boolean | null
           minutes_allowance: number | null
           minutes_used: number | null
           name: string
@@ -34,6 +35,7 @@ export type Database = {
           user_id: string
           vapi_assistant_id: string | null
           voice_id: string | null
+          widget_config: Json | null
         }
         Insert: {
           advanced_config?: Json | null
@@ -46,6 +48,7 @@ export type Database = {
           hipaa_enabled?: boolean | null
           id?: string
           is_trial?: boolean | null
+          is_web_only?: boolean | null
           minutes_allowance?: number | null
           minutes_used?: number | null
           name: string
@@ -59,6 +62,7 @@ export type Database = {
           user_id: string
           vapi_assistant_id?: string | null
           voice_id?: string | null
+          widget_config?: Json | null
         }
         Update: {
           advanced_config?: Json | null
@@ -71,6 +75,7 @@ export type Database = {
           hipaa_enabled?: boolean | null
           id?: string
           is_trial?: boolean | null
+          is_web_only?: boolean | null
           minutes_allowance?: number | null
           minutes_used?: number | null
           name?: string
@@ -84,6 +89,7 @@ export type Database = {
           user_id?: string
           vapi_assistant_id?: string | null
           voice_id?: string | null
+          widget_config?: Json | null
         }
         Relationships: []
       }

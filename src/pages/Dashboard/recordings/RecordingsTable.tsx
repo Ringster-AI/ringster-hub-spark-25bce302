@@ -64,38 +64,39 @@ export const RecordingsTable = ({
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Recent Calls</CardTitle>
-        <CardDescription>
+    <Card className="overflow-hidden">
+      <CardHeader className="px-4 sm:px-6">
+        <CardTitle className="text-lg sm:text-xl">Recent Calls</CardTitle>
+        <CardDescription className="text-sm">
           View and listen to your recent call recordings
         </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="px-3 sm:px-6">
         {recordings && recordings.length > 0 ? (
           isMobile ? (
-            <div className="space-y-4">
+            <div className="space-y-3">
               {recordings.map((recording) => (
-                <div key={recording.id} className="border rounded p-3 space-y-2">
-                  <div className="flex justify-between">
-                    <span className="font-medium">
+                <div key={recording.id} className="border rounded p-3 space-y-2 text-sm">
+                  <div className="flex justify-between items-start">
+                    <span className="font-medium truncate max-w-[160px]">
                       {recording.call_log?.agent?.name || 'Unknown'}
                     </span>
-                    <span className="text-sm text-muted-foreground">
+                    <span className="text-xs text-muted-foreground whitespace-nowrap ml-2">
                       {recording.call_log?.start_time && 
                         format(new Date(recording.call_log.start_time), 'MMM d, h:mm a')}
                     </span>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm">
+                  <div className="flex justify-between items-center gap-2">
+                    <span className="text-xs overflow-hidden text-ellipsis">
                       {recording.call_log?.from_number || 'Unknown'} 
                       {recording.call_log?.duration && 
                         ` (${Math.floor(recording.call_log.duration / 60)}:${(recording.call_log.duration % 60).toString().padStart(2, '0')})`}
                     </span>
-                    <div className="flex space-x-2">
+                    <div className="flex space-x-1">
                       <Button 
                         variant="ghost" 
                         size="sm"
+                        className="h-8 w-8 p-0"
                         onClick={() => handlePlay(recording)}
                         disabled={!recording.recording_url}
                         title={recording.recording_url ? "Play recording" : "No recording available"}
@@ -105,6 +106,7 @@ export const RecordingsTable = ({
                       <Button 
                         variant="ghost" 
                         size="sm"
+                        className="h-8 w-8 p-0"
                         onClick={() => handleDownload(recording)}
                         disabled={!recording.recording_url}
                         title={recording.recording_url ? "Download recording" : "No recording available"}
@@ -114,6 +116,7 @@ export const RecordingsTable = ({
                       <Button 
                         variant="ghost" 
                         size="sm"
+                        className="h-8 w-8 p-0"
                         onClick={() => handleTranscript(recording)}
                         title="View transcript"
                       >
@@ -125,67 +128,69 @@ export const RecordingsTable = ({
               ))}
             </div>
           ) : (
-            <Table>
-              <TableCaption>A list of your recent call recordings</TableCaption>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Agent</TableHead>
-                  <TableHead>Number</TableHead>
-                  <TableHead>Duration</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {recordings.map((recording) => (
-                  <TableRow key={recording.id}>
-                    <TableCell>
-                      {recording.call_log?.start_time && 
-                        format(new Date(recording.call_log.start_time), 'MMM d, yyyy h:mm a')}
-                    </TableCell>
-                    <TableCell>{recording.call_log?.agent?.name || 'Unknown'}</TableCell>
-                    <TableCell>{recording.call_log?.from_number || 'Unknown'}</TableCell>
-                    <TableCell>
-                      {recording.call_log?.duration 
-                        ? `${Math.floor(recording.call_log.duration / 60)}:${(recording.call_log.duration % 60).toString().padStart(2, '0')}`
-                        : 'n/a'}
-                    </TableCell>
-                    <TableCell className="flex space-x-2">
-                      <Button 
-                        variant="ghost" 
-                        size="icon"
-                        onClick={() => handlePlay(recording)}
-                        disabled={!recording.recording_url}
-                        title={recording.recording_url ? "Play recording" : "No recording available"}
-                      >
-                        <Play className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="icon"
-                        onClick={() => handleDownload(recording)}
-                        disabled={!recording.recording_url}
-                        title={recording.recording_url ? "Download recording" : "No recording available"}
-                      >
-                        <Download className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="icon"
-                        onClick={() => handleTranscript(recording)}
-                        title="View transcript"
-                      >
-                        <FileText className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
+            <div className="overflow-x-auto -mx-3 sm:mx-0">
+              <Table>
+                <TableCaption>A list of your recent call recordings</TableCaption>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="whitespace-nowrap">Date</TableHead>
+                    <TableHead className="whitespace-nowrap">Agent</TableHead>
+                    <TableHead className="whitespace-nowrap">Number</TableHead>
+                    <TableHead className="whitespace-nowrap">Duration</TableHead>
+                    <TableHead className="whitespace-nowrap">Actions</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {recordings.map((recording) => (
+                    <TableRow key={recording.id}>
+                      <TableCell className="whitespace-nowrap">
+                        {recording.call_log?.start_time && 
+                          format(new Date(recording.call_log.start_time), 'MMM d, yyyy h:mm a')}
+                      </TableCell>
+                      <TableCell>{recording.call_log?.agent?.name || 'Unknown'}</TableCell>
+                      <TableCell>{recording.call_log?.from_number || 'Unknown'}</TableCell>
+                      <TableCell className="whitespace-nowrap">
+                        {recording.call_log?.duration 
+                          ? `${Math.floor(recording.call_log.duration / 60)}:${(recording.call_log.duration % 60).toString().padStart(2, '0')}`
+                          : 'n/a'}
+                      </TableCell>
+                      <TableCell className="flex space-x-2">
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          onClick={() => handlePlay(recording)}
+                          disabled={!recording.recording_url}
+                          title={recording.recording_url ? "Play recording" : "No recording available"}
+                        >
+                          <Play className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          onClick={() => handleDownload(recording)}
+                          disabled={!recording.recording_url}
+                          title={recording.recording_url ? "Download recording" : "No recording available"}
+                        >
+                          <Download className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          onClick={() => handleTranscript(recording)}
+                          title="View transcript"
+                        >
+                          <FileText className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           )
         ) : (
           <div className="text-center py-8">
-            <p className="text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               No call recordings found. As your agents make calls, recordings will appear here.
             </p>
           </div>

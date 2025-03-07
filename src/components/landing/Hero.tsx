@@ -7,12 +7,14 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export const Hero = () => {
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   const handleBookDemo = () => {
     // Track the 'Book Demo' event with Facebook Pixel
@@ -75,45 +77,45 @@ export const Hero = () => {
         <div className="absolute inset-0 bg-black/60" />
       </div>
 
-      <div className="container mx-auto px-4 py-20 sm:px-6 lg:px-8 relative">
-        <div className="text-center animate-fade-down">
-          <h1 className="text-4xl font-bold tracking-tight text-white sm:text-6xl animate-glow">
+      <div className="container mx-auto px-4 py-16 sm:py-20 relative">
+        <div className="text-center animate-fade-down max-w-4xl mx-auto">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-white animate-glow">
             We Help Small Business—
-            <span className="block">Never Miss a Customer Call Again</span>
+            <span className="block mt-2">Never Miss a Customer Call Again</span>
           </h1>
-          <div className="mt-6 text-lg leading-8 max-w-2xl mx-auto">
+          <div className="mt-4 sm:mt-6 text-base sm:text-lg leading-7 sm:leading-8 max-w-2xl mx-auto">
             <ShinyText 
-              text="24/7 AI-powered call handling for small businesses, freelancers, and entrepreneurs—answering calls, booking appointments, and capturing leads so you don’t have to."
+              text="24/7 AI-powered call handling for small businesses, freelancers, and entrepreneurs—answering calls, booking appointments, and capturing leads so you don't have to."
               className="text-white/90"
               speed={3}
             />
           </div>
           
-          <ul className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4 text-white/90 text-lg">
+          <ul className="mt-6 sm:mt-8 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 text-white/90 text-base sm:text-lg">
             <li className="flex items-center gap-2">
-              <Phone className="h-5 w-5" />
+              <Phone className="h-4 w-4 sm:h-5 sm:w-5" />
               Answer calls 24/7
             </li>
             <li className="flex items-center gap-2">
-              <ArrowUpRight className="h-5 w-5" />
+              <ArrowUpRight className="h-4 w-4 sm:h-5 sm:w-5" />
               Reduce missed opportunities
             </li>
             <li className="flex items-center gap-2">
-              <ArrowRight className="h-5 w-5" />
+              <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5" />
               Seamless call transfers
             </li>
           </ul>
 
-          <div className="mt-10 flex items-center justify-center gap-x-6">
+          <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
             <Dialog open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
               <DialogTrigger asChild>
                 <Button 
-                  size="lg" 
-                  className="group bg-white text-[#9b87f5] hover:bg-white/90 hover:text-[#9b87f5] shadow-lg text-lg px-8 py-6"
+                  size={isMobile ? "default" : "lg"} 
+                  className="group bg-white text-[#9b87f5] hover:bg-white/90 hover:text-[#9b87f5] shadow-lg text-base sm:text-lg px-6 sm:px-8 py-2 sm:py-6 w-full sm:w-auto"
                   onClick={handleBookDemo}
                 >
                   Book a Demo
-                  <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                  <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
@@ -132,26 +134,26 @@ export const Hero = () => {
             </Dialog>
             <Button 
               variant="outline" 
-              size="lg" 
-              className="border-white text-white bg-transparent hover:bg-white/10 hover:text-white"
+              size={isMobile ? "default" : "lg"} 
+              className="border-white text-white bg-transparent hover:bg-white/10 hover:text-white w-full sm:w-auto"
               onClick={() => setIsCalendarOpen(true)}
             >
               Learn More
             </Button>
           </div>
 
-          <div className="mt-16">
-            <form onSubmit={handleWaitlistSubmit} className="flex flex-col sm:flex-row items-center justify-center gap-4 max-w-md mx-auto">
+          <div className="mt-12 sm:mt-16">
+            <form onSubmit={handleWaitlistSubmit} className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 max-w-md mx-auto">
               <Input
                 type="email"
                 placeholder="Enter your email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="flex-1 border-[#9b87f5] bg-white/10 text-white placeholder:text-white/70"
+                className="flex-1 border-[#9b87f5] bg-white/10 text-white placeholder:text-white/70 w-full"
               />
               <Button 
                 type="submit"
-                className="bg-[#9b87f5] hover:bg-[#9b87f5]/90 text-white px-8"
+                className="bg-[#9b87f5] hover:bg-[#9b87f5]/90 text-white px-6 sm:px-8 w-full sm:w-auto"
                 disabled={isSubmitting}
               >
                 Join Waitlist
