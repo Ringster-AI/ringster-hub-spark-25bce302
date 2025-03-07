@@ -17,6 +17,8 @@ import Profile from "./Dashboard/Profile";
 import { FeedbackDialog } from "@/components/dashboard/FeedbackDialog";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Menu } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const Dashboard = () => {
   const isMobile = useIsMobile();
@@ -27,13 +29,16 @@ const Dashboard = () => {
         <DashboardSidebar />
         <div className="flex-1 flex flex-col overflow-hidden">
           {isMobile && (
-            <div className="border-b p-2 flex items-center">
-              <SidebarTrigger />
+            <div className="border-b p-2 flex items-center justify-between">
+              <SidebarTrigger>
+                <Menu className="h-5 w-5" />
+              </SidebarTrigger>
               <img 
                 src="/lovable-uploads/059d2b53-6e4e-4788-a607-2344b4097212.png" 
                 alt="Ringster Logo" 
-                className="h-8 w-auto mx-auto"
+                className="h-8 w-auto"
               />
+              <div className="w-5"></div> {/* Empty div for flex spacing */}
             </div>
           )}
           <div className="flex-1 overflow-auto">

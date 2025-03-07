@@ -16,6 +16,8 @@ import { UserProfile } from "./sidebar/UserProfile";
 import { MainMenu } from "./sidebar/MainMenu";
 import { ManagementMenu } from "./sidebar/ManagementMenu";
 import { OtherMenu } from "./sidebar/OtherMenu";
+import { Sidebar } from "@/components/ui/sidebar";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface DashboardSidebarProps {
   className?: string;
@@ -26,6 +28,7 @@ export const DashboardSidebar = ({ className = '' }: DashboardSidebarProps) => {
   const { toast } = useToast();
   const { setOpenMobile } = useSidebar();
   const { data: agentCount = 0 } = useAgentCount(true);
+  const isMobile = useIsMobile();
 
   // Get campaign count
   const { data: campaignCount = 0 } = useQuery({
@@ -80,8 +83,13 @@ export const DashboardSidebar = ({ className = '' }: DashboardSidebarProps) => {
     setOpenMobile(false);
   };
 
+  const sidebarVariant = isMobile ? "offcanvas" : "icon";
+
   return (
-    <div className={`${className} h-full border-r`}>
+    <Sidebar 
+      className={`${className} h-full border-r`}
+      collapsible={sidebarVariant}
+    >
       <SidebarContent>
         <div className="p-6">
           <img 
@@ -114,6 +122,6 @@ export const DashboardSidebar = ({ className = '' }: DashboardSidebarProps) => {
           <span>Logout</span>
         </SidebarMenuButton>
       </SidebarFooter>
-    </div>
+    </Sidebar>
   );
 };
