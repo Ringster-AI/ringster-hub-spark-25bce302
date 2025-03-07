@@ -29,7 +29,7 @@ const Dashboard = () => {
         <DashboardSidebar />
         <div className="flex-1 flex flex-col overflow-hidden">
           {isMobile && (
-            <div className="border-b p-2 flex items-center justify-between">
+            <div className="border-b p-2 flex items-center justify-between bg-background">
               <SidebarTrigger>
                 <Menu className="h-5 w-5" />
               </SidebarTrigger>

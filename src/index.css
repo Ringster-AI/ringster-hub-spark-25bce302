@@ -100,3 +100,8 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Ensure mobile sidebar has proper background and visibility */
+[data-mobile="true"].bg-sidebar {
+  @apply bg-white dark:bg-gray-900;
+}
