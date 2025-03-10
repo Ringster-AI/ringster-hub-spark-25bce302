@@ -27,5 +27,8 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": ""
+  "description": "",
+  "resolutions": {
+    "path-to-regexp": "^1.8.0"
+  }
 }
