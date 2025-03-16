@@ -7,6 +7,8 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 
 serve(async (req) => {
+  console.log("Request received in store-google-tokens");
+  
   // Handle CORS preflight request
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -20,6 +22,7 @@ serve(async (req) => {
     const { email, accessToken, refreshToken, expiresAt, scopes } = await req.json();
     
     if (!email || !accessToken || !expiresAt || !scopes) {
+      console.error("Missing required parameters:", { email, hasAccessToken: !!accessToken, expiresAt, scopes });
       return new Response(
         JSON.stringify({ error: "Missing required parameters" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -30,14 +33,21 @@ serve(async (req) => {
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     
     if (userError || !user) {
+      console.error("Authentication error:", userError);
+      
+      // Try to get the Auth header for debugging
+      const authHeader = req.headers.get("Authorization");
+      console.log("Auth header present:", !!authHeader);
+      
       return new Response(
-        JSON.stringify({ error: "Authentication required" }),
+        JSON.stringify({ error: "Authentication required", details: userError?.message }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
     
     // Security check: ensure the integration is being stored for the authenticated user
     const userId = user.id;
+    console.log("User authenticated:", userId);
     
     // Store the integration securely in the database with proper RLS
     const { data, error } = await supabase
@@ -48,8 +58,7 @@ serve(async (req) => {
         access_token: accessToken,  // These will be encrypted at rest if column encryption is enabled
         refresh_token: refreshToken, // These will be encrypted at rest if column encryption is enabled
         expires_at: expiresAt,
-        scopes: scopes,
-        calendar_enabled: scopes.includes('calendar')
+        scopes: scopes
       })
       .select("id");
       
@@ -57,6 +66,8 @@ serve(async (req) => {
       console.error("Database error storing integration:", error);
       throw error;
     }
+    
+    console.log("Integration stored successfully, id:", data?.[0]?.id);
     
     return new Response(
       JSON.stringify({ success: true, id: data[0]?.id }),

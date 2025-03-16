@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { GoogleIntegration } from "@/types/integrations";
@@ -119,8 +120,17 @@ export function useGoogleIntegration() {
     try {
       setIsConnecting(true);
       
+      console.log("Handling Google redirect data", { email, hasToken: !!accessToken, hasRefreshToken: !!refreshToken, expiresAt, scopes });
+      
+      // Verify user is authenticated before proceeding
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        console.error("No active session found");
+        throw new Error("You must be logged in to connect your Google account");
+      }
+      
       // Use edge function to handle sensitive token storage
-      const { error } = await supabase.functions.invoke('store-google-tokens', {
+      const { data, error } = await supabase.functions.invoke('store-google-tokens', {
         method: 'POST',
         body: { 
           email,
@@ -130,6 +140,8 @@ export function useGoogleIntegration() {
           scopes
         }
       });
+      
+      console.log("Store tokens response:", { data, error });
       
       if (error) {
         throw new Error(error.message);

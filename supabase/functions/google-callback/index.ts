@@ -8,6 +8,8 @@ const APP_URL = Deno.env.get("APP_URL") || "http://localhost:5173";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
 
 serve(async (req) => {
+  console.log("Google OAuth callback received");
+  
   // Handle CORS preflight request
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -73,6 +75,7 @@ serve(async (req) => {
     });
 
     const tokenData = await tokenResponse.json();
+    console.log("Token exchange response status:", tokenResponse.status);
 
     if (!tokenResponse.ok) {
       console.error("Error exchanging code for tokens:", tokenData);
@@ -87,6 +90,7 @@ serve(async (req) => {
     });
 
     const userInfo = await userInfoResponse.json();
+    console.log("User info response status:", userInfoResponse.status);
 
     if (!userInfoResponse.ok) {
       console.error("Error getting user info:", userInfo);
@@ -100,6 +104,7 @@ serve(async (req) => {
     // Add a flag to indicate this is Calendar-only integration
     const calendarScope = 'https://www.googleapis.com/auth/calendar';
     const hasCalendarScope = tokenData.scope.includes(calendarScope);
+    console.log("Has calendar scope:", hasCalendarScope);
 
     // Build redirect URL with all OAuth data as query parameters
     const redirectUrl = new URL(returnUrl);
