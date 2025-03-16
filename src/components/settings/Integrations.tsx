@@ -37,6 +37,7 @@ export function Integrations() {
   }
   
   const googleConnected = !!googleIntegration;
+  const hasCalendarScope = googleIntegration?.scopes?.includes('calendar') || false;
   
   return (
     <Card>
@@ -59,7 +60,7 @@ export function Integrations() {
           </Alert>
         )}
         
-        {googleConnected && (
+        {googleConnected && hasCalendarScope && (
           <Alert>
             <Check className="h-4 w-4" />
             <AlertTitle>Google Calendar Connected</AlertTitle>
@@ -74,7 +75,7 @@ export function Integrations() {
             icon={<Calendar className="h-6 w-6 text-primary" />}
             title="Google Calendar"
             description="Allow your agents to schedule appointments on your calendar"
-            isConnected={googleConnected}
+            isConnected={googleConnected && hasCalendarScope}
             connectedEmail={googleIntegration?.email}
             scopeCheck={googleIntegration?.scopes?.includes('calendar') ? 'calendar' : ''}
             isConnecting={isConnecting}

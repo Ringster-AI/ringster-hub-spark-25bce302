@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useGoogleIntegration } from "@/hooks/useGoogleIntegration";
 import { CalendarConfigModal } from "@/components/settings/CalendarConfigModal";
@@ -72,13 +71,15 @@ export function CalendarSettings() {
       if (error) throw error;
       
       // Update local state
-      googleIntegration.calendar_id = settings.calendar_id;
-      googleIntegration.calendar_name = settings.calendar_name;
-      googleIntegration.default_duration = settings.default_duration;
-      googleIntegration.buffer_time = settings.buffer_time;
-      googleIntegration.availability_days = settings.availability_days;
-      googleIntegration.availability_start = settings.availability_start;
-      googleIntegration.availability_end = settings.availability_end;
+      if (googleIntegration) {
+        googleIntegration.calendar_id = settings.calendar_id;
+        googleIntegration.calendar_name = settings.calendar_name;
+        googleIntegration.default_duration = settings.default_duration;
+        googleIntegration.buffer_time = settings.buffer_time;
+        googleIntegration.availability_days = settings.availability_days;
+        googleIntegration.availability_start = settings.availability_start;
+        googleIntegration.availability_end = settings.availability_end;
+      }
       
       toast({
         title: "Settings Saved",
@@ -112,7 +113,8 @@ export function CalendarSettings() {
     );
   }
 
-  const isConnected = !!googleIntegration && googleIntegration.calendar_enabled;
+  // Check if connected based on Google scopes rather than calendar_enabled
+  const isConnected = !!googleIntegration && googleIntegration.scopes?.includes('calendar');
   const calendarSettings = getCalendarSettings(googleIntegration);
 
   return (

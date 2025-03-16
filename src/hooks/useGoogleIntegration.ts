@@ -24,7 +24,7 @@ export function useGoogleIntegration() {
         // Only fetch limited data - never fetch tokens directly in the browser
         const { data, error } = await (supabase
           .from('google_integrations' as any)
-          .select('id, user_id, email, created_at, updated_at, scopes, calendar_enabled')
+          .select('id, user_id, email, created_at, updated_at, scopes')
           .single() as any);
         
         if (error && error.code !== 'PGRST116') { // PGRST116 is "no rows returned"
@@ -32,7 +32,13 @@ export function useGoogleIntegration() {
         }
         
         if (data) {
-          setGoogleIntegration(data as GoogleIntegration);
+          // Add the calendar_enabled flag based on scopes
+          const integration = {
+            ...data,
+            calendar_enabled: data.scopes && data.scopes.includes('calendar')
+          } as GoogleIntegration;
+          
+          setGoogleIntegration(integration);
         }
       } catch (err: any) {
         console.error('Error fetching integrations:', err);
@@ -145,8 +151,6 @@ export function useGoogleIntegration() {
         refresh_token: '', // Intentionally not storing in front-end
         expires_at: expiresAt,
         scopes,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
         calendar_enabled: scopes.includes('calendar')
       });
       
