@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { GoogleIntegration } from "@/types/integrations";
@@ -32,13 +31,7 @@ export function useGoogleIntegration() {
         }
         
         if (data) {
-          // Add the calendar_enabled flag based on scopes
-          const integration = {
-            ...data,
-            calendar_enabled: data.scopes && data.scopes.includes('calendar')
-          } as GoogleIntegration;
-          
-          setGoogleIntegration(integration);
+          setGoogleIntegration(data as GoogleIntegration);
         }
       } catch (err: any) {
         console.error('Error fetching integrations:', err);
@@ -143,6 +136,9 @@ export function useGoogleIntegration() {
       }
       
       // Update local state with non-sensitive information
+      // Include timestamp fields with default values to satisfy TypeScript
+      const now = new Date().toISOString();
+      
       setGoogleIntegration({
         id: '', // Will be fetched on next load
         user_id: '', // Will be fetched on next load
@@ -151,7 +147,8 @@ export function useGoogleIntegration() {
         refresh_token: '', // Intentionally not storing in front-end
         expires_at: expiresAt,
         scopes,
-        calendar_enabled: scopes.includes('calendar')
+        created_at: now,
+        updated_at: now
       });
       
       toast({

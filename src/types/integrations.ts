@@ -7,9 +7,8 @@ export interface GoogleIntegration {
   refresh_token: string;
   expires_at: string;
   scopes: string;
-  created_at: string;
-  updated_at: string;
-  calendar_enabled: boolean; 
+  created_at?: string; // Make created_at optional
+  updated_at?: string; // Make updated_at optional
   // Calendar settings
   calendar_id?: string;
   calendar_name?: string;
