@@ -32,7 +32,7 @@ export function useGoogleIntegration() {
         }
         
         if (data) {
-          setGoogleIntegration(data as Partial<GoogleIntegration>);
+          setGoogleIntegration(data as GoogleIntegration);
         }
       } catch (err: any) {
         console.error('Error fetching integrations:', err);
