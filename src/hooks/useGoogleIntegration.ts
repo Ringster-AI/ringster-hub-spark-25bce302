@@ -50,6 +50,19 @@ export function useGoogleIntegration() {
     try {
       setIsConnecting(true);
       
+      // Verify user is authenticated before proceeding
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        console.error("No active session found");
+        toast({
+          variant: "destructive",
+          title: "Authentication Required",
+          description: "You must be logged in to connect your Google account",
+        });
+        navigate("/login");
+        return;
+      }
+      
       // Get current URL as return URL
       const currentUrl = window.location.href;
       
@@ -129,7 +142,9 @@ export function useGoogleIntegration() {
         throw new Error("You must be logged in to connect your Google account");
       }
       
-      // Use edge function to handle sensitive token storage
+      console.log("User is authenticated, proceeding with token storage");
+      
+      // Add Authorization header with the user's session token
       const { data, error } = await supabase.functions.invoke('store-google-tokens', {
         method: 'POST',
         body: { 
@@ -138,6 +153,9 @@ export function useGoogleIntegration() {
           refreshToken,
           expiresAt,
           scopes
+        },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
         }
       });
       
@@ -152,10 +170,10 @@ export function useGoogleIntegration() {
       const now = new Date().toISOString();
       
       setGoogleIntegration({
-        id: '', // Will be fetched on next load
-        user_id: '', // Will be fetched on next load
+        id: data?.id || '',
+        user_id: session.user.id,
         email,
-        access_token: '', // Intentionally not storing in front-end
+        access_token: '',  // Intentionally not storing in front-end
         refresh_token: '', // Intentionally not storing in front-end
         expires_at: expiresAt,
         scopes,

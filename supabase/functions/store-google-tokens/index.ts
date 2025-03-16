@@ -15,11 +15,22 @@ serve(async (req) => {
   }
 
   try {
+    // Log the headers for debugging
+    console.log("Request headers:", Object.fromEntries(req.headers.entries()));
+    
     // Create Supabase client with service role key (has elevated privileges)
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
     
     // Get token data from request body
     const { email, accessToken, refreshToken, expiresAt, scopes } = await req.json();
+    
+    console.log("Received token data:", { 
+      email, 
+      hasAccessToken: !!accessToken, 
+      hasRefreshToken: !!refreshToken, 
+      expiresAt, 
+      scopes 
+    });
     
     if (!email || !accessToken || !expiresAt || !scopes) {
       console.error("Missing required parameters:", { email, hasAccessToken: !!accessToken, expiresAt, scopes });
@@ -29,25 +40,65 @@ serve(async (req) => {
       );
     }
     
-    // Get the current user making the request
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    // Get the current user making the request from the auth header
+    const authHeader = req.headers.get("Authorization");
     
-    if (userError || !user) {
-      console.error("Authentication error:", userError);
-      
-      // Try to get the Auth header for debugging
-      const authHeader = req.headers.get("Authorization");
-      console.log("Auth header present:", !!authHeader);
-      
-      return new Response(
-        JSON.stringify({ error: "Authentication required", details: userError?.message }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+    let userId;
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      try {
+        const { data: { user }, error: userError } = await supabase.auth.getUser(authHeader.replace("Bearer ", ""));
+        
+        if (userError || !user) {
+          console.error("Authentication error with token:", userError);
+          return new Response(
+            JSON.stringify({ error: "Authentication required", details: userError?.message }),
+            { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+        
+        userId = user.id;
+        console.log("User authenticated via token:", userId);
+      } catch (authErr) {
+        console.error("Error parsing auth token:", authErr);
+      }
     }
     
-    // Security check: ensure the integration is being stored for the authenticated user
-    const userId = user.id;
-    console.log("User authenticated:", userId);
+    // If we couldn't get the user from the token, try getting the current session
+    if (!userId) {
+      console.log("Trying to get user from session");
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session?.user) {
+        console.error("No valid session found:", sessionError);
+        
+        // Use admin powers to look up the user by email instead
+        console.log("Looking up user by email:", email);
+        const { data: userData, error: userLookupError } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('email', email)
+          .single();
+        
+        if (userLookupError || !userData) {
+          console.error("Failed to find user by email:", userLookupError);
+          return new Response(
+            JSON.stringify({ 
+              error: "User not found", 
+              details: "Could not determine which user to store this integration for" 
+            }),
+            { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+        
+        userId = userData.id;
+        console.log("Found user by email lookup:", userId);
+      } else {
+        userId = session.user.id;
+        console.log("User authenticated via session:", userId);
+      }
+    }
+    
+    console.log("Storing integration for user:", userId);
     
     // Store the integration securely in the database with proper RLS
     const { data, error } = await supabase

@@ -1,3 +1,4 @@
+
 import { useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -63,20 +64,24 @@ export function GoogleOAuthHandler({ onGoogleRedirect }: GoogleOAuthHandlerProps
       
       // If we have Google data from the redirect, store it
       if (googleConnected === 'true' && email && googleToken) {
-        onGoogleRedirect(
-          email, 
-          googleToken, 
-          googleRefreshToken || '', 
-          googleExpiresAt || '', 
-          googleScopes || ''
-        ).catch(err => {
+        console.log("Attempting to store Google tokens...");
+        try {
+          await onGoogleRedirect(
+            email, 
+            googleToken, 
+            googleRefreshToken || '', 
+            googleExpiresAt || '', 
+            googleScopes || ''
+          );
+          console.log("Google token storage completed successfully");
+        } catch (err) {
           console.error("Error handling Google redirect:", err);
           toast({
             variant: "destructive",
             title: "Integration Failed",
-            description: "Failed to save Google integration data",
+            description: "Failed to save Google integration data. Please try again.",
           });
-        });
+        }
       }
       
       // If there are URL parameters, show appropriate toast and clean URL
@@ -96,6 +101,8 @@ export function GoogleOAuthHandler({ onGoogleRedirect }: GoogleOAuthHandlerProps
             errorMessage = "Server configuration error. Please contact support.";
           } else if (error === 'token_error') {
             errorMessage = "Failed to get access token from Google.";
+          } else if (error === 'auth_error') {
+            errorMessage = "Authentication error. Please log in and try again.";
           }
           
           toast({

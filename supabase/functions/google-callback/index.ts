@@ -60,6 +60,9 @@ serve(async (req) => {
     }
 
     // Exchange the authorization code for access and refresh tokens
+    console.log("Exchanging code for tokens...");
+    console.log("Redirect URI:", `${SUPABASE_URL}/functions/v1/google-callback`);
+    
     const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
       method: "POST",
       headers: {
@@ -76,11 +79,20 @@ serve(async (req) => {
 
     const tokenData = await tokenResponse.json();
     console.log("Token exchange response status:", tokenResponse.status);
-
+    
     if (!tokenResponse.ok) {
       console.error("Error exchanging code for tokens:", tokenData);
       return redirectWithError(tokenData.error || "token_error");
     }
+
+    // Log token response data (excluding sensitive information)
+    console.log("Token exchange successful:", {
+      tokenType: tokenData.token_type,
+      expiresIn: tokenData.expires_in,
+      hasAccessToken: !!tokenData.access_token,
+      hasRefreshToken: !!tokenData.refresh_token,
+      scope: tokenData.scope
+    });
 
     // Get user info from Google to get the email
     const userInfoResponse = await fetch("https://www.googleapis.com/oauth2/v2/userinfo", {
@@ -96,6 +108,8 @@ serve(async (req) => {
       console.error("Error getting user info:", userInfo);
       return redirectWithError("userinfo_error");
     }
+
+    console.log("User info retrieved:", { email: userInfo.email });
 
     // Calculate token expiration time
     const expiresAt = new Date();
@@ -121,7 +135,7 @@ serve(async (req) => {
     redirectUrl.searchParams.append("googleScopes", tokenData.scope);
     redirectUrl.searchParams.append("calendarEnabled", hasCalendarScope.toString());
     
-    console.log("Redirecting to:", redirectUrl.toString());
+    console.log("Redirecting to:", redirectUrl.toString().substring(0, 100) + "...");
     
     // Redirect back to the app with the Google data
     return Response.redirect(redirectUrl.toString());
@@ -135,6 +149,7 @@ serve(async (req) => {
     const errorUrl = new URL(`${APP_URL}/dashboard/settings`);
     errorUrl.searchParams.append("tab", "integrations");
     errorUrl.searchParams.append("error", errorCode);
+    console.log("Redirecting with error:", errorCode, "to", errorUrl.toString());
     return Response.redirect(errorUrl.toString());
   }
 });
