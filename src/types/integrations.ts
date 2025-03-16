@@ -9,6 +9,7 @@ export interface GoogleIntegration {
   scopes: string;
   created_at: string;
   updated_at: string;
+  calendar_enabled: boolean; // New field to specifically track Calendar integration
 }
 
 export interface OAuthState {

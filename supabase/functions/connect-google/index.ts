@@ -22,12 +22,11 @@ serve(async (req) => {
       );
     }
 
-    // Generate OAuth URL with scopes
+    // Generate OAuth URL with limited scopes - calendar only
     const scopes = [
       "https://www.googleapis.com/auth/userinfo.email",
       "https://www.googleapis.com/auth/userinfo.profile",
-      "https://www.googleapis.com/auth/gmail.send",
-      "https://www.googleapis.com/auth/calendar",
+      "https://www.googleapis.com/auth/calendar", // Only keeping Calendar scope
     ];
 
     // Get the return URL from the request if provided

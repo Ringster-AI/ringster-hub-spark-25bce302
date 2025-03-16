@@ -1,0 +1,92 @@
+
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { corsHeaders } from "../_shared/cors.ts";
+
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+const GOOGLE_CLIENT_ID = Deno.env.get("GOOGLE_CLIENT_ID") || "";
+const GOOGLE_CLIENT_SECRET = Deno.env.get("GOOGLE_CLIENT_SECRET") || "";
+
+serve(async (req) => {
+  // Handle CORS preflight request
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    // Create Supabase client with service role key
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    
+    // Get the current user
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    if (userError || !user) {
+      return new Response(
+        JSON.stringify({ error: "Authentication required" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    
+    const userId = user.id;
+    
+    // Get the user's Google integration
+    const { data: integrationData, error: integrationError } = await supabase
+      .from("google_integrations")
+      .select("refresh_token")
+      .eq("user_id", userId)
+      .single();
+      
+    if (integrationError && integrationError.code !== "PGRST116") {
+      throw integrationError;
+    }
+    
+    // If there's a refresh token, revoke it with Google
+    if (integrationData?.refresh_token) {
+      try {
+        await fetch("https://oauth2.googleapis.com/revoke", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded"
+          },
+          body: new URLSearchParams({
+            token: integrationData.refresh_token,
+            client_id: GOOGLE_CLIENT_ID,
+            client_secret: GOOGLE_CLIENT_SECRET
+          })
+        });
+      } catch (revokeError) {
+        // Log but continue - we still want to remove from database even if revocation fails
+        console.error("Error revoking token:", revokeError);
+      }
+    }
+    
+    // Delete the integration from database
+    const { error: deleteError } = await supabase
+      .from("google_integrations")
+      .delete()
+      .eq("user_id", userId);
+      
+    if (deleteError) {
+      throw deleteError;
+    }
+    
+    return new Response(
+      JSON.stringify({ success: true }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+    
+  } catch (err) {
+    console.error("Error in revoke-google-tokens:", err);
+    return new Response(
+      JSON.stringify({ 
+        error: "Failed to revoke Google credentials", 
+        details: err instanceof Error ? err.message : String(err) 
+      }),
+      { 
+        status: 500, 
+        headers: { ...corsHeaders, "Content-Type": "application/json" } 
+      }
+    );
+  }
+});

@@ -7,7 +7,7 @@ import {
   CardTitle 
 } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Mail, Calendar, Check, ExternalLink, AlertCircle } from "lucide-react";
+import { Calendar, Check, ExternalLink, AlertCircle } from "lucide-react";
 import { useGoogleIntegration } from "@/hooks/useGoogleIntegration";
 import { GoogleOAuthHandler } from "./GoogleOAuthHandler";
 import { IntegrationServiceCard } from "./IntegrationServiceCard";
@@ -45,7 +45,7 @@ export function Integrations() {
       <CardHeader>
         <CardTitle>Integrations</CardTitle>
         <CardDescription>
-          Connect your accounts to enable your AI agents to perform actions on your behalf
+          Connect your Google Calendar to enable your AI agents to schedule appointments
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -62,26 +62,14 @@ export function Integrations() {
         {googleConnected && (
           <Alert>
             <Check className="h-4 w-4" />
-            <AlertTitle>Google Account Connected</AlertTitle>
+            <AlertTitle>Google Calendar Connected</AlertTitle>
             <AlertDescription>
-              Your Google account ({googleIntegration.email}) is connected and your agents can now access your email and calendar.
+              Your Google account ({googleIntegration.email}) is connected and your agents can now access your calendar.
             </AlertDescription>
           </Alert>
         )}
         
         <div className="space-y-4">
-          <IntegrationServiceCard
-            icon={<Mail className="h-6 w-6 text-primary" />}
-            title="Google Mail"
-            description="Allow your agents to send emails on your behalf"
-            isConnected={googleConnected}
-            connectedEmail={googleIntegration?.email}
-            scopeCheck={googleIntegration?.scopes?.includes('gmail.send') ? 'gmail.send' : ''}
-            isConnecting={isConnecting}
-            onConnect={connectGoogle}
-            onDisconnect={disconnectGoogle}
-          />
-          
           <IntegrationServiceCard
             icon={<Calendar className="h-6 w-6 text-primary" />}
             title="Google Calendar"

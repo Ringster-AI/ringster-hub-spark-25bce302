@@ -30,13 +30,15 @@ export function GoogleOAuthHandler({ onGoogleRedirect }: GoogleOAuthHandlerProps
     const googleRefreshToken = searchParams.get('googleRefreshToken');
     const googleExpiresAt = searchParams.get('googleExpiresAt');
     const googleScopes = searchParams.get('googleScopes');
+    const calendarEnabled = searchParams.get('calendarEnabled');
     
     console.log("OAuth redirect data:", { 
       success, error, tab, email, googleConnected, 
       hasToken: !!googleToken, 
       hasRefreshToken: !!googleRefreshToken,
       expiresAt: googleExpiresAt,
-      scopes: googleScopes
+      scopes: googleScopes,
+      calendarEnabled
     });
     
     // If we have Google data from the redirect, store it
@@ -61,13 +63,13 @@ export function GoogleOAuthHandler({ onGoogleRedirect }: GoogleOAuthHandlerProps
     if (success || error) {
       if (success) {
         toast({
-          title: "Integration Successful",
-          description: "Your Google account has been successfully connected.",
+          title: "Calendar Integration Successful",
+          description: "Your Google Calendar has been successfully connected.",
         });
       }
       
       if (error) {
-        let errorMessage = "Failed to connect your Google account. Please try again.";
+        let errorMessage = "Failed to connect your Google Calendar. Please try again.";
         if (error === 'access_denied') {
           errorMessage = "You denied access to your Google account.";
         } else if (error === 'server_config_error') {

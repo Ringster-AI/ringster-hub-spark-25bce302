@@ -97,6 +97,10 @@ serve(async (req) => {
     const expiresAt = new Date();
     expiresAt.setSeconds(expiresAt.getSeconds() + tokenData.expires_in);
 
+    // Add a flag to indicate this is Calendar-only integration
+    const calendarScope = 'https://www.googleapis.com/auth/calendar';
+    const hasCalendarScope = tokenData.scope.includes(calendarScope);
+
     // Build redirect URL with all OAuth data as query parameters
     const redirectUrl = new URL(returnUrl);
     redirectUrl.searchParams.append("success", "true");
@@ -110,6 +114,7 @@ serve(async (req) => {
     
     redirectUrl.searchParams.append("googleExpiresAt", expiresAt.toISOString());
     redirectUrl.searchParams.append("googleScopes", tokenData.scope);
+    redirectUrl.searchParams.append("calendarEnabled", hasCalendarScope.toString());
     
     console.log("Redirecting to:", redirectUrl.toString());
     

@@ -21,9 +21,10 @@ export function useGoogleIntegration() {
         setIsLoading(true);
         
         // Use type assertion to work around TypeScript checking
+        // Only fetch limited data - never fetch tokens directly in the browser
         const { data, error } = await (supabase
           .from('google_integrations' as any)
-          .select('id, user_id, email, created_at, updated_at, scopes')
+          .select('id, user_id, email, created_at, updated_at, scopes, calendar_enabled')
           .single() as any);
         
         if (error && error.code !== 'PGRST116') { // PGRST116 is "no rows returned"
@@ -31,7 +32,7 @@ export function useGoogleIntegration() {
         }
         
         if (data) {
-          setGoogleIntegration(data as GoogleIntegration);
+          setGoogleIntegration(data as Partial<GoogleIntegration>);
         }
       } catch (err: any) {
         console.error('Error fetching integrations:', err);
@@ -83,11 +84,10 @@ export function useGoogleIntegration() {
     try {
       setIsConnecting(true);
       
-      // Use type assertion to work around TypeScript checking
-      const { error } = await (supabase
-        .from('google_integrations' as any)
-        .delete()
-        .is('user_id', 'not.null') as any);
+      // Use edge function to handle token revocation and secure deletion
+      const { error } = await supabase.functions.invoke('revoke-google-tokens', {
+        method: 'POST',
+      });
       
       if (error) throw error;
       
@@ -109,7 +109,7 @@ export function useGoogleIntegration() {
     }
   };
 
-  // Handle Google redirect data by storing tokens in Supabase
+  // Handle Google redirect data securely through an edge function
   const handleGoogleRedirectData = async (
     email: string, 
     accessToken: string, 
@@ -120,48 +120,39 @@ export function useGoogleIntegration() {
     try {
       setIsConnecting(true);
       
-      // Get current user
-      const { data: { user } } = await supabase.auth.getUser();
+      // Use edge function to handle sensitive token storage
+      const { error } = await supabase.functions.invoke('store-google-tokens', {
+        method: 'POST',
+        body: { 
+          email,
+          accessToken,
+          refreshToken,
+          expiresAt,
+          scopes
+        }
+      });
       
-      if (!user) {
-        throw new Error('User not authenticated');
+      if (error) {
+        throw new Error(error.message);
       }
       
-      console.log("Storing Google integration for user:", user.id, "with email:", email);
-      
-      // Store the Google integration data
-      const { error: dbError } = await (supabase
-        .from('google_integrations' as any)
-        .upsert({
-          user_id: user.id,
-          email: email,
-          access_token: accessToken,
-          refresh_token: refreshToken,
-          expires_at: expiresAt,
-          scopes: scopes,
-        }) as any);
-      
-      if (dbError) {
-        console.error("Database error storing integration:", dbError);
-        throw dbError;
-      }
-      
-      // Update local state with the new integration
+      // Update local state with non-sensitive information
       setGoogleIntegration({
-        id: '', // We don't know the ID yet, will be fetched on next load
-        user_id: user.id,
+        id: '', // Will be fetched on next load
+        user_id: '', // Will be fetched on next load
         email,
-        access_token: accessToken,
-        refresh_token: refreshToken,
+        access_token: '', // Intentionally not storing in front-end
+        refresh_token: '', // Intentionally not storing in front-end
         expires_at: expiresAt,
         scopes,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
+        calendar_enabled: scopes.includes('calendar')
       });
       
       toast({
         title: "Integration Successful",
-        description: `Your Google account (${email}) has been successfully connected.`,
+        description: `Your Google Calendar (${email}) has been successfully connected.`,
       });
       
       // Clean up URL parameters
