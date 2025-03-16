@@ -20,6 +20,14 @@ export function useGoogleIntegration() {
       try {
         setIsLoading(true);
         
+        // Check if user is authenticated
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          console.log("No active session, skipping integration fetch");
+          setIsLoading(false);
+          return;
+        }
+        
         // Use type assertion to work around TypeScript checking
         // Only fetch limited data - never fetch tokens directly in the browser
         const { data, error } = await (supabase
@@ -137,14 +145,11 @@ export function useGoogleIntegration() {
       
       // Verify user is authenticated before proceeding
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        console.error("No active session found");
-        throw new Error("You must be logged in to connect your Google account");
-      }
+      const userId = session?.user?.id;
       
-      console.log("User is authenticated, proceeding with token storage");
+      console.log("Current session:", { hasSession: !!session, userId });
       
-      // Add Authorization header with the user's session token
+      // Call the edge function with explicit userId
       const { data, error } = await supabase.functions.invoke('store-google-tokens', {
         method: 'POST',
         body: { 
@@ -152,11 +157,12 @@ export function useGoogleIntegration() {
           accessToken,
           refreshToken,
           expiresAt,
-          scopes
+          scopes,
+          userId // Pass the user ID explicitly
         },
-        headers: {
+        headers: session ? {
           Authorization: `Bearer ${session.access_token}`
-        }
+        } : {}
       });
       
       console.log("Store tokens response:", { data, error });
@@ -171,7 +177,7 @@ export function useGoogleIntegration() {
       
       setGoogleIntegration({
         id: data?.id || '',
-        user_id: session.user.id,
+        user_id: userId || '',
         email,
         access_token: '',  // Intentionally not storing in front-end
         refresh_token: '', // Intentionally not storing in front-end

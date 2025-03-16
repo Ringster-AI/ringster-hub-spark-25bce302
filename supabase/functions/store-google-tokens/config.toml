@@ -1,3 +1,5 @@
 
+# project_id is a required field when using verify_jwt
 project_id = "owzerqaududhfwngyqbp"
+# Don't require authentication for this function since we'll handle it inside
 verify_jwt = false

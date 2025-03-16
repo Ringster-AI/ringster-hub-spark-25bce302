@@ -15,21 +15,19 @@ serve(async (req) => {
   }
 
   try {
-    // Log the headers for debugging
-    console.log("Request headers:", Object.fromEntries(req.headers.entries()));
-    
     // Create Supabase client with service role key (has elevated privileges)
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
     
     // Get token data from request body
-    const { email, accessToken, refreshToken, expiresAt, scopes } = await req.json();
+    const { email, accessToken, refreshToken, expiresAt, scopes, userId } = await req.json();
     
     console.log("Received token data:", { 
       email, 
       hasAccessToken: !!accessToken, 
       hasRefreshToken: !!refreshToken, 
       expiresAt, 
-      scopes 
+      scopes,
+      hasUserId: !!userId
     });
     
     if (!email || !accessToken || !expiresAt || !scopes) {
@@ -40,47 +38,57 @@ serve(async (req) => {
       );
     }
     
-    // Get the current user making the request from the auth header
-    const authHeader = req.headers.get("Authorization");
+    // If userId is provided directly, use it
+    let userIdToUse = userId;
     
-    let userId;
-    if (authHeader && authHeader.startsWith("Bearer ")) {
-      try {
-        const { data: { user }, error: userError } = await supabase.auth.getUser(authHeader.replace("Bearer ", ""));
-        
-        if (userError || !user) {
-          console.error("Authentication error with token:", userError);
-          return new Response(
-            JSON.stringify({ error: "Authentication required", details: userError?.message }),
-            { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-          );
+    // If no userId provided, try to get it from the auth header
+    if (!userIdToUse) {
+      const authHeader = req.headers.get("Authorization");
+      
+      if (authHeader && authHeader.startsWith("Bearer ")) {
+        try {
+          const { data: { user }, error: userError } = await supabase.auth.getUser(authHeader.replace("Bearer ", ""));
+          
+          if (userError || !user) {
+            console.error("Authentication error with token:", userError);
+          } else {
+            userIdToUse = user.id;
+            console.log("User authenticated via token:", userIdToUse);
+          }
+        } catch (authErr) {
+          console.error("Error parsing auth token:", authErr);
         }
-        
-        userId = user.id;
-        console.log("User authenticated via token:", userId);
-      } catch (authErr) {
-        console.error("Error parsing auth token:", authErr);
+      } else {
+        console.log("No authorization header found");
       }
     }
     
-    // If we couldn't get the user from the token, try getting the current session
-    if (!userId) {
-      console.log("Trying to get user from session");
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    // If we still don't have a userId, try to find user by email
+    if (!userIdToUse) {
+      console.log("Looking up user by email:", email);
+      const { data: userData, error: userLookupError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('email', email)
+        .single();
       
-      if (sessionError || !session?.user) {
-        console.error("No valid session found:", sessionError);
+      if (userLookupError || !userData) {
+        console.error("Failed to find user by email lookup:", userLookupError);
         
-        // Use admin powers to look up the user by email instead
-        console.log("Looking up user by email:", email);
-        const { data: userData, error: userLookupError } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('email', email)
-          .single();
+        // As a final fallback, try to find the user directly in auth.users
+        const { data: authUser, error: authUserError } = await supabase.auth.admin.listUsers();
         
-        if (userLookupError || !userData) {
-          console.error("Failed to find user by email:", userLookupError);
+        if (authUserError) {
+          console.error("Error listing users:", authUserError);
+        } else {
+          const matchingUser = authUser.users.find(u => u.email === email);
+          if (matchingUser) {
+            userIdToUse = matchingUser.id;
+            console.log("Found user in auth.users:", userIdToUse);
+          }
+        }
+        
+        if (!userIdToUse) {
           return new Response(
             JSON.stringify({ 
               error: "User not found", 
@@ -89,25 +97,22 @@ serve(async (req) => {
             { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
           );
         }
-        
-        userId = userData.id;
-        console.log("Found user by email lookup:", userId);
       } else {
-        userId = session.user.id;
-        console.log("User authenticated via session:", userId);
+        userIdToUse = userData.id;
+        console.log("Found user by email lookup:", userIdToUse);
       }
     }
     
-    console.log("Storing integration for user:", userId);
+    console.log("Storing integration for user:", userIdToUse);
     
-    // Store the integration securely in the database with proper RLS
+    // Store the integration securely in the database
     const { data, error } = await supabase
       .from("google_integrations")
       .upsert({
-        user_id: userId,
+        user_id: userIdToUse,
         email: email,
-        access_token: accessToken,  // These will be encrypted at rest if column encryption is enabled
-        refresh_token: refreshToken, // These will be encrypted at rest if column encryption is enabled
+        access_token: accessToken,
+        refresh_token: refreshToken,
         expires_at: expiresAt,
         scopes: scopes
       })
