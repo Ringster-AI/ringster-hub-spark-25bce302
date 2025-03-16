@@ -1,7 +1,8 @@
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { PasswordResetForm } from "@/components/settings/PasswordResetForm";
 import { Integrations } from "@/components/settings/Integrations";
+import { CalendarSettings } from "@/components/settings/CalendarSettings";
 import {
   Card,
   CardContent,
@@ -10,9 +11,27 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useSearchParams, useNavigate } from "react-router-dom";
 
 const Settings = () => {
-  const [activeTab, setActiveTab] = useState<string>("security");
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const tabParam = searchParams.get("tab");
+  const [activeTab, setActiveTab] = useState<string>(tabParam || "security");
+
+  // Update URL when tab changes
+  useEffect(() => {
+    if (tabParam !== activeTab) {
+      navigate(`/dashboard/settings?tab=${activeTab}`, { replace: true });
+    }
+  }, [activeTab, navigate, tabParam]);
+
+  // Update active tab when URL changes
+  useEffect(() => {
+    if (tabParam && ["security", "integrations", "calendar"].includes(tabParam)) {
+      setActiveTab(tabParam);
+    }
+  }, [tabParam]);
 
   return (
     <div className="p-6">
@@ -22,6 +41,7 @@ const Settings = () => {
           <TabsList className="mb-4">
             <TabsTrigger value="security">Security</TabsTrigger>
             <TabsTrigger value="integrations">Integrations</TabsTrigger>
+            <TabsTrigger value="calendar">Calendar</TabsTrigger>
           </TabsList>
           
           <TabsContent value="security" className="space-y-6">
@@ -40,6 +60,10 @@ const Settings = () => {
           
           <TabsContent value="integrations" className="space-y-6">
             <Integrations />
+          </TabsContent>
+          
+          <TabsContent value="calendar" className="space-y-6">
+            <CalendarSettings />
           </TabsContent>
         </Tabs>
       </div>
