@@ -8,6 +8,18 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { GoogleIntegration } from "@/types/integrations";
+
+// Updated interface to use the existing GoogleIntegration type
+export interface CalendarSettings {
+  calendar_id?: string;
+  calendar_name?: string;
+  default_duration: number;
+  buffer_time: number;
+  availability_days: number[];
+  availability_start: string;
+  availability_end: string;
+}
 
 export function CalendarSettings() {
   const { toast } = useToast();
@@ -21,60 +33,53 @@ export function CalendarSettings() {
   } = useGoogleIntegration();
 
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
-  const [calendarSettings, setCalendarSettings] = useState<CalendarSettings | null>(null);
   const [isLoadingSettings, setIsLoadingSettings] = useState(false);
 
-  // Fetch calendar settings when integration changes
-  useEffect(() => {
-    async function fetchCalendarSettings() {
-      if (!googleIntegration?.id) return;
-      
-      try {
-        setIsLoadingSettings(true);
-        const { data, error } = await supabase
-          .from('calendar_settings')
-          .select('*')
-          .eq('user_id', googleIntegration.user_id)
-          .single();
-        
-        if (error && error.code !== 'PGRST116') {
-          throw error;
-        }
-        
-        if (data) {
-          setCalendarSettings(data as CalendarSettings);
-        }
-      } catch (err: any) {
-        console.error('Error fetching calendar settings:', err);
-        toast({
-          variant: "destructive",
-          title: "Failed to load calendar settings",
-          description: err.message || "An error occurred",
-        });
-      } finally {
-        setIsLoadingSettings(false);
-      }
-    }
+  // Prepare calendar settings from the googleIntegration object
+  const getCalendarSettings = (integration: GoogleIntegration | null): CalendarSettings | null => {
+    if (!integration) return null;
     
-    fetchCalendarSettings();
-  }, [googleIntegration, toast]);
+    return {
+      calendar_id: integration.calendar_id || undefined,
+      calendar_name: integration.calendar_name || undefined,
+      default_duration: integration.default_duration || 30,
+      buffer_time: integration.buffer_time || 10,
+      availability_days: integration.availability_days || [1, 2, 3, 4, 5],
+      availability_start: integration.availability_start || '09:00',
+      availability_end: integration.availability_end || '17:00',
+    };
+  };
 
   const saveCalendarSettings = async (settings: CalendarSettings) => {
     try {
-      if (!googleIntegration?.user_id) {
+      if (!googleIntegration?.id) {
         throw new Error("No Google integration found");
       }
       
       const { error } = await supabase
-        .from('calendar_settings')
-        .upsert({
-          user_id: googleIntegration.user_id,
-          ...settings
-        });
+        .from('google_integrations')
+        .update({
+          calendar_id: settings.calendar_id,
+          calendar_name: settings.calendar_name,
+          default_duration: settings.default_duration,
+          buffer_time: settings.buffer_time,
+          availability_days: settings.availability_days,
+          availability_start: settings.availability_start,
+          availability_end: settings.availability_end
+        })
+        .eq('id', googleIntegration.id);
       
       if (error) throw error;
       
-      setCalendarSettings(settings);
+      // Update local state
+      googleIntegration.calendar_id = settings.calendar_id;
+      googleIntegration.calendar_name = settings.calendar_name;
+      googleIntegration.default_duration = settings.default_duration;
+      googleIntegration.buffer_time = settings.buffer_time;
+      googleIntegration.availability_days = settings.availability_days;
+      googleIntegration.availability_start = settings.availability_start;
+      googleIntegration.availability_end = settings.availability_end;
+      
       toast({
         title: "Settings Saved",
         description: "Your calendar settings have been updated.",
@@ -91,7 +96,7 @@ export function CalendarSettings() {
     }
   };
 
-  if (isLoading || isLoadingSettings) {
+  if (isLoading) {
     return (
       <Card>
         <CardHeader>
@@ -108,6 +113,7 @@ export function CalendarSettings() {
   }
 
   const isConnected = !!googleIntegration && googleIntegration.calendar_enabled;
+  const calendarSettings = getCalendarSettings(googleIntegration);
 
   return (
     <Card>
@@ -141,12 +147,12 @@ export function CalendarSettings() {
                 <div>
                   <h3 className="font-medium">Calendar Configuration</h3>
                   <p className="text-sm text-muted-foreground">
-                    {calendarSettings 
+                    {calendarSettings?.calendar_id
                       ? "Your calendar settings have been configured." 
                       : "You haven't configured your calendar settings yet."}
                   </p>
                   
-                  {calendarSettings && (
+                  {calendarSettings?.calendar_id && (
                     <div className="mt-4 space-y-2 text-sm">
                       <p><span className="font-medium">Selected Calendar:</span> {calendarSettings.calendar_name || "Default Calendar"}</p>
                       <p><span className="font-medium">Default Duration:</span> {calendarSettings.default_duration} minutes</p>
@@ -157,9 +163,9 @@ export function CalendarSettings() {
                 
                 <Button 
                   onClick={() => setIsConfigModalOpen(true)}
-                  variant={calendarSettings ? "outline" : "default"}
+                  variant={calendarSettings?.calendar_id ? "outline" : "default"}
                 >
-                  {calendarSettings ? "Edit Configuration" : "Configure Calendar"}
+                  {calendarSettings?.calendar_id ? "Edit Configuration" : "Configure Calendar"}
                 </Button>
               </div>
             </div>
@@ -211,17 +217,4 @@ export function CalendarSettings() {
       />
     </Card>
   );
-}
-
-export interface CalendarSettings {
-  user_id: string;
-  calendar_id?: string;
-  calendar_name?: string;
-  default_duration: number;
-  buffer_time: number;
-  availability_days: number[];
-  availability_start: string;
-  availability_end: string;
-  created_at?: string;
-  updated_at?: string;
 }

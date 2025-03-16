@@ -456,7 +456,14 @@ export type Database = {
       google_integrations: {
         Row: {
           access_token: string
+          availability_days: number[] | null
+          availability_end: string | null
+          availability_start: string | null
+          buffer_time: number | null
+          calendar_id: string | null
+          calendar_name: string | null
           created_at: string | null
+          default_duration: number | null
           email: string
           expires_at: string
           googleCalendarEnabled: boolean | null
@@ -468,7 +475,14 @@ export type Database = {
         }
         Insert: {
           access_token: string
+          availability_days?: number[] | null
+          availability_end?: string | null
+          availability_start?: string | null
+          buffer_time?: number | null
+          calendar_id?: string | null
+          calendar_name?: string | null
           created_at?: string | null
+          default_duration?: number | null
           email: string
           expires_at: string
           googleCalendarEnabled?: boolean | null
@@ -480,7 +494,14 @@ export type Database = {
         }
         Update: {
           access_token?: string
+          availability_days?: number[] | null
+          availability_end?: string | null
+          availability_start?: string | null
+          buffer_time?: number | null
+          calendar_id?: string | null
+          calendar_name?: string | null
           created_at?: string | null
+          default_duration?: number | null
           email?: string
           expires_at?: string
           googleCalendarEnabled?: boolean | null

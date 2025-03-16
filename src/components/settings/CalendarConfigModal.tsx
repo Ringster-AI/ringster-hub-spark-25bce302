@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -128,18 +127,15 @@ export function CalendarConfigModal({
   };
 
   const onSubmit = async (values: FormValues) => {
-    if (!googleIntegration?.user_id) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "No Google integration found",
-      });
-      return;
-    }
-    
+    // Create a new CalendarSettings object with all required fields
     const settings: CalendarSettings = {
-      user_id: googleIntegration.user_id,
-      ...values,
+      calendar_id: values.calendar_id,
+      calendar_name: values.calendar_name,
+      default_duration: values.default_duration,
+      buffer_time: values.buffer_time,
+      availability_days: values.availability_days,
+      availability_start: values.availability_start,
+      availability_end: values.availability_end,
     };
     
     await onSave(settings);
