@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 
@@ -22,6 +21,15 @@ serve(async (req) => {
   // Handle CORS preflight request
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  // Verify request is from Google OAuth flow
+  const referer = req.headers.get("referer") || "";
+  if (!referer.startsWith("https://accounts.google.com/")) {
+    return new Response("Unauthorized source", { 
+      status: 401,
+      headers: corsHeaders
+    });
   }
 
   try {
