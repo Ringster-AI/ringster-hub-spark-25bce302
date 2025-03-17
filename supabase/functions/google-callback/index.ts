@@ -210,8 +210,11 @@ serve(async (req) => {
         const redirectString = redirectUrl.toString();
         console.log("Redirecting to:", redirectString.substring(0, 100) + "...");
         
-        // Redirect back to the app with the Google data
-        return Response.redirect(redirectString);
+        // Create response with custom headers for final redirect
+        const response = Response.redirect(redirectString);
+        response.headers.set("Access-Control-Allow-Origin", APP_URL);
+        response.headers.set("Access-Control-Allow-Credentials", "true");
+        return response;
       } catch (userInfoError) {
         console.error("Error in user info request:", userInfoError);
         return redirectWithError("userinfo_request_error");
@@ -238,6 +241,11 @@ serve(async (req) => {
     // Add timestamp as cache-buster
     errorUrl.searchParams.append("ts", Date.now().toString());
     console.log("Redirecting with error:", errorCode, "to", errorUrl.toString());
-    return Response.redirect(errorUrl.toString());
+    
+    // Create response with custom headers for error redirect
+    const response = Response.redirect(errorUrl.toString());
+    response.headers.set("Access-Control-Allow-Origin", APP_URL);
+    response.headers.set("Access-Control-Allow-Credentials", "true");
+    return response;
   }
 });
