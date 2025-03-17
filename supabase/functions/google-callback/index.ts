@@ -7,8 +7,17 @@ const CLIENT_SECRET = Deno.env.get("GOOGLE_CLIENT_SECRET");
 const APP_URL = Deno.env.get("APP_URL") || "http://localhost:5173";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
 
+console.log("Function loaded with environment variables:", {
+  hasClientId: !!CLIENT_ID,
+  hasClientSecret: !!CLIENT_SECRET,
+  appUrl: APP_URL,
+  hasSupabaseUrl: !!SUPABASE_URL
+});
+
 serve(async (req) => {
   console.log("Google OAuth callback received");
+  console.log("Request method:", req.method);
+  console.log("Request URL:", req.url);
   
   // Handle CORS preflight request
   if (req.method === "OPTIONS") {
@@ -37,6 +46,8 @@ serve(async (req) => {
     const state = url.searchParams.get("state") || "";
     
     console.log("Received OAuth callback with state:", state);
+    console.log("Authorization code present:", !!code);
+    console.log("Error present:", !!error);
     console.log("Full URL:", req.url);
     
     // Parse the return URL from state parameter or use default
@@ -80,6 +91,15 @@ serve(async (req) => {
     
     console.log("Token request parameters (excluding client_secret):", 
       Object.fromEntries([...tokenParams.entries()].filter(([key]) => key !== 'client_secret')));
+      
+    // Additional validation check for empty strings
+    if (CLIENT_ID.trim() === "" || CLIENT_SECRET.trim() === "") {
+      console.error("OAuth credentials are empty strings");
+      return redirectWithError("invalid_credentials");
+    }
+    
+    // Log request details before making the token request
+    console.log("About to make token request to: https://oauth2.googleapis.com/token");
     
     const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
       method: "POST",
@@ -89,9 +109,20 @@ serve(async (req) => {
       body: tokenParams,
     });
 
-    const tokenData = await tokenResponse.json();
     console.log("Token exchange response status:", tokenResponse.status);
     console.log("Token exchange response headers:", Object.fromEntries([...tokenResponse.headers.entries()]));
+    
+    const tokenResponseText = await tokenResponse.text();
+    console.log("Raw token response:", tokenResponseText);
+    
+    let tokenData;
+    try {
+      tokenData = JSON.parse(tokenResponseText);
+      console.log("Token data parsed successfully");
+    } catch (parseError) {
+      console.error("Error parsing token response:", parseError);
+      return redirectWithError("invalid_response");
+    }
     
     if (!tokenResponse.ok) {
       console.error("Error exchanging code for tokens:", tokenData);
@@ -109,51 +140,70 @@ serve(async (req) => {
     });
 
     // Get user info from Google to get the email
-    const userInfoResponse = await fetch("https://www.googleapis.com/oauth2/v2/userinfo", {
-      headers: {
-        Authorization: `Bearer ${tokenData.access_token}`,
-      },
-    });
+    try {
+      console.log("Requesting user info from Google...");
+      const userInfoResponse = await fetch("https://www.googleapis.com/oauth2/v2/userinfo", {
+        headers: {
+          Authorization: `Bearer ${tokenData.access_token}`,
+        },
+      });
 
-    const userInfo = await userInfoResponse.json();
-    console.log("User info response status:", userInfoResponse.status);
+      console.log("User info response status:", userInfoResponse.status);
+      
+      const userInfoText = await userInfoResponse.text();
+      console.log("Raw user info response:", userInfoText);
+      
+      let userInfo;
+      try {
+        userInfo = JSON.parse(userInfoText);
+        console.log("User info parsed successfully");
+      } catch (parseError) {
+        console.error("Error parsing user info response:", parseError);
+        return redirectWithError("userinfo_parse_error");
+      }
 
-    if (!userInfoResponse.ok) {
-      console.error("Error getting user info:", userInfo);
-      return redirectWithError("userinfo_error");
+      if (!userInfoResponse.ok) {
+        console.error("Error getting user info:", userInfo);
+        return redirectWithError("userinfo_error");
+      }
+
+      console.log("User info retrieved:", { email: userInfo.email });
+
+      // Calculate token expiration time
+      const expiresAt = new Date();
+      expiresAt.setSeconds(expiresAt.getSeconds() + tokenData.expires_in);
+
+      // Check for calendar scope
+      const calendarScope = 'https://www.googleapis.com/auth/calendar';
+      const hasCalendarScope = tokenData.scope.includes(calendarScope);
+      console.log("Has calendar scope:", hasCalendarScope);
+
+      // Build redirect URL with all OAuth data as query parameters
+      const redirectUrl = new URL(returnUrl);
+      redirectUrl.searchParams.append("success", "true");
+      redirectUrl.searchParams.append("email", userInfo.email);
+      redirectUrl.searchParams.append("googleConnected", "true");
+      redirectUrl.searchParams.append("googleToken", tokenData.access_token);
+      
+      if (tokenData.refresh_token) {
+        redirectUrl.searchParams.append("googleRefreshToken", tokenData.refresh_token);
+      }
+      
+      redirectUrl.searchParams.append("googleExpiresAt", expiresAt.toISOString());
+      redirectUrl.searchParams.append("googleScopes", tokenData.scope);
+      
+      const redirectString = redirectUrl.toString();
+      console.log("Redirecting to:", redirectString.substring(0, 100) + "...");
+      
+      // Redirect back to the app with the Google data
+      return Response.redirect(redirectString);
+    } catch (userInfoError) {
+      console.error("Error in user info request:", userInfoError);
+      return redirectWithError("userinfo_request_error");
     }
-
-    console.log("User info retrieved:", { email: userInfo.email });
-
-    // Calculate token expiration time
-    const expiresAt = new Date();
-    expiresAt.setSeconds(expiresAt.getSeconds() + tokenData.expires_in);
-
-    // Check for calendar scope
-    const calendarScope = 'https://www.googleapis.com/auth/calendar';
-    const hasCalendarScope = tokenData.scope.includes(calendarScope);
-    console.log("Has calendar scope:", hasCalendarScope);
-
-    // Build redirect URL with all OAuth data as query parameters
-    const redirectUrl = new URL(returnUrl);
-    redirectUrl.searchParams.append("success", "true");
-    redirectUrl.searchParams.append("email", userInfo.email);
-    redirectUrl.searchParams.append("googleConnected", "true");
-    redirectUrl.searchParams.append("googleToken", tokenData.access_token);
-    
-    if (tokenData.refresh_token) {
-      redirectUrl.searchParams.append("googleRefreshToken", tokenData.refresh_token);
-    }
-    
-    redirectUrl.searchParams.append("googleExpiresAt", expiresAt.toISOString());
-    redirectUrl.searchParams.append("googleScopes", tokenData.scope);
-    
-    console.log("Redirecting to:", redirectUrl.toString().substring(0, 100) + "...");
-    
-    // Redirect back to the app with the Google data
-    return Response.redirect(redirectUrl.toString());
   } catch (err) {
     console.error("Unexpected error in Google callback:", err);
+    console.error("Error details:", err.stack || JSON.stringify(err));
     return redirectWithError("server_error");
   }
   
