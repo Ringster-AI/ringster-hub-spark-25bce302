@@ -18,7 +18,10 @@ serve(async (req) => {
   try {
     // Validate environment variables
     if (!CLIENT_ID || !CLIENT_SECRET) {
-      console.error("Missing Google OAuth credentials in environment variables");
+      console.error("Missing Google OAuth credentials:", { 
+        hasClientId: !!CLIENT_ID, 
+        hasClientSecret: !!CLIENT_SECRET 
+      });
       return redirectWithError("server_config_error");
     }
 
@@ -34,6 +37,7 @@ serve(async (req) => {
     const state = url.searchParams.get("state") || "";
     
     console.log("Received OAuth callback with state:", state);
+    console.log("Full URL:", req.url);
     
     // Parse the return URL from state parameter or use default
     const returnUrlMatch = state.match(/return_to=([^&]+)/);
@@ -61,27 +65,37 @@ serve(async (req) => {
 
     // Exchange the authorization code for access and refresh tokens
     console.log("Exchanging code for tokens...");
-    console.log("Redirect URI:", `${SUPABASE_URL}/functions/v1/google-callback`);
+    const redirectUri = `${SUPABASE_URL}/functions/v1/google-callback`;
+    console.log("Redirect URI:", redirectUri);
+    console.log("Client ID:", CLIENT_ID);
+    console.log("Client Secret available:", !!CLIENT_SECRET); // Don't log the actual secret
+    
+    const tokenParams = new URLSearchParams({
+      code,
+      client_id: CLIENT_ID,
+      client_secret: CLIENT_SECRET,
+      redirect_uri: redirectUri,
+      grant_type: "authorization_code",
+    });
+    
+    console.log("Token request parameters (excluding client_secret):", 
+      Object.fromEntries([...tokenParams.entries()].filter(([key]) => key !== 'client_secret')));
     
     const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
       },
-      body: new URLSearchParams({
-        code,
-        client_id: CLIENT_ID,
-        client_secret: CLIENT_SECRET,
-        redirect_uri: `${SUPABASE_URL}/functions/v1/google-callback`,
-        grant_type: "authorization_code",
-      }),
+      body: tokenParams,
     });
 
     const tokenData = await tokenResponse.json();
     console.log("Token exchange response status:", tokenResponse.status);
+    console.log("Token exchange response headers:", Object.fromEntries([...tokenResponse.headers.entries()]));
     
     if (!tokenResponse.ok) {
       console.error("Error exchanging code for tokens:", tokenData);
+      console.error("Full error details:", JSON.stringify(tokenData));
       return redirectWithError(tokenData.error || "token_error");
     }
 

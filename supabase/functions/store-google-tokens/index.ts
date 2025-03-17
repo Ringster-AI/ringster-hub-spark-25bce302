@@ -15,11 +15,28 @@ serve(async (req) => {
   }
 
   try {
+    // Log environment variables availability (without exposing actual values)
+    console.log("Environment variables check:", {
+      hasSupabaseUrl: !!SUPABASE_URL,
+      hasServiceRoleKey: !!SUPABASE_SERVICE_ROLE_KEY
+    });
+    
+    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+      console.error("Missing required environment variables");
+      return new Response(
+        JSON.stringify({ error: "Server configuration error" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    
     // Create Supabase client with service role key (has elevated privileges)
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
     
     // Get token data from request body
-    const { email, accessToken, refreshToken, expiresAt, scopes, userId } = await req.json();
+    const requestBody = await req.json();
+    console.log("Request body received:", Object.keys(requestBody));
+    
+    const { email, accessToken, refreshToken, expiresAt, scopes, userId } = requestBody;
     
     console.log("Received token data:", { 
       email, 
@@ -30,8 +47,16 @@ serve(async (req) => {
       hasUserId: !!userId
     });
     
+    // Log headers for debugging
+    console.log("Request headers:", Object.fromEntries([...req.headers.entries()]));
+    
     if (!email || !accessToken || !expiresAt || !scopes) {
-      console.error("Missing required parameters:", { email, hasAccessToken: !!accessToken, expiresAt, scopes });
+      console.error("Missing required parameters:", { 
+        email, 
+        hasAccessToken: !!accessToken, 
+        expiresAt, 
+        scopes 
+      });
       return new Response(
         JSON.stringify({ error: "Missing required parameters" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -47,7 +72,11 @@ serve(async (req) => {
       
       if (authHeader && authHeader.startsWith("Bearer ")) {
         try {
-          const { data: { user }, error: userError } = await supabase.auth.getUser(authHeader.replace("Bearer ", ""));
+          console.log("Found Authorization header, attempting to get user");
+          const token = authHeader.replace("Bearer ", "");
+          console.log("Token length:", token.length);
+          
+          const { data: { user }, error: userError } = await supabase.auth.getUser(token);
           
           if (userError || !user) {
             console.error("Authentication error with token:", userError);
@@ -59,7 +88,8 @@ serve(async (req) => {
           console.error("Error parsing auth token:", authErr);
         }
       } else {
-        console.log("No authorization header found");
+        console.log("No authorization header found or header doesn't start with 'Bearer '");
+        console.log("Auth header value:", authHeader);
       }
     }
     
@@ -76,15 +106,19 @@ serve(async (req) => {
         console.error("Failed to find user by email lookup:", userLookupError);
         
         // As a final fallback, try to find the user directly in auth.users
+        console.log("Attempting to list users as final fallback");
         const { data: authUser, error: authUserError } = await supabase.auth.admin.listUsers();
         
         if (authUserError) {
           console.error("Error listing users:", authUserError);
         } else {
+          console.log(`Found ${authUser.users.length} users in auth.users`);
           const matchingUser = authUser.users.find(u => u.email === email);
           if (matchingUser) {
             userIdToUse = matchingUser.id;
             console.log("Found user in auth.users:", userIdToUse);
+          } else {
+            console.log("No matching user found in auth.users");
           }
         }
         
