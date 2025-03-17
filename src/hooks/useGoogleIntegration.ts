@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { GoogleIntegration } from "@/types/integrations";
 import { useToast } from "@/hooks/use-toast";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 export function useGoogleIntegration() {
   const { toast } = useToast();
@@ -12,7 +12,6 @@ export function useGoogleIntegration() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
-  const location = useLocation();
 
   // Fetch existing integrations on component mount
   useEffect(() => {
@@ -130,62 +129,52 @@ export function useGoogleIntegration() {
     }
   };
 
-  // Handle Google redirect data securely through an edge function
+  // Handle Google redirect data securely
   const handleGoogleRedirectData = async (
-    email: string, 
-    accessToken: string, 
-    refreshToken: string,
-    expiresAt: string,
+    email: string,
     scopes: string
   ) => {
     try {
       setIsConnecting(true);
       
-      console.log("Handling Google redirect data", { email, hasToken: !!accessToken, hasRefreshToken: !!refreshToken, expiresAt, scopes });
+      console.log("Handling Google redirect data", { email, scopes });
       
-      // Verify user is authenticated before proceeding
-      const { data: { session } } = await supabase.auth.getSession();
-      const userId = session?.user?.id;
-      
-      console.log("Current session:", { hasSession: !!session, userId });
-      
-      // Call the edge function with explicit userId
-      const { data, error } = await supabase.functions.invoke('store-google-tokens', {
-        method: 'POST',
-        body: { 
-          email,
-          accessToken,
-          refreshToken,
-          expiresAt,
-          scopes,
-          userId // Pass the user ID explicitly
-        },
-        headers: session ? {
-          Authorization: `Bearer ${session.access_token}`
-        } : {}
-      });
-      
-      console.log("Store tokens response:", { data, error });
-      
-      if (error) {
-        throw new Error(error.message);
-      }
-      
-      // Update local state with non-sensitive information
-      // Include timestamp fields with default values to satisfy TypeScript
+      // Create integration info for UI only (tokens are securely stored server-side)
       const now = new Date().toISOString();
       
-      setGoogleIntegration({
-        id: data?.id || '',
-        user_id: userId || '',
-        email,
-        access_token: '',  // Intentionally not storing in front-end
-        refresh_token: '', // Intentionally not storing in front-end
-        expires_at: expiresAt,
-        scopes,
-        created_at: now,
-        updated_at: now
-      });
+      // Fetch the latest Google integration data to ensure we have up-to-date info
+      const { data, error } = await supabase
+        .from('google_integrations' as any)
+        .select('id, user_id, email, created_at, updated_at, scopes')
+        .eq('email', email)
+        .single();
+        
+      if (error && error.code !== 'PGRST116') {
+        console.error("Error fetching integration details:", error);
+        throw new Error("Failed to retrieve integration details");
+      }
+      
+      if (data) {
+        // Update local state with data from database
+        setGoogleIntegration(data as GoogleIntegration);
+      } else {
+        // Fallback to constructing minimal local state
+        // Verify user session to get userId
+        const { data: { session } } = await supabase.auth.getSession();
+        const userId = session?.user?.id || '';
+        
+        setGoogleIntegration({
+          id: '', // Will be populated on next page load
+          user_id: userId,
+          email,
+          access_token: '',  // Intentionally not storing in front-end
+          refresh_token: '', // Intentionally not storing in front-end
+          expires_at: '', // Managed server-side
+          scopes,
+          created_at: now,
+          updated_at: now
+        });
+      }
       
       toast({
         title: "Integration Successful",
@@ -196,11 +185,11 @@ export function useGoogleIntegration() {
       navigate("/dashboard/settings?tab=integrations", { replace: true });
       
     } catch (err: any) {
-      console.error("Error storing Google integration:", err);
+      console.error("Error handling Google integration:", err);
       toast({
         variant: "destructive",
         title: "Connection Failed",
-        description: err.message || "Failed to store your Google account information.",
+        description: err.message || "Failed to update your Google account information.",
       });
     } finally {
       setIsConnecting(false);

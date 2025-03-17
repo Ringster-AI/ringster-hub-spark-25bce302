@@ -7,7 +7,8 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 
 serve(async (req) => {
-  console.log("Request received in store-google-tokens");
+  const requestId = crypto.randomUUID();
+  console.log(`[${requestId}] Request received in store-google-tokens`);
   
   // Handle CORS preflight request
   if (req.method === "OPTIONS") {
@@ -16,13 +17,13 @@ serve(async (req) => {
 
   try {
     // Log environment variables availability (without exposing actual values)
-    console.log("Environment variables check:", {
+    console.log(`[${requestId}] Environment variables check:`, {
       hasSupabaseUrl: !!SUPABASE_URL,
       hasServiceRoleKey: !!SUPABASE_SERVICE_ROLE_KEY
     });
     
     if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-      console.error("Missing required environment variables");
+      console.error(`[${requestId}] Missing required environment variables`);
       return new Response(
         JSON.stringify({ error: "Server configuration error" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -34,11 +35,11 @@ serve(async (req) => {
     
     // Get token data from request body
     const requestBody = await req.json();
-    console.log("Request body received:", Object.keys(requestBody));
+    console.log(`[${requestId}] Request body received:`, Object.keys(requestBody));
     
     const { email, accessToken, refreshToken, expiresAt, scopes, userId } = requestBody;
     
-    console.log("Received token data:", { 
+    console.log(`[${requestId}] Received token data:`, { 
       email, 
       hasAccessToken: !!accessToken, 
       hasRefreshToken: !!refreshToken, 
@@ -47,11 +48,46 @@ serve(async (req) => {
       hasUserId: !!userId
     });
     
-    // Log headers for debugging
-    console.log("Request headers:", Object.fromEntries([...req.headers.entries()]));
+    // Verify authorization
+    // This function can be called either with service role key directly or with a user token
+    let authorizedUserId = userId;
+    
+    if (!authorizedUserId) {
+      // Check if request comes with user token
+      const authHeader = req.headers.get("Authorization");
+      
+      if (authHeader && authHeader.startsWith("Bearer ")) {
+        const token = authHeader.replace("Bearer ", "");
+        
+        // Verify this isn't the service role key
+        if (token !== SUPABASE_SERVICE_ROLE_KEY) {
+          const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+          
+          if (userError || !user) {
+            console.error(`[${requestId}] User authentication failed:`, userError);
+            return new Response(
+              JSON.stringify({ error: "Authentication error" }),
+              { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+            );
+          }
+          
+          authorizedUserId = user.id;
+          console.log(`[${requestId}] Request authenticated via user token for ${authorizedUserId}`);
+        } else {
+          console.log(`[${requestId}] Request authenticated via service role key`);
+        }
+      } else if (!req.headers.get("Authorization") || !req.headers.get("Authorization").includes(SUPABASE_SERVICE_ROLE_KEY)) {
+        // Not authenticated with service role or user token
+        console.error(`[${requestId}] Unauthorized request`);
+        return new Response(
+          JSON.stringify({ error: "Unauthorized" }),
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
     
     if (!email || !accessToken || !expiresAt || !scopes) {
-      console.error("Missing required parameters:", { 
+      console.error(`[${requestId}] Missing required parameters:`, { 
         email, 
         hasAccessToken: !!accessToken, 
         expiresAt, 
@@ -63,39 +99,37 @@ serve(async (req) => {
       );
     }
     
-    // If userId is provided directly, use it
-    let userIdToUse = userId;
-    
-    // If no userId provided, try to get it from the auth header
-    if (!userIdToUse) {
-      const authHeader = req.headers.get("Authorization");
+    // If we have a userId, use it directly for token storage
+    if (authorizedUserId) {
+      console.log(`[${requestId}] Storing integration for user: ${authorizedUserId}`);
       
-      if (authHeader && authHeader.startsWith("Bearer ")) {
-        try {
-          console.log("Found Authorization header, attempting to get user");
-          const token = authHeader.replace("Bearer ", "");
-          console.log("Token length:", token.length);
-          
-          const { data: { user }, error: userError } = await supabase.auth.getUser(token);
-          
-          if (userError || !user) {
-            console.error("Authentication error with token:", userError);
-          } else {
-            userIdToUse = user.id;
-            console.log("User authenticated via token:", userIdToUse);
-          }
-        } catch (authErr) {
-          console.error("Error parsing auth token:", authErr);
-        }
-      } else {
-        console.log("No authorization header found or header doesn't start with 'Bearer '");
-        console.log("Auth header value:", authHeader);
+      // Store the integration securely in the database
+      const { data, error } = await supabase
+        .from("google_integrations")
+        .upsert({
+          user_id: authorizedUserId,
+          email: email,
+          access_token: accessToken,
+          refresh_token: refreshToken || null,
+          expires_at: expiresAt,
+          scopes: scopes
+        })
+        .select("id");
+        
+      if (error) {
+        console.error(`[${requestId}] Database error storing integration:`, error);
+        throw error;
       }
-    }
-    
-    // If we still don't have a userId, try to find user by email
-    if (!userIdToUse) {
-      console.log("Looking up user by email:", email);
+      
+      console.log(`[${requestId}] Integration stored successfully, id: ${data?.[0]?.id}`);
+      
+      return new Response(
+        JSON.stringify({ success: true, id: data[0]?.id }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    } else {
+      // If still no userId, try to look up by email
+      console.log(`[${requestId}] Looking up user by email: ${email}`);
       const { data: userData, error: userLookupError } = await supabase
         .from('profiles')
         .select('id')
@@ -103,69 +137,44 @@ serve(async (req) => {
         .single();
       
       if (userLookupError || !userData) {
-        console.error("Failed to find user by email lookup:", userLookupError);
-        
-        // As a final fallback, try to find the user directly in auth.users
-        console.log("Attempting to list users as final fallback");
-        const { data: authUser, error: authUserError } = await supabase.auth.admin.listUsers();
-        
-        if (authUserError) {
-          console.error("Error listing users:", authUserError);
-        } else {
-          console.log(`Found ${authUser.users.length} users in auth.users`);
-          const matchingUser = authUser.users.find(u => u.email === email);
-          if (matchingUser) {
-            userIdToUse = matchingUser.id;
-            console.log("Found user in auth.users:", userIdToUse);
-          } else {
-            console.log("No matching user found in auth.users");
-          }
-        }
-        
-        if (!userIdToUse) {
-          return new Response(
-            JSON.stringify({ 
-              error: "User not found", 
-              details: "Could not determine which user to store this integration for" 
-            }),
-            { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-          );
-        }
-      } else {
-        userIdToUse = userData.id;
-        console.log("Found user by email lookup:", userIdToUse);
+        console.error(`[${requestId}] Failed to find user:`, userLookupError);
+        return new Response(
+          JSON.stringify({ 
+            error: "User not found", 
+            details: "Could not determine which user to store this integration for" 
+          }),
+          { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
       }
-    }
-    
-    console.log("Storing integration for user:", userIdToUse);
-    
-    // Store the integration securely in the database
-    const { data, error } = await supabase
-      .from("google_integrations")
-      .upsert({
-        user_id: userIdToUse,
-        email: email,
-        access_token: accessToken,
-        refresh_token: refreshToken,
-        expires_at: expiresAt,
-        scopes: scopes
-      })
-      .select("id");
       
-    if (error) {
-      console.error("Database error storing integration:", error);
-      throw error;
+      // Store the integration
+      console.log(`[${requestId}] Found user by email lookup: ${userData.id}`);
+      const { data, error } = await supabase
+        .from("google_integrations")
+        .upsert({
+          user_id: userData.id,
+          email: email,
+          access_token: accessToken,
+          refresh_token: refreshToken || null,
+          expires_at: expiresAt,
+          scopes: scopes
+        })
+        .select("id");
+        
+      if (error) {
+        console.error(`[${requestId}] Database error storing integration:`, error);
+        throw error;
+      }
+      
+      console.log(`[${requestId}] Integration stored successfully, id: ${data?.[0]?.id}`);
+      
+      return new Response(
+        JSON.stringify({ success: true, id: data[0]?.id }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
-    
-    console.log("Integration stored successfully, id:", data?.[0]?.id);
-    
-    return new Response(
-      JSON.stringify({ success: true, id: data[0]?.id }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
-    
   } catch (err) {
-    console.error("Error in store-google-tokens:", err);
+    console.error(`[${requestId}] Error in store-google-tokens:`, err);
     return new Response(
       JSON.stringify({ 
         error: "Failed to store Google credentials", 

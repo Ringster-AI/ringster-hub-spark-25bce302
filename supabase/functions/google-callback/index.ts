@@ -1,51 +1,42 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders } from "../_shared/cors.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 const CLIENT_ID = Deno.env.get("GOOGLE_CLIENT_ID");
 const CLIENT_SECRET = Deno.env.get("GOOGLE_CLIENT_SECRET");
 const APP_URL = Deno.env.get("APP_URL") || "http://localhost:5173";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
-
-console.log("Function loaded with environment variables:", {
-  hasClientId: !!CLIENT_ID,
-  hasClientSecret: !!CLIENT_SECRET,
-  appUrl: APP_URL,
-  hasSupabaseUrl: !!SUPABASE_URL
-});
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
 serve(async (req) => {
-  console.log("Google OAuth callback received");
-  console.log("Request method:", req.method);
-  console.log("Request URL:", req.url);
+  const requestId = crypto.randomUUID();
+  console.log(`[${requestId}] Google OAuth callback received`);
+  console.log(`[${requestId}] Request method: ${req.method}`);
+  console.log(`[${requestId}] Request URL: ${req.url}`);
   
   // Handle CORS preflight request
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Verify request is from Google OAuth flow
-  const referer = req.headers.get("referer") || "";
-  if (!referer.startsWith("https://accounts.google.com/")) {
-    return new Response("Unauthorized source", { 
-      status: 401,
-      headers: corsHeaders
-    });
-  }
-
   try {
     // Validate environment variables
     if (!CLIENT_ID || !CLIENT_SECRET) {
-      console.error("Missing Google OAuth credentials:", { 
+      console.error(`[${requestId}] Missing Google OAuth credentials:`, { 
         hasClientId: !!CLIENT_ID, 
         hasClientSecret: !!CLIENT_SECRET 
       });
-      return redirectWithError("server_config_error");
+      return redirectWithError("server_config_error", requestId);
     }
 
-    if (!SUPABASE_URL) {
-      console.error("Missing Supabase URL in environment variables");
-      return redirectWithError("server_config_error");
+    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+      console.error(`[${requestId}] Missing Supabase environment variables`);
+      return redirectWithError("server_config_error", requestId);
     }
+
+    // Create Supabase client for database operations
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
     // Get the authorization code and state from the URL
     const url = new URL(req.url);
@@ -53,41 +44,55 @@ serve(async (req) => {
     const error = url.searchParams.get("error");
     const state = url.searchParams.get("state") || "";
     
-    console.log("Received OAuth callback with state:", state);
-    console.log("Authorization code present:", !!code);
-    console.log("Error present:", !!error);
-    console.log("Full URL:", req.url);
+    console.log(`[${requestId}] Received OAuth callback with state: ${state}`);
+    console.log(`[${requestId}] Authorization code present: ${!!code}`);
+    console.log(`[${requestId}] Error present: ${!!error}`);
     
-    // Parse the return URL from state parameter or use default
-    const returnUrlMatch = state.match(/return_to=([^&]+)/);
-    let returnUrl = returnUrlMatch 
-      ? decodeURIComponent(returnUrlMatch[1])
-      : `${APP_URL}/dashboard/settings?tab=integrations`;
-      
-    // Fix the return URL if it has double dashboard paths
-    if (returnUrl.includes("/dashboard/settings/dashboard/settings")) {
-      returnUrl = returnUrl.replace("/dashboard/settings/dashboard/settings", "/dashboard/settings");
-    }
-
-    console.log("Return URL:", returnUrl);
-
     // Handle OAuth errors
     if (error) {
-      console.error("Error from Google OAuth:", error);
-      return Response.redirect(`${returnUrl}&error=${error}`);
+      console.error(`[${requestId}] Error from Google OAuth: ${error}`);
+      return redirectWithError(error, requestId);
     }
 
     if (!code) {
-      console.error("No authorization code received");
-      return redirectWithError("no_code");
+      console.error(`[${requestId}] No authorization code received`);
+      return redirectWithError("no_code", requestId);
     }
 
+    // Verify state parameter and get code_verifier
+    if (!state) {
+      console.error(`[${requestId}] Missing state parameter`);
+      return redirectWithError("invalid_state", requestId);
+    }
+
+    // Look up state in database
+    const { data: stateData, error: stateError } = await supabase
+      .from('oauth_states')
+      .select('*')
+      .eq('state', state)
+      .single();
+
+    if (stateError || !stateData) {
+      console.error(`[${requestId}] Invalid state parameter or state not found:`, stateError);
+      return redirectWithError("invalid_state", requestId);
+    }
+
+    // Check if state has expired
+    if (new Date(stateData.expires_at) < new Date()) {
+      console.error(`[${requestId}] State token has expired`);
+      return redirectWithError("expired_state", requestId);
+    }
+
+    const codeVerifier = stateData.code_verifier;
+    const returnUrl = stateData.return_url;
+    const userId = stateData.user_id;
+
+    console.log(`[${requestId}] State verified, return URL: ${returnUrl}`);
+    console.log(`[${requestId}] Associated user ID: ${userId || 'none'}`);
+
     // Exchange the authorization code for access and refresh tokens
-    console.log("Exchanging code for tokens...");
+    console.log(`[${requestId}] Exchanging code for tokens...`);
     const redirectUri = `${SUPABASE_URL}/functions/v1/google-callback`;
-    console.log("Redirect URI:", redirectUri);
-    console.log("Client ID length:", CLIENT_ID?.length);
-    console.log("Client Secret available and length:", !!CLIENT_SECRET, CLIENT_SECRET?.length); // Don't log the actual secret
     
     // IMPORTANT: Use URLSearchParams for proper x-www-form-urlencoded format
     const tokenParams = new URLSearchParams({
@@ -96,20 +101,11 @@ serve(async (req) => {
       client_secret: CLIENT_SECRET,
       redirect_uri: redirectUri,
       grant_type: "authorization_code",
+      code_verifier: codeVerifier, // Add PKCE code verifier
     });
     
-    console.log("Token request parameters (excluding client_secret):", 
+    console.log(`[${requestId}] Token request parameters (excluding client_secret):`, 
       Object.fromEntries([...tokenParams.entries()].filter(([key]) => key !== 'client_secret')));
-      
-    // Additional validation check for empty strings
-    if (CLIENT_ID.trim() === "" || CLIENT_SECRET.trim() === "") {
-      console.error("OAuth credentials are empty strings");
-      return redirectWithError("invalid_credentials");
-    }
-    
-    // Log request details before making the token request
-    console.log("About to make token request to: https://oauth2.googleapis.com/token");
-    console.log("Using content-type: application/x-www-form-urlencoded");
     
     // Add timeout protection
     const controller = new AbortController();
@@ -129,131 +125,184 @@ serve(async (req) => {
       // Clear the timeout since the request completed
       clearTimeout(timeoutId);
 
-      console.log("Token exchange response status:", tokenResponse.status);
-      console.log("Token exchange response headers:", Object.fromEntries([...tokenResponse.headers.entries()]));
+      console.log(`[${requestId}] Token exchange response status: ${tokenResponse.status}`);
       
       const tokenResponseText = await tokenResponse.text();
-      console.log("Raw token response:", tokenResponseText);
+      console.log(`[${requestId}] Raw token response: ${tokenResponseText}`);
       
       let tokenData;
       try {
         tokenData = JSON.parse(tokenResponseText);
-        console.log("Token data parsed successfully");
+        console.log(`[${requestId}] Token data parsed successfully`);
       } catch (parseError) {
-        console.error("Error parsing token response:", parseError);
-        return redirectWithError("invalid_response");
+        console.error(`[${requestId}] Error parsing token response:`, parseError);
+        return redirectWithError("invalid_response", requestId);
       }
       
       if (!tokenResponse.ok) {
-        console.error("Error exchanging code for tokens:", tokenData);
-        console.error("Full error details:", JSON.stringify(tokenData));
-        return redirectWithError(tokenData.error || "token_error");
+        console.error(`[${requestId}] Error exchanging code for tokens:`, tokenData);
+        return redirectWithError(tokenData.error || "token_error", requestId);
       }
-
-      // Log token response data (excluding sensitive information)
-      console.log("Token exchange successful:", {
-        tokenType: tokenData.token_type,
-        expiresIn: tokenData.expires_in,
-        hasAccessToken: !!tokenData.access_token,
-        hasRefreshToken: !!tokenData.refresh_token,
-        scope: tokenData.scope
-      });
 
       // Get user info from Google to get the email
       try {
-        console.log("Requesting user info from Google...");
+        console.log(`[${requestId}] Requesting user info from Google...`);
         const userInfoResponse = await fetch("https://www.googleapis.com/oauth2/v2/userinfo", {
           headers: {
             Authorization: `Bearer ${tokenData.access_token}`,
           },
         });
 
-        console.log("User info response status:", userInfoResponse.status);
+        console.log(`[${requestId}] User info response status: ${userInfoResponse.status}`);
         
         const userInfoText = await userInfoResponse.text();
-        console.log("Raw user info response:", userInfoText);
+        console.log(`[${requestId}] Raw user info response: ${userInfoText}`);
         
         let userInfo;
         try {
           userInfo = JSON.parse(userInfoText);
-          console.log("User info parsed successfully");
+          console.log(`[${requestId}] User info parsed successfully`);
         } catch (parseError) {
-          console.error("Error parsing user info response:", parseError);
-          return redirectWithError("userinfo_parse_error");
+          console.error(`[${requestId}] Error parsing user info response:`, parseError);
+          return redirectWithError("userinfo_parse_error", requestId);
         }
 
         if (!userInfoResponse.ok) {
-          console.error("Error getting user info:", userInfo);
-          return redirectWithError("userinfo_error");
+          console.error(`[${requestId}] Error getting user info:`, userInfo);
+          return redirectWithError("userinfo_error", requestId);
         }
 
-        console.log("User info retrieved:", { email: userInfo.email });
+        console.log(`[${requestId}] User info retrieved: ${userInfo.email}`);
 
-        // Calculate token expiration time
+        // Calculate token expiration time with 5 minute buffer
+        const expiresInSeconds = tokenData.expires_in - 300; // 5 minute buffer
         const expiresAt = new Date();
-        expiresAt.setSeconds(expiresAt.getSeconds() + tokenData.expires_in);
+        expiresAt.setSeconds(expiresAt.getSeconds() + expiresInSeconds);
 
         // Check for calendar scope
         const calendarScope = 'https://www.googleapis.com/auth/calendar';
         const hasCalendarScope = tokenData.scope.includes(calendarScope);
-        console.log("Has calendar scope:", hasCalendarScope);
+        console.log(`[${requestId}] Has calendar scope: ${hasCalendarScope}`);
 
-        // Build redirect URL with all OAuth data as query parameters
+        // Store tokens securely via store-google-tokens function
+        // This is done using a server-to-server call to avoid tokens in URL
+        if (userId) {
+          try {
+            console.log(`[${requestId}] Storing tokens securely for user ${userId}`);
+            
+            const storeResponse = await fetch(`${SUPABASE_URL}/functions/v1/store-google-tokens`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`
+              },
+              body: JSON.stringify({
+                userId,
+                email: userInfo.email,
+                accessToken: tokenData.access_token,
+                refreshToken: tokenData.refresh_token || '',
+                expiresAt: expiresAt.toISOString(),
+                scopes: tokenData.scope
+              })
+            });
+            
+            const storeResult = await storeResponse.json();
+            
+            if (!storeResponse.ok) {
+              console.error(`[${requestId}] Error storing tokens:`, storeResult);
+              return redirectWithError("storage_error", requestId);
+            }
+            
+            console.log(`[${requestId}] Tokens stored successfully`);
+          } catch (storeError) {
+            console.error(`[${requestId}] Error calling token storage function:`, storeError);
+            return redirectWithError("storage_error", requestId);
+          }
+        } else {
+          console.warn(`[${requestId}] No user ID available, cannot store tokens securely`);
+        }
+
+        // After storing tokens, redirect to success URL with minimal parameters
+        // Don't include any sensitive tokens in URL
         const redirectUrl = new URL(returnUrl);
         redirectUrl.searchParams.append("success", "true");
         redirectUrl.searchParams.append("email", userInfo.email);
         redirectUrl.searchParams.append("googleConnected", "true");
-        redirectUrl.searchParams.append("googleToken", tokenData.access_token);
-        
-        if (tokenData.refresh_token) {
-          redirectUrl.searchParams.append("googleRefreshToken", tokenData.refresh_token);
-        }
-        
-        redirectUrl.searchParams.append("googleExpiresAt", expiresAt.toISOString());
         redirectUrl.searchParams.append("googleScopes", tokenData.scope);
         
         // Add timestamp as cache-buster
         redirectUrl.searchParams.append("ts", Date.now().toString());
         
         const redirectString = redirectUrl.toString();
-        console.log("Redirecting to:", redirectString.substring(0, 100) + "...");
+        console.log(`[${requestId}] Redirecting to: ${redirectString.substring(0, 100)}...`);
         
         // Create response with custom headers for final redirect
         const response = Response.redirect(redirectString);
         response.headers.set("Access-Control-Allow-Origin", APP_URL);
         response.headers.set("Access-Control-Allow-Credentials", "true");
+        
+        // Add security headers
+        response.headers.set("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+        response.headers.set("X-Content-Type-Options", "nosniff");
+        
+        // Clean up the used state entry
+        await supabase.from('oauth_states').delete().eq('state', state);
+        
         return response;
       } catch (userInfoError) {
-        console.error("Error in user info request:", userInfoError);
-        return redirectWithError("userinfo_request_error");
+        console.error(`[${requestId}] Error in user info request:`, userInfoError);
+        return redirectWithError("userinfo_request_error", requestId);
       }
     } catch (fetchError) {
       clearTimeout(timeoutId);
       if (fetchError.name === 'AbortError') {
-        console.error("Token request timed out");
-        return redirectWithError("request_timeout");
+        console.error(`[${requestId}] Token request timed out`);
+        return redirectWithError("request_timeout", requestId);
       }
       throw fetchError;
     }
   } catch (err) {
-    console.error("Unexpected error in Google callback:", err);
-    console.error("Error details:", err.stack || JSON.stringify(err));
-    return redirectWithError("server_error");
+    console.error(`[${requestId}] Unexpected error in Google callback:`, err);
+    console.error(`[${requestId}] Error details:`, err.stack || JSON.stringify(err));
+    return redirectWithError("server_error", requestId);
   }
   
   // Helper function to redirect with error
-  function redirectWithError(errorCode: string) {
+  function redirectWithError(errorCode: string, reqId: string) {
+    const errorMessages: Record<string, string> = {
+      "server_config_error": "Server configuration error",
+      "no_code": "No authorization code received",
+      "invalid_state": "Invalid state parameter",
+      "expired_state": "Authorization request expired",
+      "invalid_response": "Invalid response from Google",
+      "token_error": "Error exchanging code for tokens",
+      "userinfo_error": "Error retrieving user information",
+      "userinfo_parse_error": "Error parsing user information",
+      "userinfo_request_error": "Error requesting user information",
+      "request_timeout": "Request timed out",
+      "storage_error": "Error storing integration data",
+      "auth_error": "Authentication error",
+      "access_denied": "Access denied by user",
+      "server_error": "Unexpected server error"
+    };
+    
+    const errorMessage = errorMessages[errorCode] || "Unknown error";
+    console.error(`[${reqId}] Error: ${errorCode} - ${errorMessage}`);
+    
     const errorUrl = new URL(`${APP_URL}/dashboard/settings`);
     errorUrl.searchParams.append("tab", "integrations");
     errorUrl.searchParams.append("error", errorCode);
+    errorUrl.searchParams.append("errorMessage", errorMessage);
     // Add timestamp as cache-buster
     errorUrl.searchParams.append("ts", Date.now().toString());
-    console.log("Redirecting with error:", errorCode, "to", errorUrl.toString());
+    console.log(`[${reqId}] Redirecting with error: ${errorCode} to ${errorUrl.toString()}`);
     
-    // Create response with custom headers for error redirect
+    // Create response with custom headers and security headers for error redirect
     const response = Response.redirect(errorUrl.toString());
     response.headers.set("Access-Control-Allow-Origin", APP_URL);
     response.headers.set("Access-Control-Allow-Credentials", "true");
+    response.headers.set("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+    response.headers.set("X-Content-Type-Options", "nosniff");
     return response;
   }
 });

@@ -6,9 +6,6 @@ import { supabase } from "@/integrations/supabase/client";
 interface GoogleOAuthHandlerProps {
   onGoogleRedirect: (
     email: string, 
-    accessToken: string, 
-    refreshToken: string,
-    expiresAt: string,
     scopes: string
   ) => Promise<void>;
 }
@@ -22,21 +19,16 @@ export function GoogleOAuthHandler({ onGoogleRedirect }: GoogleOAuthHandlerProps
   useEffect(() => {
     const success = searchParams.get('success');
     const error = searchParams.get('error');
+    const errorMessage = searchParams.get('errorMessage');
     const tab = searchParams.get('tab');
     
     // Handle Google auth redirect data
     const email = searchParams.get('email');
     const googleConnected = searchParams.get('googleConnected');
-    const googleToken = searchParams.get('googleToken');
-    const googleRefreshToken = searchParams.get('googleRefreshToken');
-    const googleExpiresAt = searchParams.get('googleExpiresAt');
     const googleScopes = searchParams.get('googleScopes');
     
     console.log("OAuth redirect data:", { 
       success, error, tab, email, googleConnected, 
-      hasToken: !!googleToken, 
-      hasRefreshToken: !!googleRefreshToken,
-      expiresAt: googleExpiresAt,
       scopes: googleScopes
     });
     
@@ -57,21 +49,6 @@ export function GoogleOAuthHandler({ onGoogleRedirect }: GoogleOAuthHandlerProps
         return false;
       }
       
-      // If we have a session but it's close to expiring, refresh it
-      if (session) {
-        try {
-          // Try to refresh the session to ensure it doesn't expire during OAuth process
-          const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
-          if (refreshError) {
-            console.warn("Session refresh warning:", refreshError);
-          } else {
-            console.log("Session refreshed successfully");
-          }
-        } catch (refreshErr) {
-          console.error("Error refreshing session:", refreshErr);
-        }
-      }
-      
       return !!session;
     };
     
@@ -85,18 +62,15 @@ export function GoogleOAuthHandler({ onGoogleRedirect }: GoogleOAuthHandlerProps
           return;
         }
         
-        // If we have Google data from the redirect, store it
-        if (googleConnected === 'true' && email && googleToken) {
-          console.log("Attempting to store Google tokens...");
+        // If we have Google data from the redirect, notify the parent component
+        if (googleConnected === 'true' && email) {
+          console.log("Google account connected successfully");
           try {
             await onGoogleRedirect(
-              email, 
-              googleToken, 
-              googleRefreshToken || '', 
-              googleExpiresAt || '', 
+              email,
               googleScopes || ''
             );
-            console.log("Google token storage completed successfully");
+            console.log("Parent component notified of Google connection");
           } catch (err) {
             console.error("Error handling Google redirect:", err);
             toast({
@@ -117,21 +91,28 @@ export function GoogleOAuthHandler({ onGoogleRedirect }: GoogleOAuthHandlerProps
           }
           
           if (error) {
-            let errorMessage = "Failed to connect your Google Calendar. Please try again.";
-            if (error === 'access_denied') {
-              errorMessage = "You denied access to your Google account.";
-            } else if (error === 'server_config_error') {
-              errorMessage = "Server configuration error. Please contact support.";
-            } else if (error === 'token_error') {
-              errorMessage = "Failed to get access token from Google.";
-            } else if (error === 'auth_error') {
-              errorMessage = "Authentication error. Please log in and try again.";
+            let displayErrorMessage = "Failed to connect your Google Calendar. Please try again.";
+            
+            // Use the provided error message if available
+            if (errorMessage) {
+              displayErrorMessage = errorMessage;
+            } else {
+              // Fallback error messages
+              if (error === 'access_denied') {
+                displayErrorMessage = "You denied access to your Google account.";
+              } else if (error === 'server_config_error') {
+                displayErrorMessage = "Server configuration error. Please contact support.";
+              } else if (error === 'token_error') {
+                displayErrorMessage = "Failed to get access token from Google.";
+              } else if (error === 'auth_error') {
+                displayErrorMessage = "Authentication error. Please log in and try again.";
+              }
             }
             
             toast({
               variant: "destructive",
               title: "Connection Failed",
-              description: errorMessage,
+              description: displayErrorMessage,
             });
           }
           
