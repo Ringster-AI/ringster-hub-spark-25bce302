@@ -78,9 +78,10 @@ serve(async (req) => {
     console.log("Exchanging code for tokens...");
     const redirectUri = `${SUPABASE_URL}/functions/v1/google-callback`;
     console.log("Redirect URI:", redirectUri);
-    console.log("Client ID:", CLIENT_ID);
-    console.log("Client Secret available:", !!CLIENT_SECRET); // Don't log the actual secret
+    console.log("Client ID length:", CLIENT_ID?.length);
+    console.log("Client Secret available and length:", !!CLIENT_SECRET, CLIENT_SECRET?.length); // Don't log the actual secret
     
+    // IMPORTANT: Use URLSearchParams for proper x-www-form-urlencoded format
     const tokenParams = new URLSearchParams({
       code,
       client_id: CLIENT_ID,
@@ -100,6 +101,7 @@ serve(async (req) => {
     
     // Log request details before making the token request
     console.log("About to make token request to: https://oauth2.googleapis.com/token");
+    console.log("Using content-type: application/x-www-form-urlencoded");
     
     const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
       method: "POST",
