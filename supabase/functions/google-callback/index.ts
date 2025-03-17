@@ -103,105 +103,123 @@ serve(async (req) => {
     console.log("About to make token request to: https://oauth2.googleapis.com/token");
     console.log("Using content-type: application/x-www-form-urlencoded");
     
-    const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      body: tokenParams,
-    });
-
-    console.log("Token exchange response status:", tokenResponse.status);
-    console.log("Token exchange response headers:", Object.fromEntries([...tokenResponse.headers.entries()]));
+    // Add timeout protection
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 seconds timeout
     
-    const tokenResponseText = await tokenResponse.text();
-    console.log("Raw token response:", tokenResponseText);
-    
-    let tokenData;
     try {
-      tokenData = JSON.parse(tokenResponseText);
-      console.log("Token data parsed successfully");
-    } catch (parseError) {
-      console.error("Error parsing token response:", parseError);
-      return redirectWithError("invalid_response");
-    }
-    
-    if (!tokenResponse.ok) {
-      console.error("Error exchanging code for tokens:", tokenData);
-      console.error("Full error details:", JSON.stringify(tokenData));
-      return redirectWithError(tokenData.error || "token_error");
-    }
-
-    // Log token response data (excluding sensitive information)
-    console.log("Token exchange successful:", {
-      tokenType: tokenData.token_type,
-      expiresIn: tokenData.expires_in,
-      hasAccessToken: !!tokenData.access_token,
-      hasRefreshToken: !!tokenData.refresh_token,
-      scope: tokenData.scope
-    });
-
-    // Get user info from Google to get the email
-    try {
-      console.log("Requesting user info from Google...");
-      const userInfoResponse = await fetch("https://www.googleapis.com/oauth2/v2/userinfo", {
+      const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
+        method: "POST",
         headers: {
-          Authorization: `Bearer ${tokenData.access_token}`,
+          "Content-Type": "application/x-www-form-urlencoded",
+          "Accept": "application/json"
         },
+        body: tokenParams,
+        signal: controller.signal
+      });
+      
+      // Clear the timeout since the request completed
+      clearTimeout(timeoutId);
+
+      console.log("Token exchange response status:", tokenResponse.status);
+      console.log("Token exchange response headers:", Object.fromEntries([...tokenResponse.headers.entries()]));
+      
+      const tokenResponseText = await tokenResponse.text();
+      console.log("Raw token response:", tokenResponseText);
+      
+      let tokenData;
+      try {
+        tokenData = JSON.parse(tokenResponseText);
+        console.log("Token data parsed successfully");
+      } catch (parseError) {
+        console.error("Error parsing token response:", parseError);
+        return redirectWithError("invalid_response");
+      }
+      
+      if (!tokenResponse.ok) {
+        console.error("Error exchanging code for tokens:", tokenData);
+        console.error("Full error details:", JSON.stringify(tokenData));
+        return redirectWithError(tokenData.error || "token_error");
+      }
+
+      // Log token response data (excluding sensitive information)
+      console.log("Token exchange successful:", {
+        tokenType: tokenData.token_type,
+        expiresIn: tokenData.expires_in,
+        hasAccessToken: !!tokenData.access_token,
+        hasRefreshToken: !!tokenData.refresh_token,
+        scope: tokenData.scope
       });
 
-      console.log("User info response status:", userInfoResponse.status);
-      
-      const userInfoText = await userInfoResponse.text();
-      console.log("Raw user info response:", userInfoText);
-      
-      let userInfo;
+      // Get user info from Google to get the email
       try {
-        userInfo = JSON.parse(userInfoText);
-        console.log("User info parsed successfully");
-      } catch (parseError) {
-        console.error("Error parsing user info response:", parseError);
-        return redirectWithError("userinfo_parse_error");
+        console.log("Requesting user info from Google...");
+        const userInfoResponse = await fetch("https://www.googleapis.com/oauth2/v2/userinfo", {
+          headers: {
+            Authorization: `Bearer ${tokenData.access_token}`,
+          },
+        });
+
+        console.log("User info response status:", userInfoResponse.status);
+        
+        const userInfoText = await userInfoResponse.text();
+        console.log("Raw user info response:", userInfoText);
+        
+        let userInfo;
+        try {
+          userInfo = JSON.parse(userInfoText);
+          console.log("User info parsed successfully");
+        } catch (parseError) {
+          console.error("Error parsing user info response:", parseError);
+          return redirectWithError("userinfo_parse_error");
+        }
+
+        if (!userInfoResponse.ok) {
+          console.error("Error getting user info:", userInfo);
+          return redirectWithError("userinfo_error");
+        }
+
+        console.log("User info retrieved:", { email: userInfo.email });
+
+        // Calculate token expiration time
+        const expiresAt = new Date();
+        expiresAt.setSeconds(expiresAt.getSeconds() + tokenData.expires_in);
+
+        // Check for calendar scope
+        const calendarScope = 'https://www.googleapis.com/auth/calendar';
+        const hasCalendarScope = tokenData.scope.includes(calendarScope);
+        console.log("Has calendar scope:", hasCalendarScope);
+
+        // Build redirect URL with all OAuth data as query parameters
+        const redirectUrl = new URL(returnUrl);
+        redirectUrl.searchParams.append("success", "true");
+        redirectUrl.searchParams.append("email", userInfo.email);
+        redirectUrl.searchParams.append("googleConnected", "true");
+        redirectUrl.searchParams.append("googleToken", tokenData.access_token);
+        
+        if (tokenData.refresh_token) {
+          redirectUrl.searchParams.append("googleRefreshToken", tokenData.refresh_token);
+        }
+        
+        redirectUrl.searchParams.append("googleExpiresAt", expiresAt.toISOString());
+        redirectUrl.searchParams.append("googleScopes", tokenData.scope);
+        
+        const redirectString = redirectUrl.toString();
+        console.log("Redirecting to:", redirectString.substring(0, 100) + "...");
+        
+        // Redirect back to the app with the Google data
+        return Response.redirect(redirectString);
+      } catch (userInfoError) {
+        console.error("Error in user info request:", userInfoError);
+        return redirectWithError("userinfo_request_error");
       }
-
-      if (!userInfoResponse.ok) {
-        console.error("Error getting user info:", userInfo);
-        return redirectWithError("userinfo_error");
+    } catch (fetchError) {
+      clearTimeout(timeoutId);
+      if (fetchError.name === 'AbortError') {
+        console.error("Token request timed out");
+        return redirectWithError("request_timeout");
       }
-
-      console.log("User info retrieved:", { email: userInfo.email });
-
-      // Calculate token expiration time
-      const expiresAt = new Date();
-      expiresAt.setSeconds(expiresAt.getSeconds() + tokenData.expires_in);
-
-      // Check for calendar scope
-      const calendarScope = 'https://www.googleapis.com/auth/calendar';
-      const hasCalendarScope = tokenData.scope.includes(calendarScope);
-      console.log("Has calendar scope:", hasCalendarScope);
-
-      // Build redirect URL with all OAuth data as query parameters
-      const redirectUrl = new URL(returnUrl);
-      redirectUrl.searchParams.append("success", "true");
-      redirectUrl.searchParams.append("email", userInfo.email);
-      redirectUrl.searchParams.append("googleConnected", "true");
-      redirectUrl.searchParams.append("googleToken", tokenData.access_token);
-      
-      if (tokenData.refresh_token) {
-        redirectUrl.searchParams.append("googleRefreshToken", tokenData.refresh_token);
-      }
-      
-      redirectUrl.searchParams.append("googleExpiresAt", expiresAt.toISOString());
-      redirectUrl.searchParams.append("googleScopes", tokenData.scope);
-      
-      const redirectString = redirectUrl.toString();
-      console.log("Redirecting to:", redirectString.substring(0, 100) + "...");
-      
-      // Redirect back to the app with the Google data
-      return Response.redirect(redirectString);
-    } catch (userInfoError) {
-      console.error("Error in user info request:", userInfoError);
-      return redirectWithError("userinfo_request_error");
+      throw fetchError;
     }
   } catch (err) {
     console.error("Unexpected error in Google callback:", err);
