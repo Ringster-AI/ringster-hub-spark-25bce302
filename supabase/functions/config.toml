@@ -9,3 +9,4 @@ verify_jwt = false
 
 [shared_schema]
 migrations_dir = "migrations"
+
