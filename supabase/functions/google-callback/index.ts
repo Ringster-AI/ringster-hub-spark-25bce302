@@ -204,6 +204,9 @@ serve(async (req) => {
         redirectUrl.searchParams.append("googleExpiresAt", expiresAt.toISOString());
         redirectUrl.searchParams.append("googleScopes", tokenData.scope);
         
+        // Add timestamp as cache-buster
+        redirectUrl.searchParams.append("ts", Date.now().toString());
+        
         const redirectString = redirectUrl.toString();
         console.log("Redirecting to:", redirectString.substring(0, 100) + "...");
         
@@ -232,6 +235,8 @@ serve(async (req) => {
     const errorUrl = new URL(`${APP_URL}/dashboard/settings`);
     errorUrl.searchParams.append("tab", "integrations");
     errorUrl.searchParams.append("error", errorCode);
+    // Add timestamp as cache-buster
+    errorUrl.searchParams.append("ts", Date.now().toString());
     console.log("Redirecting with error:", errorCode, "to", errorUrl.toString());
     return Response.redirect(errorUrl.toString());
   }
