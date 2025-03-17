@@ -156,7 +156,8 @@ export function useGoogleIntegration() {
       
       if (data) {
         // Update local state with data from database
-        setGoogleIntegration(data as GoogleIntegration);
+        // Fix TypeScript error with proper type assertion
+        setGoogleIntegration(data as unknown as GoogleIntegration);
       } else {
         // Fallback to constructing minimal local state
         // Verify user session to get userId

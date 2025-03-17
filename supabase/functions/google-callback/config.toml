@@ -3,3 +3,4 @@
 project_id = "owzerqaududhfwngyqbp"
 # Don't require authentication for this function
 verify_jwt = false
+allow_public_network_access = true

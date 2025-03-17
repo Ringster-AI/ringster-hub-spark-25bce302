@@ -1,11 +1,14 @@
 
+[global]
 project_id = "owzerqaududhfwngyqbp"
 
 [connect-google]
 verify_jwt = false
+allow_public_network_access = true
 
 [google-callback]
 verify_jwt = false
+allow_public_network_access = true
 
 [shared_schema]
 migrations_dir = "migrations"
