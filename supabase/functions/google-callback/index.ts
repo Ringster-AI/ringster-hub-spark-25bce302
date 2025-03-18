@@ -280,6 +280,7 @@ serve(async (req) => {
         
         // Create new response object with headers
         return Response.redirect(redirectString, {
+          status: 302, // Explicitly set 302 Found status code
           headers: {
             "Access-Control-Allow-Origin": APP_URL,
             "Access-Control-Allow-Credentials": "true",
@@ -342,6 +343,7 @@ serve(async (req) => {
     
     // Create a new response with headers instead of modifying an existing one
     return Response.redirect(errorUrl.toString(), {
+      status: 302, // Explicitly set 302 Found status code
       headers: {
         "Access-Control-Allow-Origin": APP_URL,
         "Access-Control-Allow-Credentials": "true",
