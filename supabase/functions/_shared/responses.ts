@@ -1,4 +1,5 @@
 
+
 import { corsHeaders } from "./cors.ts";
 
 const DEFAULT_APP_URL = "http://localhost:5173";
@@ -43,9 +44,10 @@ export function redirectWithError(
   errorUrl.searchParams.append("ts", Date.now().toString());
   console.log(`[${reqId}] Redirecting with error: ${errorCode} to ${errorUrl.toString()}`);
   
-  return Response.redirect(errorUrl.toString(), {
+  return new Response(null, {
     status: 302, // Explicitly set 302 Found status code
     headers: {
+      Location: errorUrl.toString(),
       "Access-Control-Allow-Origin": appUrl,
       "Access-Control-Allow-Credentials": "true",
       "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
@@ -75,9 +77,10 @@ export function createSuccessRedirect(
   const redirectString = redirectUrl.toString();
   console.log(`[${reqId}] Redirecting to: ${redirectString.substring(0, 100)}...`);
   
-  return Response.redirect(redirectString, {
+  return new Response(null, {
     status: 302, // Explicitly set 302 Found status code
     headers: {
+      Location: redirectString,
       "Access-Control-Allow-Origin": Deno.env.get("APP_URL") || DEFAULT_APP_URL,
       "Access-Control-Allow-Credentials": "true",
       "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
@@ -85,3 +88,4 @@ export function createSuccessRedirect(
     }
   });
 }
+
