@@ -68,6 +68,7 @@ serve(async (req) => {
     // Look up state in database
     let stateData;
     try {
+      console.log(`[${requestId}] Looking up state in database: ${state}`);
       const { data, error: stateError } = await supabase
         .from('oauth_states')
         .select('*')
@@ -134,6 +135,7 @@ serve(async (req) => {
     const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 seconds timeout
     
     try {
+      console.log(`[${requestId}] Making token exchange request`);
       const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
         method: "POST",
         headers: {
@@ -150,7 +152,7 @@ serve(async (req) => {
       console.log(`[${requestId}] Token exchange response status: ${tokenResponse.status}`);
       
       const tokenResponseText = await tokenResponse.text();
-      console.log(`[${requestId}] Raw token response: ${tokenResponseText.substring(0, 100)}...`);
+      console.log(`[${requestId}] Raw token response (first 100 chars): ${tokenResponseText.substring(0, 100)}...`);
       
       let tokenData;
       try {
