@@ -15,19 +15,34 @@ serve(async (req) => {
   }
 
   try {
-    // Create Supabase client with service role key
-    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    // Get the authorization header
+    const authHeader = req.headers.get('Authorization');
     
-    // Get the current user
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    
-    if (userError || !user) {
+    if (!authHeader) {
+      console.error("No authorization header provided");
       return new Response(
-        JSON.stringify({ error: "Authentication required" }),
+        JSON.stringify({ error: "No authorization header provided" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
     
+    // Create Supabase client with service role key
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    
+    // Get the current user using the authorization token from the request
+    const { data: { user }, error: userError } = await supabase.auth.getUser(
+      authHeader.replace('Bearer ', '')
+    );
+    
+    if (userError || !user) {
+      console.error("Authentication error:", userError);
+      return new Response(
+        JSON.stringify({ error: "Authentication required", details: userError?.message }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    
+    console.log("Authenticated user:", user.id);
     const userId = user.id;
     
     // Get the user's Google integration
@@ -38,13 +53,15 @@ serve(async (req) => {
       .single();
       
     if (integrationError && integrationError.code !== "PGRST116") {
+      console.error("Error fetching integration:", integrationError);
       throw integrationError;
     }
     
     // If there's a refresh token, revoke it with Google
     if (integrationData?.refresh_token) {
       try {
-        await fetch("https://oauth2.googleapis.com/revoke", {
+        console.log("Revoking token for user:", userId);
+        const revokeResponse = await fetch("https://oauth2.googleapis.com/revoke", {
           method: "POST",
           headers: {
             "Content-Type": "application/x-www-form-urlencoded"
@@ -55,10 +72,20 @@ serve(async (req) => {
             client_secret: GOOGLE_CLIENT_SECRET
           })
         });
+        
+        const revokeStatus = revokeResponse.status;
+        console.log("Token revocation status:", revokeStatus);
+        
+        if (!revokeResponse.ok) {
+          const revokeError = await revokeResponse.text();
+          console.error("Error from Google revoke API:", revokeError);
+        }
       } catch (revokeError) {
         // Log but continue - we still want to remove from database even if revocation fails
         console.error("Error revoking token:", revokeError);
       }
+    } else {
+      console.log("No refresh token found for user:", userId);
     }
     
     // Delete the integration from database
@@ -68,8 +95,11 @@ serve(async (req) => {
       .eq("user_id", userId);
       
     if (deleteError) {
+      console.error("Error deleting integration:", deleteError);
       throw deleteError;
     }
+    
+    console.log("Successfully removed Google integration for user:", userId);
     
     return new Response(
       JSON.stringify({ success: true }),

@@ -119,12 +119,25 @@ export function useGoogleIntegration() {
     try {
       setIsConnecting(true);
       
+      // Get the current session to include the auth token in the request
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error("No active session found");
+      }
+      
       // Use edge function to handle token revocation and secure deletion
+      // Include the proper authorization header with the JWT token
       const { error } = await supabase.functions.invoke('revoke-google-tokens', {
         method: 'POST',
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error("Error calling revoke-google-tokens:", error);
+        throw error;
+      }
       
       setGoogleIntegration(null);
       
