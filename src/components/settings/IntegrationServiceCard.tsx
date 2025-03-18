@@ -10,6 +10,7 @@ interface IntegrationServiceCardProps {
   isConnected: boolean;
   connectedEmail?: string;
   scopeCheck?: string;
+  isLoading: boolean;
   isConnecting: boolean;
   onConnect: () => void;
   onDisconnect: () => void;
@@ -22,6 +23,7 @@ export function IntegrationServiceCard({
   isConnected,
   connectedEmail,
   scopeCheck,
+  isLoading,
   isConnecting,
   onConnect,
   onDisconnect

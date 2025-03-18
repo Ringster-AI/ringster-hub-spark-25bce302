@@ -78,6 +78,7 @@ export function Integrations() {
             isConnected={googleConnected && hasCalendarScope}
             connectedEmail={googleIntegration?.email}
             scopeCheck={googleIntegration?.scopes?.includes('calendar') ? 'calendar' : ''}
+            isLoading={isLoading}
             isConnecting={isConnecting}
             onConnect={connectGoogle}
             onDisconnect={disconnectGoogle}

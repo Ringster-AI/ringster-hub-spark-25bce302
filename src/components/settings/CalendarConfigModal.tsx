@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -12,8 +13,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { CalendarSettings } from "./CalendarSettings";
 import { GoogleIntegration } from "@/types/integrations";
+import { CalendarSettingsType } from "@/types/calendar";
 
 const weekdays = [
   { id: 0, name: "Sunday" },
@@ -46,8 +47,8 @@ type FormValues = z.infer<typeof formSchema>;
 interface CalendarConfigModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (settings: CalendarSettings) => Promise<void>;
-  initialSettings: CalendarSettings | null;
+  onSave: (settings: CalendarSettingsType) => Promise<void>;
+  initialSettings: CalendarSettingsType | null;
   googleIntegration: GoogleIntegration | null;
 }
 
@@ -128,7 +129,7 @@ export function CalendarConfigModal({
 
   const onSubmit = async (values: FormValues) => {
     // Create a new CalendarSettings object with all required fields
-    const settings: CalendarSettings = {
+    const settings: CalendarSettingsType = {
       calendar_id: values.calendar_id,
       calendar_name: values.calendar_name,
       default_duration: values.default_duration,
