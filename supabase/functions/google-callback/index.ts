@@ -66,15 +66,28 @@ serve(async (req) => {
     }
 
     // Look up state in database
-    const { data: stateData, error: stateError } = await supabase
-      .from('oauth_states')
-      .select('*')
-      .eq('state', state)
-      .single();
-
-    if (stateError || !stateData) {
-      console.error(`[${requestId}] Invalid state parameter or state not found:`, stateError);
-      return redirectWithError("invalid_state", requestId);
+    let stateData;
+    try {
+      const { data, error: stateError } = await supabase
+        .from('oauth_states')
+        .select('*')
+        .eq('state', state)
+        .single();
+      
+      if (stateError) {
+        console.error(`[${requestId}] Error fetching state data:`, stateError);
+        return redirectWithError("invalid_state", requestId);
+      }
+      
+      if (!data) {
+        console.error(`[${requestId}] State not found in database`);
+        return redirectWithError("invalid_state", requestId);
+      }
+      
+      stateData = data;
+    } catch (stateQueryError) {
+      console.error(`[${requestId}] Exception querying state:`, stateQueryError);
+      return redirectWithError("database_error", requestId);
     }
 
     // Check if state has expired
@@ -269,7 +282,8 @@ serve(async (req) => {
         console.error(`[${requestId}] Token request timed out`);
         return redirectWithError("request_timeout", requestId);
       }
-      throw fetchError;
+      console.error(`[${requestId}] Fetch error in token exchange:`, fetchError);
+      return redirectWithError("token_exchange_error", requestId);
     }
   } catch (err) {
     console.error(`[${requestId}] Unexpected error in Google callback:`, err);
@@ -286,6 +300,7 @@ serve(async (req) => {
       "expired_state": "Authorization request expired",
       "invalid_response": "Invalid response from Google",
       "token_error": "Error exchanging code for tokens",
+      "token_exchange_error": "Error during token exchange with Google",
       "userinfo_error": "Error retrieving user information",
       "userinfo_parse_error": "Error parsing user information",
       "userinfo_request_error": "Error requesting user information",
@@ -293,6 +308,7 @@ serve(async (req) => {
       "storage_error": "Error storing integration data",
       "storage_parse_error": "Error parsing storage response",
       "missing_user_id": "Missing user ID for token storage",
+      "database_error": "Database query error",
       "auth_error": "Authentication error",
       "access_denied": "Access denied by user",
       "server_error": "Unexpected server error"

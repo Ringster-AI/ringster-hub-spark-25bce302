@@ -103,88 +103,104 @@ serve(async (req) => {
     if (authorizedUserId) {
       console.log(`[${requestId}] Storing integration for user: ${authorizedUserId}`);
       
-      // First check if an entry already exists
-      const { data: existingData, error: fetchError } = await supabase
-        .from("google_integrations")
-        .select("id")
-        .eq("user_id", authorizedUserId)
-        .maybeSingle();
+      try {
+        // First check if an entry already exists
+        const { data: existingData, error: fetchError } = await supabase
+          .from("google_integrations")
+          .select("id")
+          .eq("user_id", authorizedUserId)
+          .maybeSingle();
+          
+        if (fetchError) {
+          console.error(`[${requestId}] Error checking for existing integration:`, fetchError);
+        }
         
-      if (fetchError) {
-        console.error(`[${requestId}] Error checking for existing integration:`, fetchError);
-      }
-      
-      console.log(`[${requestId}] Existing integration check:`, existingData ? "Found" : "Not found");
-      
-      // Store the integration securely in the database
-      const { data, error } = await supabase
-        .from("google_integrations")
-        .upsert({
-          user_id: authorizedUserId,
-          email: email,
-          access_token: accessToken,
-          refresh_token: refreshToken || null,
-          expires_at: expiresAt,
-          scopes: scopes
-        })
-        .select("id");
+        console.log(`[${requestId}] Existing integration check:`, existingData ? "Found" : "Not found");
         
-      if (error) {
-        console.error(`[${requestId}] Database error storing integration:`, error);
-        throw error;
+        // Store the integration securely in the database
+        const { data, error } = await supabase
+          .from("google_integrations")
+          .upsert({
+            user_id: authorizedUserId,
+            email: email,
+            access_token: accessToken,
+            refresh_token: refreshToken || null,
+            expires_at: expiresAt,
+            scopes: scopes
+          })
+          .select("id");
+          
+        if (error) {
+          console.error(`[${requestId}] Database error storing integration:`, error);
+          throw error;
+        }
+        
+        console.log(`[${requestId}] Integration stored successfully, id: ${data?.[0]?.id}`);
+        
+        return new Response(
+          JSON.stringify({ success: true, id: data[0]?.id }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      } catch (dbError) {
+        console.error(`[${requestId}] Database operation failed:`, dbError);
+        return new Response(
+          JSON.stringify({ error: "Database operation failed", details: String(dbError) }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
       }
-      
-      console.log(`[${requestId}] Integration stored successfully, id: ${data?.[0]?.id}`);
-      
-      return new Response(
-        JSON.stringify({ success: true, id: data[0]?.id }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
     } else {
       // If still no userId, try to look up by email
       console.log(`[${requestId}] Looking up user by email: ${email}`);
-      const { data: userData, error: userLookupError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('email', email)
-        .single();
-      
-      if (userLookupError || !userData) {
-        console.error(`[${requestId}] Failed to find user:`, userLookupError);
+      try {
+        const { data: userData, error: userLookupError } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('email', email)
+          .single();
+        
+        if (userLookupError || !userData) {
+          console.error(`[${requestId}] Failed to find user:`, userLookupError);
+          return new Response(
+            JSON.stringify({ 
+              error: "User not found", 
+              details: "Could not determine which user to store this integration for" 
+            }),
+            { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+        
+        // Store the integration
+        console.log(`[${requestId}] Found user by email lookup: ${userData.id}`);
+        const { data, error } = await supabase
+          .from("google_integrations")
+          .upsert({
+            user_id: userData.id,
+            email: email,
+            access_token: accessToken,
+            refresh_token: refreshToken || null,
+            expires_at: expiresAt,
+            scopes: scopes
+          })
+          .select("id");
+          
+        if (error) {
+          console.error(`[${requestId}] Database error storing integration:`, error);
+          throw error;
+        }
+        
+        console.log(`[${requestId}] Integration stored successfully, id: ${data?.[0]?.id}`);
+        
         return new Response(
-          JSON.stringify({ 
-            error: "User not found", 
-            details: "Could not determine which user to store this integration for" 
-          }),
-          { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          JSON.stringify({ success: true, id: data[0]?.id }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      } catch (lookupError) {
+        console.error(`[${requestId}] User lookup or integration storage failed:`, lookupError);
+        return new Response(
+          JSON.stringify({ error: "User lookup failed", details: String(lookupError) }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-      
-      // Store the integration
-      console.log(`[${requestId}] Found user by email lookup: ${userData.id}`);
-      const { data, error } = await supabase
-        .from("google_integrations")
-        .upsert({
-          user_id: userData.id,
-          email: email,
-          access_token: accessToken,
-          refresh_token: refreshToken || null,
-          expires_at: expiresAt,
-          scopes: scopes
-        })
-        .select("id");
-        
-      if (error) {
-        console.error(`[${requestId}] Database error storing integration:`, error);
-        throw error;
-      }
-      
-      console.log(`[${requestId}] Integration stored successfully, id: ${data?.[0]?.id}`);
-      
-      return new Response(
-        JSON.stringify({ success: true, id: data[0]?.id }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
     }
   } catch (err) {
     console.error(`[${requestId}] Error in store-google-tokens:`, err);
