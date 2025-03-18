@@ -57,6 +57,7 @@ export function GoogleOAuthHandler({ onGoogleRedirect }: GoogleOAuthHandlerProps
       setIsProcessing(true);
       
       try {
+        // Check if user is authenticated first
         const isAuthenticated = await checkAuthentication();
         if (!isAuthenticated) {
           setIsProcessing(false);
