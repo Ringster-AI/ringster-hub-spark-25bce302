@@ -85,6 +85,14 @@ serve(async (req) => {
       }
       
       stateData = data;
+      console.log(`[${requestId}] State data retrieved:`, {
+        state: stateData.state,
+        hasCodeVerifier: !!stateData.code_verifier,
+        hasReturnUrl: !!stateData.return_url,
+        userId: stateData.user_id,
+        createdAt: stateData.created_at,
+        expiresAt: stateData.expires_at
+      });
     } catch (stateQueryError) {
       console.error(`[${requestId}] Exception querying state:`, stateQueryError);
       return redirectWithError("database_error", requestId);
@@ -117,8 +125,9 @@ serve(async (req) => {
       code_verifier: codeVerifier, // Add PKCE code verifier
     });
     
-    console.log(`[${requestId}] Token request parameters (excluding client_secret):`, 
+    console.log(`[${requestId}] Token request parameters:`, 
       Object.fromEntries([...tokenParams.entries()].filter(([key]) => key !== 'client_secret')));
+    console.log(`[${requestId}] Redirect URI: ${redirectUri}`);
     
     // Add timeout protection
     const controller = new AbortController();
@@ -174,7 +183,11 @@ serve(async (req) => {
         let userInfo;
         try {
           userInfo = JSON.parse(userInfoText);
-          console.log(`[${requestId}] User info parsed successfully: ${JSON.stringify(userInfo)}`);
+          console.log(`[${requestId}] User info parsed successfully: ${JSON.stringify({
+            email: userInfo.email,
+            id: userInfo.id,
+            verified_email: userInfo.verified_email
+          })}`);
         } catch (parseError) {
           console.error(`[${requestId}] Error parsing user info response:`, parseError);
           return redirectWithError("userinfo_parse_error", requestId);
@@ -220,6 +233,7 @@ serve(async (req) => {
             });
             
             const storeResponseText = await storeResponse.text();
+            console.log(`[${requestId}] Store tokens response status: ${storeResponse.status}`);
             console.log(`[${requestId}] Store tokens response: ${storeResponseText}`);
             
             let storeResult;
