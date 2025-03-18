@@ -513,6 +513,36 @@ export type Database = {
         }
         Relationships: []
       }
+      oauth_states: {
+        Row: {
+          code_verifier: string
+          created_at: string | null
+          expires_at: string
+          id: string
+          return_url: string
+          state: string
+          user_id: string | null
+        }
+        Insert: {
+          code_verifier: string
+          created_at?: string | null
+          expires_at: string
+          id?: string
+          return_url: string
+          state: string
+          user_id?: string | null
+        }
+        Update: {
+          code_verifier?: string
+          created_at?: string | null
+          expires_at?: string
+          id?: string
+          return_url?: string
+          state?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       organizations: {
         Row: {
           additional_info: string | null
