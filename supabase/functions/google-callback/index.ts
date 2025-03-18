@@ -275,19 +275,18 @@ serve(async (req) => {
         const redirectString = redirectUrl.toString();
         console.log(`[${requestId}] Redirecting to: ${redirectString.substring(0, 100)}...`);
         
-        // Create response with custom headers for final redirect
-        const response = Response.redirect(redirectString);
-        response.headers.set("Access-Control-Allow-Origin", APP_URL);
-        response.headers.set("Access-Control-Allow-Credentials", "true");
-        
-        // Add security headers
-        response.headers.set("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
-        response.headers.set("X-Content-Type-Options", "nosniff");
-        
         // Clean up the used state entry
         await supabase.from('oauth_states').delete().eq('state', state);
         
-        return response;
+        // Create new response object with headers
+        return Response.redirect(redirectString, {
+          headers: {
+            "Access-Control-Allow-Origin": APP_URL,
+            "Access-Control-Allow-Credentials": "true",
+            "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+            "X-Content-Type-Options": "nosniff"
+          }
+        });
       } catch (userInfoError) {
         console.error(`[${requestId}] Error in user info request:`, userInfoError);
         return redirectWithError("userinfo_request_error", requestId);
@@ -341,12 +340,14 @@ serve(async (req) => {
     errorUrl.searchParams.append("ts", Date.now().toString());
     console.log(`[${reqId}] Redirecting with error: ${errorCode} to ${errorUrl.toString()}`);
     
-    // Create response with custom headers and security headers for error redirect
-    const response = Response.redirect(errorUrl.toString());
-    response.headers.set("Access-Control-Allow-Origin", APP_URL);
-    response.headers.set("Access-Control-Allow-Credentials", "true");
-    response.headers.set("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
-    response.headers.set("X-Content-Type-Options", "nosniff");
-    return response;
+    // Create a new response with headers instead of modifying an existing one
+    return Response.redirect(errorUrl.toString(), {
+      headers: {
+        "Access-Control-Allow-Origin": APP_URL,
+        "Access-Control-Allow-Credentials": "true",
+        "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+        "X-Content-Type-Options": "nosniff"
+      }
+    });
   }
 });
