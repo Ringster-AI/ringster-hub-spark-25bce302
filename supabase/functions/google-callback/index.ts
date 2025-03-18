@@ -128,7 +128,7 @@ serve(async (req) => {
       console.log(`[${requestId}] Token exchange response status: ${tokenResponse.status}`);
       
       const tokenResponseText = await tokenResponse.text();
-      console.log(`[${requestId}] Raw token response: ${tokenResponseText}`);
+      console.log(`[${requestId}] Raw token response: ${tokenResponseText.substring(0, 100)}...`);
       
       let tokenData;
       try {
@@ -161,7 +161,7 @@ serve(async (req) => {
         let userInfo;
         try {
           userInfo = JSON.parse(userInfoText);
-          console.log(`[${requestId}] User info parsed successfully`);
+          console.log(`[${requestId}] User info parsed successfully: ${JSON.stringify(userInfo)}`);
         } catch (parseError) {
           console.error(`[${requestId}] Error parsing user info response:`, parseError);
           return redirectWithError("userinfo_parse_error", requestId);
@@ -206,20 +206,30 @@ serve(async (req) => {
               })
             });
             
-            const storeResult = await storeResponse.json();
+            const storeResponseText = await storeResponse.text();
+            console.log(`[${requestId}] Store tokens response: ${storeResponseText}`);
+            
+            let storeResult;
+            try {
+              storeResult = JSON.parse(storeResponseText);
+            } catch (parseError) {
+              console.error(`[${requestId}] Error parsing store response:`, parseError, storeResponseText);
+              return redirectWithError("storage_parse_error", requestId);
+            }
             
             if (!storeResponse.ok) {
               console.error(`[${requestId}] Error storing tokens:`, storeResult);
               return redirectWithError("storage_error", requestId);
             }
             
-            console.log(`[${requestId}] Tokens stored successfully`);
+            console.log(`[${requestId}] Tokens stored successfully:`, storeResult);
           } catch (storeError) {
             console.error(`[${requestId}] Error calling token storage function:`, storeError);
             return redirectWithError("storage_error", requestId);
           }
         } else {
           console.warn(`[${requestId}] No user ID available, cannot store tokens securely`);
+          return redirectWithError("missing_user_id", requestId);
         }
 
         // After storing tokens, redirect to success URL with minimal parameters
@@ -281,6 +291,8 @@ serve(async (req) => {
       "userinfo_request_error": "Error requesting user information",
       "request_timeout": "Request timed out",
       "storage_error": "Error storing integration data",
+      "storage_parse_error": "Error parsing storage response",
+      "missing_user_id": "Missing user ID for token storage",
       "auth_error": "Authentication error",
       "access_denied": "Access denied by user",
       "server_error": "Unexpected server error"

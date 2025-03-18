@@ -103,6 +103,19 @@ serve(async (req) => {
     if (authorizedUserId) {
       console.log(`[${requestId}] Storing integration for user: ${authorizedUserId}`);
       
+      // First check if an entry already exists
+      const { data: existingData, error: fetchError } = await supabase
+        .from("google_integrations")
+        .select("id")
+        .eq("user_id", authorizedUserId)
+        .maybeSingle();
+        
+      if (fetchError) {
+        console.error(`[${requestId}] Error checking for existing integration:`, fetchError);
+      }
+      
+      console.log(`[${requestId}] Existing integration check:`, existingData ? "Found" : "Not found");
+      
       // Store the integration securely in the database
       const { data, error } = await supabase
         .from("google_integrations")

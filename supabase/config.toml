@@ -1,5 +1,13 @@
 
 project_id = "owzerqaududhfwngyqbp"
+[functions.connect-google]
+verify_jwt = true
+[functions.google-callback]
+verify_jwt = false
+[functions.revoke-google-tokens]
+verify_jwt = true
+[functions.store-google-tokens]
+verify_jwt = false
 [functions.add-to-sendgrid]
 verify_jwt = false
 [functions.forward-demo-request]

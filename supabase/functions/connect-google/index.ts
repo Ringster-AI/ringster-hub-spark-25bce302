@@ -53,6 +53,43 @@ serve(async (req) => {
       );
     }
 
+    // Get the authenticated user from the request
+    try {
+      const authHeader = req.headers.get('Authorization');
+      if (!authHeader) {
+        console.error(`[${requestId}] No Authorization header found`);
+        return new Response(
+          JSON.stringify({ error: "Authentication required" }),
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      
+      // Extract JWT token
+      const token = authHeader.replace('Bearer ', '');
+      
+      // Get user from Supabase auth
+      if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+        const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+        const { data: { user }, error } = await supabase.auth.getUser(token);
+        
+        if (error || !user) {
+          console.error(`[${requestId}] Error getting user from token:`, error);
+          return new Response(
+            JSON.stringify({ error: "Authentication failed", details: error?.message }),
+            { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+        
+        console.log(`[${requestId}] Authenticated user: ${user.id}`);
+      }
+    } catch (authError) {
+      console.error(`[${requestId}] Error authenticating user:`, authError);
+      return new Response(
+        JSON.stringify({ error: "Authentication error", details: String(authError) }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // Generate OAuth URL with limited scopes - calendar only
     const scopes = [
       "https://www.googleapis.com/auth/userinfo.email",
@@ -103,7 +140,7 @@ serve(async (req) => {
         const expiresAt = new Date();
         expiresAt.setMinutes(expiresAt.getMinutes() + 10);
         
-        const { error: storeError } = await supabase
+        const { data, error: storeError } = await supabase
           .from('oauth_states')
           .insert({
             state: stateValue,
@@ -111,14 +148,15 @@ serve(async (req) => {
             return_url: returnUrl,
             user_id: userId,
             expires_at: expiresAt.toISOString()
-          });
+          })
+          .select('*');
           
         if (storeError) {
           console.error(`[${requestId}] Error storing OAuth state:`, storeError);
           throw new Error('Failed to store OAuth state');
         }
         
-        console.log(`[${requestId}] Stored OAuth state in database`);
+        console.log(`[${requestId}] Stored OAuth state in database:`, data);
       } catch (dbErr) {
         console.error(`[${requestId}] Database error:`, dbErr);
         // Continue with the flow, but log the error

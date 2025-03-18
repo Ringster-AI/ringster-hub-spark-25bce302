@@ -27,19 +27,26 @@ export function useGoogleIntegration() {
           return;
         }
         
+        console.log("Fetching Google integrations for user:", session.user.id);
+        
         // Use type assertion to work around TypeScript checking
         // Only fetch limited data - never fetch tokens directly in the browser
         const { data, error } = await (supabase
-          .from('google_integrations' as any)
+          .from('google_integrations')
           .select('id, user_id, email, created_at, updated_at, scopes')
+          .eq('user_id', session.user.id)
           .single() as any);
         
         if (error && error.code !== 'PGRST116') { // PGRST116 is "no rows returned"
+          console.error("Error fetching integrations:", error);
           throw error;
         }
         
         if (data) {
+          console.log("Google integration found:", data);
           setGoogleIntegration(data as GoogleIntegration);
+        } else {
+          console.log("No Google integration found for user");
         }
       } catch (err: any) {
         console.error('Error fetching integrations:', err);
@@ -56,6 +63,7 @@ export function useGoogleIntegration() {
   const connectGoogle = async () => {
     try {
       setIsConnecting(true);
+      setError(null);
       
       // Verify user is authenticated before proceeding
       const { data: { session } } = await supabase.auth.getSession();
@@ -70,6 +78,8 @@ export function useGoogleIntegration() {
         return;
       }
       
+      console.log("Starting Google OAuth flow for user:", session.user.id);
+      
       // Get current URL as return URL
       const currentUrl = window.location.href;
       
@@ -79,13 +89,17 @@ export function useGoogleIntegration() {
         body: { returnUrl: currentUrl },
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error("Error invoking connect-google function:", error);
+        throw error;
+      }
       
       // Redirect to Google's OAuth page
       if (data?.url) {
         console.log("Redirecting to Google OAuth:", data.url);
         window.location.href = data.url;
       } else {
+        console.error("No redirect URL received from server");
         throw new Error('No redirect URL received from server');
       }
     } catch (error: any) {
@@ -95,6 +109,7 @@ export function useGoogleIntegration() {
         title: "Connection Failed",
         description: error.message || "Failed to connect Google account. Please try again.",
       });
+      setError(error.message || "Failed to connect Google account");
       setIsConnecting(false);
     }
   };
@@ -142,9 +157,24 @@ export function useGoogleIntegration() {
       // Create integration info for UI only (tokens are securely stored server-side)
       const now = new Date().toISOString();
       
+      // Check if user is authenticated
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        console.error("No active session found when handling redirect");
+        toast({
+          variant: "destructive",
+          title: "Authentication Required",
+          description: "You must be logged in to connect your Google account",
+        });
+        navigate("/login");
+        return;
+      }
+      
+      console.log("User is authenticated:", session.user.id);
+      
       // Fetch the latest Google integration data to ensure we have up-to-date info
       const { data, error } = await supabase
-        .from('google_integrations' as any)
+        .from('google_integrations')
         .select('id, user_id, email, created_at, updated_at, scopes')
         .eq('email', email)
         .single();
@@ -155,15 +185,17 @@ export function useGoogleIntegration() {
       }
       
       if (data) {
+        console.log("Integration found after redirect:", data);
         // Update local state with data from database
         // Fix TypeScript error with proper type assertion
         setGoogleIntegration(data as unknown as GoogleIntegration);
       } else {
-        // Fallback to constructing minimal local state
-        // Verify user session to get userId
-        const { data: { session } } = await supabase.auth.getSession();
-        const userId = session?.user?.id || '';
+        console.log("No integration found for email:", email);
         
+        // Verify user session to get userId
+        const userId = session.user.id;
+        
+        // Create a minimal representation for UI
         setGoogleIntegration({
           id: '', // Will be populated on next page load
           user_id: userId,

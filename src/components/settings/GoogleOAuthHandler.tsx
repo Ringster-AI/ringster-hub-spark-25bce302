@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -27,8 +28,8 @@ export function GoogleOAuthHandler({ onGoogleRedirect }: GoogleOAuthHandlerProps
     const googleConnected = searchParams.get('googleConnected');
     const googleScopes = searchParams.get('googleScopes');
     
-    console.log("OAuth redirect data:", { 
-      success, error, tab, email, googleConnected, 
+    console.log("OAuth redirect data received:", { 
+      success, error, errorMessage, tab, email, googleConnected, 
       scopes: googleScopes
     });
     
@@ -64,7 +65,7 @@ export function GoogleOAuthHandler({ onGoogleRedirect }: GoogleOAuthHandlerProps
         
         // If we have Google data from the redirect, notify the parent component
         if (googleConnected === 'true' && email) {
-          console.log("Google account connected successfully");
+          console.log("Google account connected successfully:", email);
           try {
             await onGoogleRedirect(
               email,
@@ -108,6 +109,8 @@ export function GoogleOAuthHandler({ onGoogleRedirect }: GoogleOAuthHandlerProps
                 displayErrorMessage = "Authentication error. Please log in and try again.";
               }
             }
+            
+            console.error("OAuth error:", error, displayErrorMessage);
             
             toast({
               variant: "destructive",
