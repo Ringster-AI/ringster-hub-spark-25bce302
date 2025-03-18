@@ -18,16 +18,29 @@ serve(async (req) => {
   }
 
   try {
+    // Get the authorization header
+    const authHeader = req.headers.get('Authorization');
+    
+    if (!authHeader) {
+      console.error(`[${requestId}] No authorization header provided`);
+      return new Response(
+        JSON.stringify({ error: "No authorization header provided" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    
     // Create Supabase client with service role key (has elevated privileges)
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
     
-    // Get the current user making the request
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    // Get the current user making the request using the provided token
+    const { data: { user }, error: userError } = await supabase.auth.getUser(
+      authHeader.replace('Bearer ', '')
+    );
     
     if (userError || !user) {
       console.error(`[${requestId}] Authentication error:`, userError);
       return new Response(
-        JSON.stringify({ error: "Authentication required" }),
+        JSON.stringify({ error: "Authentication required", details: userError?.message }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }

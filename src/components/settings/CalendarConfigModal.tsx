@@ -84,9 +84,18 @@ export function CalendarConfigModal({
       try {
         setIsLoadingCalendars(true);
         
+        // Get the current session to include the auth token in the request
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          throw new Error("No active session found");
+        }
+        
         // Call the Supabase Edge Function to fetch calendars
         const { data, error } = await supabase.functions.invoke('google-calendar-list', {
           method: 'GET',
+          headers: {
+            Authorization: `Bearer ${session.access_token}`
+          }
         });
         
         if (error) throw error;
