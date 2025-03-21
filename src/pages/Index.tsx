@@ -1,6 +1,7 @@
+
 import { Hero } from "@/components/landing/Hero";
 import { Features } from "@/components/landing/Features";
-import { TryRingster } from "@/components/landing/TryRingster";
+import { FeaturesAndBenefits } from "@/components/landing/FeaturesAndBenefits";
 import { Footer } from "@/components/landing/Footer";
 import { SoundFamiliar } from "@/components/landing/SoundFamiliar";
 import { Button } from "@/components/ui/button";
@@ -46,7 +47,7 @@ const Index = () => {
       </nav>
       <div className="pt-20 sm:pt-24 md:pt-28">
         <Hero />
-        <TryRingster />
+        <FeaturesAndBenefits />
         <SoundFamiliar />
         <Features />
         
