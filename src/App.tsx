@@ -19,6 +19,7 @@ import { useToast } from "@/hooks/use-toast";
 import BlogPost from "./pages/BlogPost";
 import Ebook from "./pages/Ebook";
 import EbookThankYou from "./pages/EbookThankYou";
+import Offer from "./pages/Offer";
 
 const queryClient = new QueryClient();
 
@@ -99,6 +100,7 @@ function App() {
             <Route path="/blog/:slug" element={<BlogPost />} />
             <Route path="/ebook" element={<Ebook />} />
             <Route path="/ebook-thank-you" element={<EbookThankYou />} />
+            <Route path="/offer" element={<Offer />} />
             <Route path="/dashboard/*" element={
               <PrivateRoute>
                 <Dashboard />
