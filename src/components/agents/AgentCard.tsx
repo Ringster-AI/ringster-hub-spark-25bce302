@@ -43,8 +43,8 @@ export const AgentCard = ({ agent, onToggleStatus, onUpdate }: AgentCardProps) =
         });
         
         toast({
-          title: "Configuration Error",
-          description: "VAPI public key is not configured. Please check your environment variables and ensure VITE_VAPI_PUBLIC_KEY is set.",
+          title: "VAPI Configuration Missing",
+          description: "To use the Call Agent feature, you need to set up your VAPI public key. Create a .env file in your project root and add: VITE_VAPI_PUBLIC_KEY=your_key_here, then restart the development server.",
           variant: "destructive",
         });
         return;

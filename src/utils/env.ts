@@ -36,6 +36,12 @@ export const getEnvVar = (key: string): string | undefined => {
   
   console.warn(`Environment variable ${key} not found in any source`);
   console.log('Available import.meta.env keys:', typeof import.meta !== 'undefined' ? Object.keys(import.meta.env || {}) : 'import.meta not available');
+  console.log('Build-time environment variables:', {
+    NODE_ENV: import.meta.env?.MODE,
+    DEV: import.meta.env?.DEV,
+    PROD: import.meta.env?.PROD,
+    BASE_URL: import.meta.env?.BASE_URL
+  });
   
   return undefined;
 };
@@ -43,6 +49,16 @@ export const getEnvVar = (key: string): string | undefined => {
 export const getVapiPublicKey = (): string | undefined => {
   const key = getEnvVar('VITE_VAPI_PUBLIC_KEY');
   console.log('VITE_VAPI_PUBLIC_KEY result:', key ? 'Found' : 'Not found');
+  
+  // In development, provide helpful guidance
+  if (!key && import.meta.env?.DEV) {
+    console.warn('🔑 VAPI_PUBLIC_KEY not found. To fix this:');
+    console.warn('1. Create a .env file in your project root');
+    console.warn('2. Add: VITE_VAPI_PUBLIC_KEY=your_actual_key_here');
+    console.warn('3. Restart your development server');
+    console.warn('4. Your VAPI public key should start with something like "pk-" or similar');
+  }
+  
   return key;
 };
 
