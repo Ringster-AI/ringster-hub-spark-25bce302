@@ -27,10 +27,21 @@ export const AgentCard = ({ agent, onToggleStatus, onUpdate }: AgentCardProps) =
 
   const handleBrowserCall = async () => {
     try {
+      console.log('Starting browser call...');
+      
       const VAPI_PUBLIC_KEY = getVapiPublicKey();
+      
+      console.log('VAPI_PUBLIC_KEY retrieved:', VAPI_PUBLIC_KEY ? 'Present' : 'Missing');
       
       if (!VAPI_PUBLIC_KEY) {
         console.error('VAPI public key not found in environment variables');
+        
+        // Check what environment variables are actually available
+        console.log('Available environment variables:', {
+          importMetaEnv: typeof import.meta !== 'undefined' ? Object.keys(import.meta.env || {}) : 'Not available',
+          windowEnv: typeof window !== 'undefined' && window.ENV ? Object.keys(window.ENV) : 'Not available'
+        });
+        
         toast({
           title: "Configuration Error",
           description: "VAPI public key is not configured. Please check your environment variables and ensure VITE_VAPI_PUBLIC_KEY is set.",
