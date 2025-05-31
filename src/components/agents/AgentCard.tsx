@@ -9,17 +9,7 @@ import { AgentTrialWarning } from "./AgentTrialWarning";
 import { AgentHeader } from "./AgentHeader";
 import { AgentPhoneInfo } from "./AgentPhoneInfo";
 import { AgentUsageStats } from "./AgentUsageStats";
-
-// Get the VAPI public key from environment variables
-const getVapiPublicKey = () => {
-  // Try different ways to get the key
-  const key = import.meta.env.VITE_VAPI_PUBLIC_KEY || 
-             window.ENV?.VITE_VAPI_PUBLIC_KEY || 
-             process.env.VITE_VAPI_PUBLIC_KEY;
-  
-  console.log('VAPI Public Key available:', !!key);
-  return key;
-};
+import { getVapiPublicKey } from "@/utils/env";
 
 interface AgentCardProps {
   agent: AgentConfig;
