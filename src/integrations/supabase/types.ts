@@ -93,6 +93,265 @@ export type Database = {
         }
         Relationships: []
       }
+      agent_configs_5sy83d: {
+        Row: {
+          business_hours: Json
+          calendar_integration: Json | null
+          created_at: string
+          goodbye: string
+          greeting: string
+          id: string
+          name: string
+          organization_id: string
+          phone_number: string
+          system_prompt: string
+          transfer_directory: Json | null
+          updated_at: string
+          voice_id: string | null
+        }
+        Insert: {
+          business_hours: Json
+          calendar_integration?: Json | null
+          created_at?: string
+          goodbye: string
+          greeting: string
+          id?: string
+          name: string
+          organization_id: string
+          phone_number: string
+          system_prompt: string
+          transfer_directory?: Json | null
+          updated_at?: string
+          voice_id?: string | null
+        }
+        Update: {
+          business_hours?: Json
+          calendar_integration?: Json | null
+          created_at?: string
+          goodbye?: string
+          greeting?: string
+          id?: string
+          name?: string
+          organization_id?: string
+          phone_number?: string
+          system_prompt?: string
+          transfer_directory?: Json | null
+          updated_at?: string
+          voice_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_configs_5sy83d_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations_5sy83d"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_phone_assistant_5sy83d_agent_configs: {
+        Row: {
+          business_hours: Json
+          calendar_integration: Json | null
+          created_at: string
+          goodbye: string
+          greeting: string
+          id: string
+          name: string
+          organization_id: string
+          phone_number: string
+          system_prompt: string
+          transfer_directory: Json | null
+          updated_at: string
+          user_email: string
+          voice_id: string | null
+        }
+        Insert: {
+          business_hours: Json
+          calendar_integration?: Json | null
+          created_at?: string
+          goodbye: string
+          greeting: string
+          id?: string
+          name: string
+          organization_id: string
+          phone_number: string
+          system_prompt: string
+          transfer_directory?: Json | null
+          updated_at?: string
+          user_email: string
+          voice_id?: string | null
+        }
+        Update: {
+          business_hours?: Json
+          calendar_integration?: Json | null
+          created_at?: string
+          goodbye?: string
+          greeting?: string
+          id?: string
+          name?: string
+          organization_id?: string
+          phone_number?: string
+          system_prompt?: string
+          transfer_directory?: Json | null
+          updated_at?: string
+          user_email?: string
+          voice_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_phone_assistant_5sy83d_agent_configs_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "ai_phone_assistant_5sy83d_organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_phone_assistant_5sy83d_call_logs: {
+        Row: {
+          agent_id: string
+          call_sid: string
+          created_at: string
+          duration: number | null
+          from_number: string
+          id: string
+          organization_id: string
+          recording_url: string | null
+          status: string
+          summary: string | null
+          to_number: string
+          transcript: string | null
+          updated_at: string
+          user_email: string
+        }
+        Insert: {
+          agent_id: string
+          call_sid: string
+          created_at?: string
+          duration?: number | null
+          from_number: string
+          id?: string
+          organization_id: string
+          recording_url?: string | null
+          status: string
+          summary?: string | null
+          to_number: string
+          transcript?: string | null
+          updated_at?: string
+          user_email: string
+        }
+        Update: {
+          agent_id?: string
+          call_sid?: string
+          created_at?: string
+          duration?: number | null
+          from_number?: string
+          id?: string
+          organization_id?: string
+          recording_url?: string | null
+          status?: string
+          summary?: string | null
+          to_number?: string
+          transcript?: string | null
+          updated_at?: string
+          user_email?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_phone_assistant_5sy83d_call_logs_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "ai_phone_assistant_5sy83d_agent_configs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_phone_assistant_5sy83d_call_logs_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "ai_phone_assistant_5sy83d_organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_phone_assistant_5sy83d_google_integrations: {
+        Row: {
+          access_token: string
+          availability_days: string | null
+          availability_end: string | null
+          availability_start: string | null
+          calendar_id: string | null
+          created_at: string
+          email: string
+          id: string
+          refresh_token: string
+          scopes: string
+          updated_at: string
+          user_email: string
+          user_id: string
+        }
+        Insert: {
+          access_token: string
+          availability_days?: string | null
+          availability_end?: string | null
+          availability_start?: string | null
+          calendar_id?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          refresh_token: string
+          scopes: string
+          updated_at?: string
+          user_email: string
+          user_id: string
+        }
+        Update: {
+          access_token?: string
+          availability_days?: string | null
+          availability_end?: string | null
+          availability_start?: string | null
+          calendar_id?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          refresh_token?: string
+          scopes?: string
+          updated_at?: string
+          user_email?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      ai_phone_assistant_5sy83d_organizations: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          owner_id: string
+          settings: Json | null
+          updated_at: string
+          user_email: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          owner_id: string
+          settings?: Json | null
+          updated_at?: string
+          user_email: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          owner_id?: string
+          settings?: Json | null
+          updated_at?: string
+          user_email?: string
+        }
+        Relationships: []
+      }
       blog_posts: {
         Row: {
           author_id: string
@@ -181,6 +440,69 @@ export type Database = {
             columns: ["agent_id"]
             isOneToOne: false
             referencedRelation: "agent_configs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      call_logs_5sy83d: {
+        Row: {
+          agent_id: string
+          call_sid: string
+          created_at: string
+          duration: number | null
+          from_number: string
+          id: string
+          organization_id: string
+          recording_url: string | null
+          status: string
+          summary: string | null
+          to_number: string
+          transcript: string | null
+          updated_at: string
+        }
+        Insert: {
+          agent_id: string
+          call_sid: string
+          created_at?: string
+          duration?: number | null
+          from_number: string
+          id?: string
+          organization_id: string
+          recording_url?: string | null
+          status: string
+          summary?: string | null
+          to_number: string
+          transcript?: string | null
+          updated_at?: string
+        }
+        Update: {
+          agent_id?: string
+          call_sid?: string
+          created_at?: string
+          duration?: number | null
+          from_number?: string
+          id?: string
+          organization_id?: string
+          recording_url?: string | null
+          status?: string
+          summary?: string | null
+          to_number?: string
+          transcript?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "call_logs_5sy83d_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agent_configs_5sy83d"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "call_logs_5sy83d_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations_5sy83d"
             referencedColumns: ["id"]
           },
         ]
@@ -513,6 +835,51 @@ export type Database = {
         }
         Relationships: []
       }
+      google_integrations_5sy83d: {
+        Row: {
+          access_token: string
+          availability_days: string | null
+          availability_end: string | null
+          availability_start: string | null
+          calendar_id: string | null
+          created_at: string
+          email: string
+          id: string
+          refresh_token: string
+          scopes: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_token: string
+          availability_days?: string | null
+          availability_end?: string | null
+          availability_start?: string | null
+          calendar_id?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          refresh_token: string
+          scopes: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_token?: string
+          availability_days?: string | null
+          availability_end?: string | null
+          availability_start?: string | null
+          calendar_id?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          refresh_token?: string
+          scopes?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       oauth_states: {
         Row: {
           code_verifier: string
@@ -581,6 +948,33 @@ export type Database = {
           },
         ]
       }
+      organizations_5sy83d: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          owner_id: string
+          settings: Json | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          owner_id: string
+          settings?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          owner_id?: string
+          settings?: Json | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -619,6 +1013,47 @@ export type Database = {
           website?: string | null
         }
         Relationships: []
+      }
+      profiles_5sy83d: {
+        Row: {
+          created_at: string
+          email: string
+          first_name: string | null
+          id: string
+          last_name: string | null
+          organization_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          organization_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          organization_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_5sy83d_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations_5sy83d"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       subscription_plans: {
         Row: {
@@ -826,6 +1261,50 @@ export type Database = {
           },
         ]
       }
+      user_subscriptions_5sy83d: {
+        Row: {
+          created_at: string
+          current_period_end: string
+          current_period_start: string
+          id: string
+          organization_id: string
+          plan_id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_period_end: string
+          current_period_start: string
+          id?: string
+          organization_id: string
+          plan_id: string
+          status: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_period_end?: string
+          current_period_start?: string
+          id?: string
+          organization_id?: string
+          plan_id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_subscriptions_5sy83d_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations_5sy83d"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -842,16 +1321,11 @@ export type Database = {
         Returns: undefined
       }
       has_role: {
-        Args: {
-          user_id: string
-          role_name: string
-        }
+        Args: { user_id: string; role_name: string }
         Returns: boolean
       }
       is_admin: {
-        Args: {
-          user_id: string
-        }
+        Args: { user_id: string }
         Returns: boolean
       }
       process_campaign_contacts: {
@@ -859,17 +1333,11 @@ export type Database = {
         Returns: undefined
       }
       sync_user_subscription: {
-        Args: {
-          p_user_id: string
-          p_plan_id?: string
-        }
+        Args: { p_user_id: string; p_plan_id?: string }
         Returns: undefined
       }
       update_minutes_used: {
-        Args: {
-          p_user_id: string
-          p_minutes: number
-        }
+        Args: { p_user_id: string; p_minutes: number }
         Returns: undefined
       }
     }
@@ -883,27 +1351,29 @@ export type Database = {
   }
 }
 
-type PublicSchema = Database[Extract<keyof Database, "public">]
+type DefaultSchema = Database[Extract<keyof Database, "public">]
 
 export type Tables<
-  PublicTableNameOrOptions extends
-    | keyof (PublicSchema["Tables"] & PublicSchema["Views"])
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof Database },
-  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
-        Database[PublicTableNameOrOptions["schema"]]["Views"])
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof Database
+  }
+    ? keyof (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never = never,
-> = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
-      Database[PublicTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
+  ? (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
     ? R
     : never
-  : PublicTableNameOrOptions extends keyof (PublicSchema["Tables"] &
-        PublicSchema["Views"])
-    ? (PublicSchema["Tables"] &
-        PublicSchema["Views"])[PublicTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
         Row: infer R
       }
       ? R
@@ -911,20 +1381,22 @@ export type Tables<
     : never
 
 export type TablesInsert<
-  PublicTableNameOrOptions extends
-    | keyof PublicSchema["Tables"]
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
     | { schema: keyof Database },
-  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof Database
+  }
+    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
+  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I
     }
     ? I
     : never
-  : PublicTableNameOrOptions extends keyof PublicSchema["Tables"]
-    ? PublicSchema["Tables"][PublicTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
         Insert: infer I
       }
       ? I
@@ -932,20 +1404,22 @@ export type TablesInsert<
     : never
 
 export type TablesUpdate<
-  PublicTableNameOrOptions extends
-    | keyof PublicSchema["Tables"]
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
     | { schema: keyof Database },
-  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof Database
+  }
+    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
+  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U
     }
     ? U
     : never
-  : PublicTableNameOrOptions extends keyof PublicSchema["Tables"]
-    ? PublicSchema["Tables"][PublicTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
         Update: infer U
       }
       ? U
@@ -953,21 +1427,23 @@ export type TablesUpdate<
     : never
 
 export type Enums<
-  PublicEnumNameOrOptions extends
-    | keyof PublicSchema["Enums"]
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
     | { schema: keyof Database },
-  EnumName extends PublicEnumNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicEnumNameOrOptions["schema"]]["Enums"]
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof Database
+  }
+    ? keyof Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never = never,
-> = PublicEnumNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicEnumNameOrOptions["schema"]]["Enums"][EnumName]
-  : PublicEnumNameOrOptions extends keyof PublicSchema["Enums"]
-    ? PublicSchema["Enums"][PublicEnumNameOrOptions]
+> = DefaultSchemaEnumNameOrOptions extends { schema: keyof Database }
+  ? Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
     : never
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-    | keyof PublicSchema["CompositeTypes"]
+    | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof Database },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
     schema: keyof Database
@@ -976,6 +1452,15 @@ export type CompositeTypes<
     : never = never,
 > = PublicCompositeTypeNameOrOptions extends { schema: keyof Database }
   ? Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
-  : PublicCompositeTypeNameOrOptions extends keyof PublicSchema["CompositeTypes"]
-    ? PublicSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
+
+export const Constants = {
+  public: {
+    Enums: {
+      app_role: ["admin", "user"],
+      team_member_role: ["owner", "admin", "member"],
+    },
+  },
+} as const

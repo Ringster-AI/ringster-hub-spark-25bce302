@@ -10,7 +10,16 @@ import { AgentHeader } from "./AgentHeader";
 import { AgentPhoneInfo } from "./AgentPhoneInfo";
 import { AgentUsageStats } from "./AgentUsageStats";
 
-const VAPI_PUBLIC_KEY = import.meta.env.VITE_VAPI_PUBLIC_KEY || window.ENV?.VITE_VAPI_PUBLIC_KEY || '';
+// Get the VAPI public key from environment variables
+const getVapiPublicKey = () => {
+  // Try different ways to get the key
+  const key = import.meta.env.VITE_VAPI_PUBLIC_KEY || 
+             window.ENV?.VITE_VAPI_PUBLIC_KEY || 
+             process.env.VITE_VAPI_PUBLIC_KEY;
+  
+  console.log('VAPI Public Key available:', !!key);
+  return key;
+};
 
 interface AgentCardProps {
   agent: AgentConfig;
@@ -28,8 +37,16 @@ export const AgentCard = ({ agent, onToggleStatus, onUpdate }: AgentCardProps) =
 
   const handleBrowserCall = async () => {
     try {
+      const VAPI_PUBLIC_KEY = getVapiPublicKey();
+      
       if (!VAPI_PUBLIC_KEY) {
-        throw new Error("Vapi public key is not configured. Please check your environment variables and ensure VITE_VAPI_PUBLIC_KEY is set.");
+        console.error('VAPI public key not found in environment variables');
+        toast({
+          title: "Configuration Error",
+          description: "VAPI public key is not configured. Please check your environment variables and ensure VITE_VAPI_PUBLIC_KEY is set.",
+          variant: "destructive",
+        });
+        return;
       }
 
       const assistantId = agent.vapi_assistant_id;
