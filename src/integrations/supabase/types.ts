@@ -394,6 +394,89 @@ export type Database = {
         }
         Relationships: []
       }
+      calendar_bookings: {
+        Row: {
+          appointment_datetime: string
+          appointment_type: string | null
+          attendee_email: string | null
+          attendee_name: string | null
+          booking_status: string
+          call_log_id: string | null
+          campaign_id: string | null
+          contact_id: string | null
+          created_at: string
+          duration_minutes: number
+          google_event_id: string | null
+          google_integration_id: string | null
+          id: string
+          notes: string | null
+          updated_at: string
+        }
+        Insert: {
+          appointment_datetime: string
+          appointment_type?: string | null
+          attendee_email?: string | null
+          attendee_name?: string | null
+          booking_status?: string
+          call_log_id?: string | null
+          campaign_id?: string | null
+          contact_id?: string | null
+          created_at?: string
+          duration_minutes?: number
+          google_event_id?: string | null
+          google_integration_id?: string | null
+          id?: string
+          notes?: string | null
+          updated_at?: string
+        }
+        Update: {
+          appointment_datetime?: string
+          appointment_type?: string | null
+          attendee_email?: string | null
+          attendee_name?: string | null
+          booking_status?: string
+          call_log_id?: string | null
+          campaign_id?: string | null
+          contact_id?: string | null
+          created_at?: string
+          duration_minutes?: number
+          google_event_id?: string | null
+          google_integration_id?: string | null
+          id?: string
+          notes?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calendar_bookings_call_log_id_fkey"
+            columns: ["call_log_id"]
+            isOneToOne: false
+            referencedRelation: "call_logs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "calendar_bookings_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "calendar_bookings_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "campaign_contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "calendar_bookings_google_integration_id_fkey"
+            columns: ["google_integration_id"]
+            isOneToOne: false
+            referencedRelation: "google_integrations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       call_logs: {
         Row: {
           agent_id: string | null
@@ -774,6 +857,66 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      follow_up_sequences: {
+        Row: {
+          campaign_id: string | null
+          contact_id: string | null
+          content: string | null
+          created_at: string
+          delay_hours: number
+          id: string
+          scheduled_for: string | null
+          sent_at: string | null
+          sequence_type: string
+          status: string
+          trigger_event: string
+          updated_at: string
+        }
+        Insert: {
+          campaign_id?: string | null
+          contact_id?: string | null
+          content?: string | null
+          created_at?: string
+          delay_hours?: number
+          id?: string
+          scheduled_for?: string | null
+          sent_at?: string | null
+          sequence_type: string
+          status?: string
+          trigger_event: string
+          updated_at?: string
+        }
+        Update: {
+          campaign_id?: string | null
+          contact_id?: string | null
+          content?: string | null
+          created_at?: string
+          delay_hours?: number
+          id?: string
+          scheduled_for?: string | null
+          sent_at?: string | null
+          sequence_type?: string
+          status?: string
+          trigger_event?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "follow_up_sequences_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "follow_up_sequences_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "campaign_contacts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       google_integrations: {
         Row: {
