@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -128,7 +127,7 @@ export function CalendarToolsManagement({ agentId }: CalendarToolsManagementProp
   };
 
   const handleConfigurationUpdate = (newConfig: CalendarToolConfiguration) => {
-    updateCalendarTool.mutate({ configuration: newConfig as Json });
+    updateCalendarTool.mutate({ configuration: newConfig as unknown as Json });
   };
 
   const getConfiguration = (): CalendarToolConfiguration => {
