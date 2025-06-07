@@ -1,14 +1,58 @@
 
 project_id = "owzerqaududhfwngyqbp"
-[functions.connect-google]
-verify_jwt = true
-[functions.google-callback]
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[auth]
+enabled = true
+port = 54322
+external_url = "http://localhost:54321"
+email_double_confirm_changes = true
+email_enable_signup = true
+email_enable_confirmations = false
+password_min_length = 6
+
+[auth.email]
+smtp_host = ""
+smtp_port = 587
+smtp_user = ""
+smtp_pass = ""
+smtp_admin_email = ""
+enable_signup = true
+double_confirm_changes = true
+enable_confirmations = false
+
+[db]
+enabled = true
+port = 54322
+major_version = 15
+
+[realtime]
+enabled = true
+port = 54323
+
+[studio]
+enabled = true
+port = 54324
+
+[inbucket]
+enabled = true
+port = 54325
+
+[storage]
+enabled = true
+port = 54326
+
+[analytics]
+enabled = false
+
+[functions.vapi-calendar-tool]
 verify_jwt = false
-[functions.revoke-google-tokens]
-verify_jwt = true
-[functions.store-google-tokens]
-verify_jwt = false
-[functions.add-to-sendgrid]
-verify_jwt = false
-[functions.forward-demo-request]
+
+[functions.verify-phone]
 verify_jwt = false

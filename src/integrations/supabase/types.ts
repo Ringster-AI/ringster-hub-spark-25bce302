@@ -394,6 +394,92 @@ export type Database = {
         }
         Relationships: []
       }
+      booking_requests: {
+        Row: {
+          appointment_type: string | null
+          attendee_email: string | null
+          attendee_name: string
+          call_log_id: string | null
+          campaign_id: string | null
+          contact_id: string | null
+          created_at: string | null
+          duration_minutes: number | null
+          expires_at: string | null
+          id: string
+          notes: string | null
+          phone_number: string
+          requested_datetime: string
+          status: string | null
+          updated_at: string | null
+          verification_id: string | null
+        }
+        Insert: {
+          appointment_type?: string | null
+          attendee_email?: string | null
+          attendee_name: string
+          call_log_id?: string | null
+          campaign_id?: string | null
+          contact_id?: string | null
+          created_at?: string | null
+          duration_minutes?: number | null
+          expires_at?: string | null
+          id?: string
+          notes?: string | null
+          phone_number: string
+          requested_datetime: string
+          status?: string | null
+          updated_at?: string | null
+          verification_id?: string | null
+        }
+        Update: {
+          appointment_type?: string | null
+          attendee_email?: string | null
+          attendee_name?: string
+          call_log_id?: string | null
+          campaign_id?: string | null
+          contact_id?: string | null
+          created_at?: string | null
+          duration_minutes?: number | null
+          expires_at?: string | null
+          id?: string
+          notes?: string | null
+          phone_number?: string
+          requested_datetime?: string
+          status?: string | null
+          updated_at?: string | null
+          verification_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_requests_call_log_id_fkey"
+            columns: ["call_log_id"]
+            isOneToOne: false
+            referencedRelation: "call_logs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "booking_requests_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "booking_requests_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "campaign_contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "booking_requests_verification_id_fkey"
+            columns: ["verification_id"]
+            isOneToOne: false
+            referencedRelation: "phone_verifications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       calendar_bookings: {
         Row: {
           appointment_datetime: string
@@ -473,6 +559,44 @@ export type Database = {
             columns: ["google_integration_id"]
             isOneToOne: false
             referencedRelation: "google_integrations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      calendar_tools: {
+        Row: {
+          agent_id: string
+          configuration: Json | null
+          created_at: string | null
+          id: string
+          is_enabled: boolean | null
+          tool_name: string
+          updated_at: string | null
+        }
+        Insert: {
+          agent_id: string
+          configuration?: Json | null
+          created_at?: string | null
+          id?: string
+          is_enabled?: boolean | null
+          tool_name?: string
+          updated_at?: string | null
+        }
+        Update: {
+          agent_id?: string
+          configuration?: Json | null
+          created_at?: string | null
+          id?: string
+          is_enabled?: boolean | null
+          tool_name?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calendar_tools_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agent_configs"
             referencedColumns: ["id"]
           },
         ]
@@ -1255,6 +1379,39 @@ export type Database = {
         }
         Relationships: []
       }
+      phone_verifications: {
+        Row: {
+          attempts: number | null
+          created_at: string | null
+          expires_at: string
+          id: string
+          phone_number: string
+          updated_at: string | null
+          verification_code: string
+          verified: boolean | null
+        }
+        Insert: {
+          attempts?: number | null
+          created_at?: string | null
+          expires_at?: string
+          id?: string
+          phone_number: string
+          updated_at?: string | null
+          verification_code: string
+          verified?: boolean | null
+        }
+        Update: {
+          attempts?: number | null
+          created_at?: string | null
+          expires_at?: string
+          id?: string
+          phone_number?: string
+          updated_at?: string | null
+          verification_code?: string
+          verified?: boolean | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -1334,6 +1491,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      rate_limits: {
+        Row: {
+          action_type: string
+          count: number | null
+          created_at: string | null
+          id: string
+          identifier: string
+          updated_at: string | null
+          window_start: string | null
+        }
+        Insert: {
+          action_type: string
+          count?: number | null
+          created_at?: string | null
+          id?: string
+          identifier: string
+          updated_at?: string | null
+          window_start?: string | null
+        }
+        Update: {
+          action_type?: string
+          count?: number | null
+          created_at?: string | null
+          id?: string
+          identifier?: string
+          updated_at?: string | null
+          window_start?: string | null
+        }
+        Relationships: []
       }
       subscription_plans: {
         Row: {
