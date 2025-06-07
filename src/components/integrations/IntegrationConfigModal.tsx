@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Integration } from "@/types/integrations";
+import { Integration } from "@/types/integrations/index";
 import { IntegrationRegistry } from "@/services/integrations/IntegrationRegistry";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";

@@ -1,5 +1,5 @@
 
-import { IntegrationProvider } from "@/types/integrations";
+import { IntegrationProvider } from "@/types/integrations/index";
 import { supabase } from "@/integrations/supabase/client";
 import { IntegrationService } from "../IntegrationService";
 

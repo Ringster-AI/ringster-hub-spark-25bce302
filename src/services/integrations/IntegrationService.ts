@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Integration, IntegrationLog, CampaignIntegration } from "@/types/integrations";
+import { Integration, IntegrationLog, CampaignIntegration } from "@/types/integrations/index";
 
 export class IntegrationService {
   static async getUserIntegrations(): Promise<Integration[]> {

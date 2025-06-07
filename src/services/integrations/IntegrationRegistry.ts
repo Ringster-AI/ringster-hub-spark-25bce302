@@ -1,5 +1,5 @@
 
-import { IntegrationType, IntegrationProvider } from "@/types/integrations";
+import { IntegrationType, IntegrationProvider } from "@/types/integrations/index";
 import { GoogleCalendarProvider } from "./providers/GoogleCalendarProvider";
 import { Calendar, Mail, Phone, Users, FileText, BarChart } from "lucide-react";
 

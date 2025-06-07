@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { CampaignIntegration } from "@/types/integrations";
+import { CampaignIntegration } from "@/types/integrations/index";
 import { IntegrationService } from "@/services/integrations/IntegrationService";
 import { IntegrationRegistry } from "@/services/integrations/IntegrationRegistry";
 import { useIntegrations } from "@/hooks/useIntegrations";

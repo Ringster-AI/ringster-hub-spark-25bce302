@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Integration } from "@/types/integrations";
+import { Integration } from "@/types/integrations/index";
 import { IntegrationRegistry } from "@/services/integrations/IntegrationRegistry";
 import { useIntegrations } from "@/hooks/useIntegrations";
 import { IntegrationCard } from "./IntegrationCard";

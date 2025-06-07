@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Integration } from "@/types/integrations";
+import { Integration } from "@/types/integrations/index";
 import { IntegrationService } from "@/services/integrations/IntegrationService";
 import { IntegrationRegistry } from "@/services/integrations/IntegrationRegistry";
 import { useToast } from "@/hooks/use-toast";
