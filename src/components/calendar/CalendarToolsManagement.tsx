@@ -11,21 +11,25 @@ import { Badge } from "@/components/ui/badge";
 import { Calendar, Clock, Phone, Settings } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { Json } from "@/types/database";
+
+interface CalendarToolConfiguration {
+  requirePhoneVerification: boolean;
+  allowedTimeSlots: string[];
+  bufferMinutes: number;
+  maxAdvanceBookingDays: number;
+  reminderSettings: {
+    enabled: boolean;
+    timings: string[];
+  };
+}
 
 interface CalendarTool {
   id: string;
   agent_id: string;
+  campaign_id?: string;
   tool_name: string;
-  configuration: {
-    requirePhoneVerification: boolean;
-    allowedTimeSlots: string[];
-    bufferMinutes: number;
-    maxAdvanceBookingDays: number;
-    reminderSettings: {
-      enabled: boolean;
-      timings: string[];
-    };
-  };
+  configuration: Json;
   is_enabled: boolean;
   created_at: string;
   updated_at: string;
@@ -47,6 +51,7 @@ export function CalendarToolsManagement({ agentId }: CalendarToolsManagementProp
         .from("calendar_tools")
         .select("*")
         .eq("agent_id", agentId)
+        .is("campaign_id", null)
         .single();
 
       if (error && error.code !== "PGRST116") {
@@ -122,8 +127,35 @@ export function CalendarToolsManagement({ agentId }: CalendarToolsManagementProp
     updateCalendarTool.mutate({ is_enabled: enabled });
   };
 
-  const handleConfigurationUpdate = (newConfig: any) => {
-    updateCalendarTool.mutate({ configuration: newConfig });
+  const handleConfigurationUpdate = (newConfig: CalendarToolConfiguration) => {
+    updateCalendarTool.mutate({ configuration: newConfig as Json });
+  };
+
+  const getConfiguration = (): CalendarToolConfiguration => {
+    if (!calendarTool?.configuration || typeof calendarTool.configuration !== 'object') {
+      return {
+        requirePhoneVerification: true,
+        allowedTimeSlots: ["09:00-17:00"],
+        bufferMinutes: 15,
+        maxAdvanceBookingDays: 30,
+        reminderSettings: {
+          enabled: true,
+          timings: ["24h", "2h"]
+        }
+      };
+    }
+
+    const config = calendarTool.configuration as Record<string, any>;
+    return {
+      requirePhoneVerification: config.requirePhoneVerification ?? true,
+      allowedTimeSlots: config.allowedTimeSlots ?? ["09:00-17:00"],
+      bufferMinutes: config.bufferMinutes ?? 15,
+      maxAdvanceBookingDays: config.maxAdvanceBookingDays ?? 30,
+      reminderSettings: {
+        enabled: config.reminderSettings?.enabled ?? true,
+        timings: config.reminderSettings?.timings ?? ["24h", "2h"]
+      }
+    };
   };
 
   if (isLoading) {
@@ -160,6 +192,8 @@ export function CalendarToolsManagement({ agentId }: CalendarToolsManagementProp
     );
   }
 
+  const configuration = getConfiguration();
+
   return (
     <div className="space-y-4">
       <Card>
@@ -185,19 +219,19 @@ export function CalendarToolsManagement({ agentId }: CalendarToolsManagementProp
               <div className="flex items-center gap-2">
                 <Phone className="h-4 w-4 text-primary" />
                 <span className="text-sm">
-                  {calendarTool.configuration.requirePhoneVerification ? "Phone verification required" : "No phone verification"}
+                  {configuration.requirePhoneVerification ? "Phone verification required" : "No phone verification"}
                 </span>
               </div>
               <div className="flex items-center gap-2">
                 <Clock className="h-4 w-4 text-primary" />
                 <span className="text-sm">
-                  {calendarTool.configuration.bufferMinutes} min buffer time
+                  {configuration.bufferMinutes} min buffer time
                 </span>
               </div>
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-primary" />
                 <span className="text-sm">
-                  {calendarTool.configuration.maxAdvanceBookingDays} days advance booking
+                  {configuration.maxAdvanceBookingDays} days advance booking
                 </span>
               </div>
             </div>
@@ -223,7 +257,7 @@ export function CalendarToolsManagement({ agentId }: CalendarToolsManagementProp
           </CardHeader>
           <CardContent>
             <CalendarToolConfigForm
-              configuration={calendarTool.configuration}
+              configuration={configuration}
               onSave={handleConfigurationUpdate}
               onCancel={() => setIsEditing(false)}
               isLoading={updateCalendarTool.isPending}
@@ -236,8 +270,8 @@ export function CalendarToolsManagement({ agentId }: CalendarToolsManagementProp
 }
 
 interface CalendarToolConfigFormProps {
-  configuration: CalendarTool['configuration'];
-  onSave: (config: CalendarTool['configuration']) => void;
+  configuration: CalendarToolConfiguration;
+  onSave: (config: CalendarToolConfiguration) => void;
   onCancel: () => void;
   isLoading: boolean;
 }

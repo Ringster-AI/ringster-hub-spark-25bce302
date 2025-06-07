@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { CalendarBooking } from "@/types/database/calendar-bookings";
 import { BookingSourceFilter } from "../calendar/BookingSourceFilter";
-import { Calendar, Clock, User, Mail, Phone, Campaign } from "lucide-react";
+import { Calendar, Clock, User, Mail, Phone, FolderOpen } from "lucide-react";
 
 interface CalendarBookingsProps {
   campaignId?: string;
@@ -173,7 +174,7 @@ export function CalendarBookings({ campaignId }: CalendarBookingsProps) {
                 )}
                 {booking.campaign && (
                   <div className="flex items-center gap-2 text-sm">
-                    <Campaign className="h-4 w-4" />
+                    <FolderOpen className="h-4 w-4" />
                     Campaign: {booking.campaign.name}
                   </div>
                 )}

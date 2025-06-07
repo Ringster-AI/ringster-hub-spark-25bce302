@@ -9,7 +9,7 @@ import { CalendarBookings } from "./CalendarBookings";
 import { CampaignCalendarToolsManagement } from "../calendar/CampaignCalendarToolsManagement";
 import { FollowUpSequences } from "./FollowUpSequences";
 import { ContactList } from "./ContactList";
-import { Campaign, Users, Calendar, GitBranch, Settings } from "lucide-react";
+import { FolderOpen, Users, Calendar, GitBranch, Settings } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 export function CampaignDetails() {
@@ -57,7 +57,7 @@ export function CampaignDetails() {
   return (
     <div className="space-y-6 p-4 md:p-6">
       <div className="flex items-center gap-4">
-        <Campaign className="h-8 w-8" />
+        <FolderOpen className="h-8 w-8" />
         <div>
           <h1 className="text-2xl md:text-3xl font-bold">{campaign.name}</h1>
           <div className="flex items-center gap-2 mt-1">

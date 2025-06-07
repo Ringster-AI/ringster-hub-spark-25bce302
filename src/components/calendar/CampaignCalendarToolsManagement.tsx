@@ -6,12 +6,19 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Settings, Campaign } from "lucide-react";
+import { Calendar, Settings, FolderOpen } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { Json } from "@/types/database";
 
 interface CampaignCalendarToolsManagementProps {
   campaignId: string;
+}
+
+interface CalendarToolConfiguration {
+  requirePhoneVerification: boolean;
+  bufferMinutes: number;
+  maxAdvanceBookingDays: number;
 }
 
 export function CampaignCalendarToolsManagement({ campaignId }: CampaignCalendarToolsManagementProps) {
@@ -155,6 +162,23 @@ export function CampaignCalendarToolsManagement({ campaignId }: CampaignCalendar
     },
   });
 
+  const getConfiguration = (config: Json): CalendarToolConfiguration => {
+    if (!config || typeof config !== 'object') {
+      return {
+        requirePhoneVerification: true,
+        bufferMinutes: 15,
+        maxAdvanceBookingDays: 30
+      };
+    }
+
+    const configObj = config as Record<string, any>;
+    return {
+      requirePhoneVerification: configObj.requirePhoneVerification ?? true,
+      bufferMinutes: configObj.bufferMinutes ?? 15,
+      maxAdvanceBookingDays: configObj.maxAdvanceBookingDays ?? 30
+    };
+  };
+
   if (isLoading) {
     return <div>Loading campaign calendar tools...</div>;
   }
@@ -164,7 +188,7 @@ export function CampaignCalendarToolsManagement({ campaignId }: CampaignCalendar
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Campaign className="h-5 w-5" />
+            <FolderOpen className="h-5 w-5" />
             Campaign Calendar Tools
           </CardTitle>
         </CardHeader>
@@ -201,72 +225,76 @@ export function CampaignCalendarToolsManagement({ campaignId }: CampaignCalendar
                 <p className="text-sm text-muted-foreground">Add an agent above to enable calendar booking</p>
               </div>
             ) : (
-              campaignCalendarTools?.map((tool) => (
-                <Card key={tool.id}>
-                  <CardHeader className="pb-3">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <CardTitle className="text-base flex items-center gap-2">
-                          <Calendar className="h-4 w-4" />
-                          {tool.agent?.name || 'Unknown Agent'}
-                          <Badge variant={tool.is_enabled ? "default" : "secondary"}>
-                            {tool.is_enabled ? "Enabled" : "Disabled"}
-                          </Badge>
-                        </CardTitle>
+              campaignCalendarTools?.map((tool) => {
+                const configuration = getConfiguration(tool.configuration);
+                
+                return (
+                  <Card key={tool.id}>
+                    <CardHeader className="pb-3">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <CardTitle className="text-base flex items-center gap-2">
+                            <Calendar className="h-4 w-4" />
+                            {tool.agent?.name || 'Unknown Agent'}
+                            <Badge variant={tool.is_enabled ? "default" : "secondary"}>
+                              {tool.is_enabled ? "Enabled" : "Disabled"}
+                            </Badge>
+                          </CardTitle>
+                        </div>
+                        <Switch
+                          checked={tool.is_enabled}
+                          onCheckedChange={(enabled) => 
+                            updateCalendarTool.mutate({ 
+                              toolId: tool.id, 
+                              updates: { is_enabled: enabled } 
+                            })
+                          }
+                          disabled={updateCalendarTool.isPending}
+                        />
                       </div>
-                      <Switch
-                        checked={tool.is_enabled}
-                        onCheckedChange={(enabled) => 
-                          updateCalendarTool.mutate({ 
-                            toolId: tool.id, 
-                            updates: { is_enabled: enabled } 
-                          })
-                        }
-                        disabled={updateCalendarTool.isPending}
-                      />
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      <div className="text-sm text-muted-foreground">
-                        <strong>Tool Name:</strong> {tool.tool_name}
-                      </div>
-                      
-                      <div className="text-sm text-muted-foreground">
-                        <strong>Configuration:</strong>
-                        <ul className="list-disc list-inside ml-2 mt-1">
-                          <li>Phone verification: {tool.configuration.requirePhoneVerification ? 'Required' : 'Optional'}</li>
-                          <li>Buffer time: {tool.configuration.bufferMinutes} minutes</li>
-                          <li>Max advance booking: {tool.configuration.maxAdvanceBookingDays} days</li>
-                        </ul>
-                      </div>
-
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => {
-                            // This would open a configuration modal
-                            console.log('Configure tool:', tool.id);
-                          }}
-                        >
-                          <Settings className="h-4 w-4 mr-1" />
-                          Configure
-                        </Button>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        <div className="text-sm text-muted-foreground">
+                          <strong>Tool Name:</strong> {tool.tool_name}
+                        </div>
                         
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => removeCalendarTool.mutate(tool.id)}
-                          disabled={removeCalendarTool.isPending}
-                        >
-                          Remove
-                        </Button>
+                        <div className="text-sm text-muted-foreground">
+                          <strong>Configuration:</strong>
+                          <ul className="list-disc list-inside ml-2 mt-1">
+                            <li>Phone verification: {configuration.requirePhoneVerification ? 'Required' : 'Optional'}</li>
+                            <li>Buffer time: {configuration.bufferMinutes} minutes</li>
+                            <li>Max advance booking: {configuration.maxAdvanceBookingDays} days</li>
+                          </ul>
+                        </div>
+
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              // This would open a configuration modal
+                              console.log('Configure tool:', tool.id);
+                            }}
+                          >
+                            <Settings className="h-4 w-4 mr-1" />
+                            Configure
+                          </Button>
+                          
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => removeCalendarTool.mutate(tool.id)}
+                            disabled={removeCalendarTool.isPending}
+                          >
+                            Remove
+                          </Button>
+                        </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
+                    </CardContent>
+                  </Card>
+                );
+              })
             )}
           </div>
         </CardContent>
