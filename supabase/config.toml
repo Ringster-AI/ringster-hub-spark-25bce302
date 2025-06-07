@@ -51,8 +51,19 @@ port = 54326
 [analytics]
 enabled = false
 
+[functions.connect-google]
+verify_jwt = false
+allow_public_network_access = true
+
+[functions.google-callback]
+verify_jwt = false
+allow_public_network_access = true
+
 [functions.vapi-calendar-tool]
 verify_jwt = false
 
 [functions.verify-phone]
 verify_jwt = false
+
+[shared_schema]
+migrations_dir = "migrations"

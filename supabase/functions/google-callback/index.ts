@@ -20,11 +20,12 @@ serve(async (req) => {
   
   // Handle CORS preflight request
   if (req.method === "OPTIONS") {
+    console.log(`[${requestId}] Handling OPTIONS request`);
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    // Validate environment variables
+    // Validate environment variables first
     if (!CLIENT_ID || !CLIENT_SECRET) {
       console.error(`[${requestId}] Missing Google OAuth credentials:`, { 
         hasClientId: !!CLIENT_ID, 
