@@ -8,6 +8,7 @@ import { ContactList } from "./ContactList";
 import { CalendarConfig } from "./CalendarConfig";
 import { CalendarBookings } from "./CalendarBookings";
 import { FollowUpSequences } from "./FollowUpSequences";
+import { CampaignIntegrations } from "@/components/integrations/CampaignIntegrations";
 import { useCampaignForm } from "./form/useCampaignForm";
 
 interface CampaignFormProps {
@@ -44,6 +45,10 @@ export function CampaignForm({ onSuccess, initialData }: CampaignFormProps) {
 
         {initialData && (
           <>
+            <div className="rounded-lg border p-4">
+              <CampaignIntegrations campaignId={initialData.id} />
+            </div>
+
             <div className="rounded-lg border p-4">
               <CalendarBookings campaignId={initialData.id} />
             </div>

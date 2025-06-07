@@ -679,6 +679,51 @@ export type Database = {
           },
         ]
       }
+      campaign_integrations: {
+        Row: {
+          campaign_id: string
+          configuration: Json
+          created_at: string
+          id: string
+          integration_id: string
+          is_enabled: boolean
+          updated_at: string
+        }
+        Insert: {
+          campaign_id: string
+          configuration?: Json
+          created_at?: string
+          id?: string
+          integration_id: string
+          is_enabled?: boolean
+          updated_at?: string
+        }
+        Update: {
+          campaign_id?: string
+          configuration?: Json
+          created_at?: string
+          id?: string
+          integration_id?: string
+          is_enabled?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_integrations_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_integrations_integration_id_fkey"
+            columns: ["integration_id"]
+            isOneToOne: false
+            referencedRelation: "integrations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       campaigns: {
         Row: {
           agent_id: string | null
@@ -1018,6 +1063,98 @@ export type Database = {
           id?: string
           refresh_token?: string
           scopes?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      integration_logs: {
+        Row: {
+          action: string
+          created_at: string
+          details: Json | null
+          id: string
+          integration_id: string
+          message: string | null
+          status: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          integration_id: string
+          message?: string | null
+          status: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          integration_id?: string
+          message?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "integration_logs_integration_id_fkey"
+            columns: ["integration_id"]
+            isOneToOne: false
+            referencedRelation: "integrations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      integrations: {
+        Row: {
+          capabilities: string[]
+          configuration: Json
+          created_at: string
+          credentials: Json
+          display_name: string
+          expires_at: string | null
+          id: string
+          integration_type: string
+          is_active: boolean
+          last_sync_at: string | null
+          metadata: Json
+          provider_name: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          capabilities?: string[]
+          configuration?: Json
+          created_at?: string
+          credentials?: Json
+          display_name: string
+          expires_at?: string | null
+          id?: string
+          integration_type: string
+          is_active?: boolean
+          last_sync_at?: string | null
+          metadata?: Json
+          provider_name: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          capabilities?: string[]
+          configuration?: Json
+          created_at?: string
+          credentials?: Json
+          display_name?: string
+          expires_at?: string | null
+          id?: string
+          integration_type?: string
+          is_active?: boolean
+          last_sync_at?: string | null
+          metadata?: Json
+          provider_name?: string
+          status?: string
           updated_at?: string
           user_id?: string
         }
@@ -1470,6 +1607,10 @@ export type Database = {
       is_admin: {
         Args: { user_id: string }
         Returns: boolean
+      }
+      migrate_google_integrations: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       process_campaign_contacts: {
         Args: Record<PropertyKey, never>

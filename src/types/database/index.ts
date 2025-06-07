@@ -9,6 +9,7 @@ import { CallLogsSchema } from './call-logs';
 import { UsageSummarySchema } from './usage-summary';
 import { CampaignsSchema } from './campaigns';
 import { CalendarBookingsSchema } from './calendar-bookings';
+import { IntegrationsSchema } from './integrations';
 
 export interface Database {
   public: ProfilesSchema['Tables'] & 
@@ -19,7 +20,8 @@ export interface Database {
           CallLogsSchema['Tables'] &
           UsageSummarySchema['Tables'] &
           CampaignsSchema['Tables'] &
-          CalendarBookingsSchema['Tables']
+          CalendarBookingsSchema['Tables'] &
+          IntegrationsSchema['Tables']
   auth: AuthSchema
 }
 
@@ -33,3 +35,4 @@ export * from './call-logs';
 export * from './usage-summary';
 export * from './campaigns';
 export * from './calendar-bookings';
+export * from './integrations';
