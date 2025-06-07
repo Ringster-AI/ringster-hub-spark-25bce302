@@ -10,7 +10,7 @@ import { CalendarBooking } from "@/types/database/calendar-bookings";
 import { Calendar, Clock, User, Mail, Phone } from "lucide-react";
 
 interface CalendarBookingsProps {
-  campaignId: string;
+  campaignId?: string;
 }
 
 export function CalendarBookings({ campaignId }: CalendarBookingsProps) {
@@ -20,16 +20,20 @@ export function CalendarBookings({ campaignId }: CalendarBookingsProps) {
   const { data: bookings, isLoading } = useQuery({
     queryKey: ["calendar-bookings", campaignId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("calendar_bookings")
         .select(`
           *,
           contact:campaign_contacts(*),
           call_log:call_logs(*)
         `)
-        .eq("campaign_id", campaignId)
         .order("appointment_datetime", { ascending: true });
 
+      if (campaignId) {
+        query = query.eq("campaign_id", campaignId);
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
       return data as (CalendarBooking & { contact: any; call_log: any })[];
     },

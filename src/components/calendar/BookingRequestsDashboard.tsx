@@ -138,7 +138,7 @@ export function BookingRequestsDashboard() {
                   </div>
                 ) : (
                   bookingRequests?.map((request) => (
-                    <BookingRequestCard key={request.id} request={request} />
+                    <BookingRequestCard key={request.id} request={request} getStatusBadge={getStatusBadge} />
                   ))
                 )}
               </div>
@@ -152,9 +152,10 @@ export function BookingRequestsDashboard() {
 
 interface BookingRequestCardProps {
   request: BookingRequest;
+  getStatusBadge: (status: string) => JSX.Element;
 }
 
-function BookingRequestCard({ request }: BookingRequestCardProps) {
+function BookingRequestCard({ request, getStatusBadge }: BookingRequestCardProps) {
   const isExpired = new Date(request.expires_at) < new Date();
 
   return (
@@ -165,11 +166,7 @@ function BookingRequestCard({ request }: BookingRequestCardProps) {
             <div className="flex items-center gap-2">
               <User className="h-4 w-4 text-primary" />
               <span className="font-medium">{request.attendee_name}</span>
-              {request.status === "pending_verification" && getStatusBadge(request.status)}
-              {request.status === "verified" && getStatusBadge(request.status)}
-              {request.status === "booked" && getStatusBadge(request.status)}
-              {request.status === "cancelled" && getStatusBadge(request.status)}
-              {request.status === "expired" && getStatusBadge(request.status)}
+              {getStatusBadge(request.status)}
             </div>
 
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
