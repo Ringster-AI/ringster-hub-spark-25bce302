@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,7 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { CalendarBooking } from "@/types/database/calendar-bookings";
-import { Calendar, Clock, User, Mail, Phone } from "lucide-react";
+import { BookingSourceFilter } from "../calendar/BookingSourceFilter";
+import { Calendar, Clock, User, Mail, Phone, Campaign } from "lucide-react";
 
 interface CalendarBookingsProps {
   campaignId?: string;
@@ -16,16 +16,18 @@ interface CalendarBookingsProps {
 export function CalendarBookings({ campaignId }: CalendarBookingsProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [sourceFilter, setSourceFilter] = useState<string>("all");
 
   const { data: bookings, isLoading } = useQuery({
-    queryKey: ["calendar-bookings", campaignId],
+    queryKey: ["calendar-bookings", campaignId, sourceFilter],
     queryFn: async () => {
       let query = supabase
         .from("calendar_bookings")
         .select(`
           *,
           contact:campaign_contacts(*),
-          call_log:call_logs(*)
+          call_log:call_logs(*),
+          campaign:campaigns(*)
         `)
         .order("appointment_datetime", { ascending: true });
 
@@ -33,9 +35,18 @@ export function CalendarBookings({ campaignId }: CalendarBookingsProps) {
         query = query.eq("campaign_id", campaignId);
       }
 
+      if (sourceFilter !== "all") {
+        query = query.eq("booking_source", sourceFilter);
+      }
+
       const { data, error } = await query;
       if (error) throw error;
-      return data as (CalendarBooking & { contact: any; call_log: any })[];
+      return data as (CalendarBooking & { 
+        contact: any; 
+        call_log: any; 
+        campaign: any;
+        booking_source?: string;
+      })[];
     },
   });
 
@@ -49,7 +60,7 @@ export function CalendarBookings({ campaignId }: CalendarBookingsProps) {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["calendar-bookings", campaignId] });
+      queryClient.invalidateQueries({ queryKey: ["calendar-bookings", campaignId, sourceFilter] });
       toast({
         title: "Booking updated",
         description: "Booking status has been updated successfully.",
@@ -74,6 +85,17 @@ export function CalendarBookings({ campaignId }: CalendarBookingsProps) {
     }
   };
 
+  const getSourceBadge = (source?: string) => {
+    switch (source) {
+      case 'inbound':
+        return <Badge variant="outline">Inbound</Badge>;
+      case 'outbound_campaign':
+        return <Badge variant="default">Campaign</Badge>;
+      default:
+        return null;
+    }
+  };
+
   if (isLoading) {
     return <div>Loading calendar bookings...</div>;
   }
@@ -94,7 +116,16 @@ export function CalendarBookings({ campaignId }: CalendarBookingsProps) {
 
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-semibold">Calendar Bookings</h3>
+      <div className="flex justify-between items-center">
+        <h3 className="text-lg font-semibold">Calendar Bookings</h3>
+        {!campaignId && (
+          <BookingSourceFilter 
+            selectedSource={sourceFilter} 
+            onSourceChange={setSourceFilter} 
+          />
+        )}
+      </div>
+      
       <div className="grid gap-4">
         {bookings.map((booking) => (
           <Card key={booking.id}>
@@ -103,9 +134,12 @@ export function CalendarBookings({ campaignId }: CalendarBookingsProps) {
                 <CardTitle className="text-base">
                   {booking.attendee_name || `${booking.contact?.first_name} ${booking.contact?.last_name}`}
                 </CardTitle>
-                <Badge variant={getStatusColor(booking.booking_status) as any}>
-                  {booking.booking_status}
-                </Badge>
+                <div className="flex gap-2">
+                  <Badge variant={getStatusColor(booking.booking_status) as any}>
+                    {booking.booking_status}
+                  </Badge>
+                  {getSourceBadge(booking.booking_source)}
+                </div>
               </div>
             </CardHeader>
             <CardContent>
@@ -135,6 +169,12 @@ export function CalendarBookings({ campaignId }: CalendarBookingsProps) {
                   <div className="flex items-center gap-2 text-sm">
                     <User className="h-4 w-4" />
                     {booking.appointment_type}
+                  </div>
+                )}
+                {booking.campaign && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <Campaign className="h-4 w-4" />
+                    Campaign: {booking.campaign.name}
                   </div>
                 )}
                 {booking.notes && (

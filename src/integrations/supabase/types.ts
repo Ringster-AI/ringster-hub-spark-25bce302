@@ -486,6 +486,7 @@ export type Database = {
           appointment_type: string | null
           attendee_email: string | null
           attendee_name: string | null
+          booking_source: string | null
           booking_status: string
           call_log_id: string | null
           campaign_id: string | null
@@ -503,6 +504,7 @@ export type Database = {
           appointment_type?: string | null
           attendee_email?: string | null
           attendee_name?: string | null
+          booking_source?: string | null
           booking_status?: string
           call_log_id?: string | null
           campaign_id?: string | null
@@ -520,6 +522,7 @@ export type Database = {
           appointment_type?: string | null
           attendee_email?: string | null
           attendee_name?: string | null
+          booking_source?: string | null
           booking_status?: string
           call_log_id?: string | null
           campaign_id?: string | null
@@ -566,6 +569,7 @@ export type Database = {
       calendar_tools: {
         Row: {
           agent_id: string
+          campaign_id: string | null
           configuration: Json | null
           created_at: string | null
           id: string
@@ -575,6 +579,7 @@ export type Database = {
         }
         Insert: {
           agent_id: string
+          campaign_id?: string | null
           configuration?: Json | null
           created_at?: string | null
           id?: string
@@ -584,6 +589,7 @@ export type Database = {
         }
         Update: {
           agent_id?: string
+          campaign_id?: string | null
           configuration?: Json | null
           created_at?: string | null
           id?: string
@@ -597,6 +603,13 @@ export type Database = {
             columns: ["agent_id"]
             isOneToOne: false
             referencedRelation: "agent_configs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "calendar_tools_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
             referencedColumns: ["id"]
           },
         ]
