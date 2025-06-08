@@ -89,14 +89,14 @@ export class VapiAssistantUpdateService {
     const config = typeof agent.config === 'object' ? agent.config : JSON.parse(agent.config || '{}');
     const rawVapiAssistantId = config.vapi_assistant_id;
 
-    // Convert to string and validate
-    if (!rawVapiAssistantId) {
-      console.log("No VAPI assistant ID found for agent, skipping sync");
+    // Validate and convert to string
+    if (!rawVapiAssistantId || rawVapiAssistantId === true) {
+      console.log("No valid VAPI assistant ID found for agent, skipping sync");
       return;
     }
 
-    // Ensure we have a string for the assistant ID with explicit typing
-    const assistantId: string = String(rawVapiAssistantId);
+    // Convert to string - now TypeScript knows it's either string or number
+    const assistantId = String(rawVapiAssistantId);
 
     // Update VAPI assistant
     try {
