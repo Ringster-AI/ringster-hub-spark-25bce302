@@ -57,7 +57,7 @@ export class VapiAssistantUpdateService {
     if (agentData.voice_id) {
       updateData.voice = {
         provider: "11labs",
-        voiceId: String(agentData.voice_id), // Convert to string to avoid TypeScript error
+        voiceId: String(agentData.voice_id),
       };
     }
 
@@ -96,12 +96,12 @@ export class VapiAssistantUpdateService {
     }
 
     // Ensure we have a string for the assistant ID
-    const vapiAssistantId: string = String(rawVapiAssistantId);
+    const assistantId = String(rawVapiAssistantId);
 
     // Update VAPI assistant
     try {
-      await this.updateAssistant(vapiAssistantId, agent);
-      console.log(`Successfully synced agent ${agentId} with VAPI assistant ${vapiAssistantId}`);
+      await this.updateAssistant(assistantId, agent);
+      console.log(`Successfully synced agent ${agentId} with VAPI assistant ${assistantId}`);
     } catch (error) {
       console.error(`Failed to sync agent ${agentId} with VAPI:`, error);
       throw error;
