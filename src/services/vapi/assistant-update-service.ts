@@ -57,7 +57,7 @@ export class VapiAssistantUpdateService {
     if (agentData.voice_id) {
       updateData.voice = {
         provider: "11labs",
-        voiceId: agentData.voice_id,
+        voiceId: String(agentData.voice_id), // Convert to string to avoid TypeScript error
       };
     }
 
