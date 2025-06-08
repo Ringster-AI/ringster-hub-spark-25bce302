@@ -10,7 +10,7 @@ export const generateToolInstructions = (agentData: any) => {
   
   // Calendar booking tool instructions
   if (agentData.calendar_booking?.enabled || agentData.config?.calendar_booking?.enabled) {
-    instructions.push('Use the calendar booking tool to schedule appointments when customers request to book a meeting or consultation.');
+    instructions.push('Use the google_calendar tool to schedule appointments when customers request to book a meeting or consultation.');
   }
   
   return instructions;
@@ -37,6 +37,6 @@ const removeExistingToolInstructions = (description: string) => {
   // Remove common tool instruction patterns
   return description
     .replace(/\s*Use the transferCall tool to transfer calls to the respective departments[^.]*\./gi, '')
-    .replace(/\s*Use the calendar booking tool to schedule appointments[^.]*\./gi, '')
+    .replace(/\s*Use the (calendar booking tool|google_calendar tool) to schedule appointments[^.]*\./gi, '')
     .trim();
 };
