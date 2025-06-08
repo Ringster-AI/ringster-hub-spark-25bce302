@@ -17,6 +17,7 @@ export interface AgentFormData {
     business_hours_end?: string;
     booking_lead_time_hours?: number;
     require_phone_verification?: boolean;
+    allowed_days?: number[];
   };
   advanced_config?: {
     voice: {
@@ -41,6 +42,16 @@ export interface AgentFormData {
         userName?: string;
       };
       recordingPath?: string;
+    };
+    calendar_booking?: {
+      enabled: boolean;
+      default_duration?: number;
+      buffer_time?: number;
+      business_hours_start?: string;
+      business_hours_end?: string;
+      booking_lead_time_hours?: number;
+      require_phone_verification?: boolean;
+      allowed_days?: number[];
     };
   };
 }

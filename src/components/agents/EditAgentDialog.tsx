@@ -19,7 +19,41 @@ interface EditAgentDialogProps {
 export const EditAgentDialog = ({ agent, open, onOpenChange }: EditAgentDialogProps) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { canCustomizeVoice } = useSubscriptionFeatures();
+  const { features } = useSubscriptionFeatures();
+
+  // Safely parse JSON fields with proper type casting
+  const parseTransferDirectory = (data: any) => {
+    if (!data) return {};
+    if (typeof data === 'object') return data;
+    try {
+      return JSON.parse(data);
+    } catch {
+      return {};
+    }
+  };
+
+  const parseAdvancedConfig = (data: any) => {
+    if (!data) return undefined;
+    if (typeof data === 'object') return data;
+    try {
+      return JSON.parse(data);
+    } catch {
+      return undefined;
+    }
+  };
+
+  const parseConfig = (data: any) => {
+    if (!data) return {};
+    if (typeof data === 'object') return data;
+    try {
+      return JSON.parse(data);
+    } catch {
+      return {};
+    }
+  };
+
+  const parsedConfig = parseConfig(agent.config);
+  const parsedAdvancedConfig = parseAdvancedConfig(agent.advanced_config);
 
   const form = useForm<AgentFormData>({
     defaultValues: {
@@ -29,12 +63,12 @@ export const EditAgentDialog = ({ agent, open, onOpenChange }: EditAgentDialogPr
       goodbye: agent.goodbye || "",
       voice_id: agent.voice_id || "",
       phone_number: agent.phone_number || "",
-      transfer_directory: agent.transfer_directory || {},
-      hipaa_enabled: agent.hipaa_enabled || false,
+      transfer_directory: parseTransferDirectory(agent.transfer_directory),
+      hipaa_enabled: false, // Default value since this field doesn't exist on AgentConfig
       agent_type: agent.agent_type || 'inbound',
-      advanced_config: agent.advanced_config,
-      config: agent.config,
-      calendar_booking: agent.config?.calendar_booking || {
+      advanced_config: parsedAdvancedConfig,
+      config: parsedConfig,
+      calendar_booking: parsedConfig?.calendar_booking || {
         enabled: false,
         default_duration: 30,
         buffer_time: 10,
@@ -53,7 +87,7 @@ export const EditAgentDialog = ({ agent, open, onOpenChange }: EditAgentDialogPr
         throw new Error("Not authenticated");
       }
 
-      // Update agent config
+      // Prepare update data with proper JSON conversion
       const updateData = {
         name: formData.name,
         description: formData.description,
@@ -61,14 +95,13 @@ export const EditAgentDialog = ({ agent, open, onOpenChange }: EditAgentDialogPr
         goodbye: formData.goodbye,
         voice_id: formData.voice_id,
         phone_number: formData.phone_number,
-        transfer_directory: formData.transfer_directory || {},
-        hipaa_enabled: formData.hipaa_enabled || false,
+        transfer_directory: formData.transfer_directory as any,
         agent_type: formData.agent_type || 'inbound',
-        advanced_config: formData.advanced_config,
+        advanced_config: formData.advanced_config as any,
         config: {
           ...formData.config,
           calendar_booking: formData.calendar_booking
-        },
+        } as any,
         updated_at: new Date().toISOString()
       };
 
@@ -137,7 +170,7 @@ export const EditAgentDialog = ({ agent, open, onOpenChange }: EditAgentDialogPr
     },
   });
 
-  const handleSubmit = (data: AgentFormData) => {
+  const handleSubmit = async (data: AgentFormData) => {
     updateMutation.mutate(data);
   };
 
@@ -155,7 +188,7 @@ export const EditAgentDialog = ({ agent, open, onOpenChange }: EditAgentDialogPr
           form={form}
           onSubmit={handleSubmit}
           onCancel={handleCancel}
-          canCustomizeVoice={canCustomizeVoice}
+          canCustomizeVoice={() => features.canCustomizeVoices}
           disabled={updateMutation.isPending}
         />
       </DialogContent>

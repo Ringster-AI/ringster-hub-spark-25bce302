@@ -67,20 +67,48 @@ export function AgentCalendarToolsManagement({ agentId }: AgentCalendarToolsMana
 
   // Update form when data is loaded
   useEffect(() => {
-    if (agent?.config?.calendar_booking) {
-      form.reset({
-        calendar_booking: agent.config.calendar_booking
-      });
+    if (agent?.config) {
+      // Safely parse the config JSON
+      const parseConfig = (configData: any) => {
+        if (!configData) return {};
+        if (typeof configData === 'object') return configData;
+        try {
+          return JSON.parse(configData);
+        } catch {
+          return {};
+        }
+      };
+
+      const parsedConfig = parseConfig(agent.config);
+      
+      if (parsedConfig?.calendar_booking) {
+        form.reset({
+          calendar_booking: parsedConfig.calendar_booking
+        });
+      }
     } else if (calendarTool?.configuration) {
+      // Safely parse the configuration
+      const parseConfiguration = (configData: any) => {
+        if (!configData) return {};
+        if (typeof configData === 'object') return configData;
+        try {
+          return JSON.parse(configData);
+        } catch {
+          return {};
+        }
+      };
+
+      const parsedConfiguration = parseConfiguration(calendarTool.configuration);
+      
       form.reset({
         calendar_booking: {
           enabled: calendarTool.is_enabled,
-          default_duration: calendarTool.configuration.default_duration || 30,
-          buffer_time: calendarTool.configuration.buffer_time || 10,
-          business_hours_start: calendarTool.configuration.business_hours_start || "09:00",
-          business_hours_end: calendarTool.configuration.business_hours_end || "17:00",
-          booking_lead_time_hours: calendarTool.configuration.booking_lead_time_hours || 2,
-          require_phone_verification: calendarTool.configuration.require_phone_verification ?? true
+          default_duration: parsedConfiguration.default_duration || 30,
+          buffer_time: parsedConfiguration.buffer_time || 10,
+          business_hours_start: parsedConfiguration.business_hours_start || "09:00",
+          business_hours_end: parsedConfiguration.business_hours_end || "17:00",
+          booking_lead_time_hours: parsedConfiguration.booking_lead_time_hours || 2,
+          require_phone_verification: parsedConfiguration.require_phone_verification ?? true
         }
       });
     }
@@ -122,16 +150,19 @@ export function AgentCalendarToolsManagement({ agentId }: AgentCalendarToolsMana
       }
 
       // Also update agent config
+      const currentConfig = agent?.config ? 
+        (typeof agent.config === 'object' ? agent.config : JSON.parse(agent.config as string)) : {};
+      
       const { error: agentError } = await supabase
         .from("agent_configs")
         .update({
           config: {
-            ...agent?.config,
+            ...currentConfig,
             calendar_booking: {
               ...form.getValues("calendar_booking"),
               enabled
             }
-          }
+          } as any
         })
         .eq("id", agentId);
 
@@ -176,13 +207,16 @@ export function AgentCalendarToolsManagement({ agentId }: AgentCalendarToolsMana
       if (toolError) throw toolError;
 
       // Also update agent config
+      const currentConfig = agent?.config ? 
+        (typeof agent.config === 'object' ? agent.config : JSON.parse(agent.config as string)) : {};
+      
       const { error: agentError } = await supabase
         .from("agent_configs")
         .update({
           config: {
-            ...agent?.config,
+            ...currentConfig,
             calendar_booking: data.calendar_booking
-          }
+          } as any
         })
         .eq("id", agentId);
 

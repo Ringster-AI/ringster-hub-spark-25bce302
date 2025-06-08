@@ -15,7 +15,7 @@ export const useCreateAgent = () => {
         throw new Error("Not authenticated");
       }
 
-      // Prepare the agent config data
+      // Prepare the agent config data with proper type casting
       const agentConfig = {
         name: formData.name,
         description: formData.description,
@@ -23,14 +23,13 @@ export const useCreateAgent = () => {
         goodbye: formData.goodbye,
         voice_id: formData.voice_id,
         phone_number: formData.phone_number,
-        transfer_directory: formData.transfer_directory || {},
-        hipaa_enabled: formData.hipaa_enabled || false,
+        transfer_directory: formData.transfer_directory as any, // Cast to Json
         agent_type: formData.agent_type || 'inbound',
-        advanced_config: formData.advanced_config,
+        advanced_config: formData.advanced_config as any, // Cast to Json
         config: {
           ...formData.config,
           calendar_booking: formData.calendar_booking
-        },
+        } as any, // Cast to Json
         user_id: session.user.id,
         status: 'inactive'
       };
@@ -60,7 +59,7 @@ export const useCreateAgent = () => {
             business_hours_end: formData.calendar_booking.business_hours_end || '17:00',
             booking_lead_time_hours: formData.calendar_booking.booking_lead_time_hours || 2,
             require_phone_verification: formData.calendar_booking.require_phone_verification ?? true,
-            allowed_days: formData.calendar_booking.booking_lead_time_hours || [1, 2, 3, 4, 5]
+            allowed_days: formData.calendar_booking.allowed_days || [1, 2, 3, 4, 5]
           }
         };
 
