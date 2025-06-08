@@ -95,8 +95,8 @@ export class VapiAssistantUpdateService {
       return;
     }
 
-    // Ensure we have a string for the assistant ID
-    const assistantId = String(rawVapiAssistantId);
+    // Ensure we have a string for the assistant ID with explicit typing
+    const assistantId: string = String(rawVapiAssistantId);
 
     // Update VAPI assistant
     try {
