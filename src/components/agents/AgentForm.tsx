@@ -11,6 +11,7 @@ import { VoiceSelection } from "./VoiceSelection";
 import { TransferDirectory } from "./TransferDirectory";
 import { FormActions } from "./FormActions";
 import { AdvancedAgentConfig } from "./AdvancedAgentConfig";
+import { CalendarBookingConfig } from "./CalendarBookingConfig";
 import { AgentFormData } from "@/types/agents";
 import { useSubscriptionFeatures } from "@/hooks/useSubscriptionFeatures";
 
@@ -53,6 +54,8 @@ export const AgentForm = ({ form, onSubmit, onCancel, canCustomizeVoice, disable
 
         <BasicAgentInfo form={form} disabled={disabled} />
         <AgentMessages form={form} disabled={disabled} />
+        
+        <CalendarBookingConfig form={form} disabled={disabled} />
         
         {features.isPaid && (
           <div className="flex items-center justify-between rounded-lg border p-4">
