@@ -59,6 +59,10 @@ allow_public_network_access = true
 verify_jwt = false
 allow_public_network_access = true
 
+[functions.get-usage-data]
+verify_jwt = false
+allow_public_network_access = true
+
 [functions.vapi-calendar-tool]
 verify_jwt = false
 
