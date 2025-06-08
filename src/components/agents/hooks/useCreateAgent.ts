@@ -1,67 +1,44 @@
 
-import { useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { AgentFormData } from "@/types/agents";
-import { Json } from "@/types/database/auth";
 
-export const useCreateAgent = (onSuccess: () => void) => {
-  const [isLoading, setIsLoading] = useState(false);
+export const useCreateAgent = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const createAgent = async (data: AgentFormData, maxAgents: number, currentCount: number) => {
-    if (isLoading) {
-      console.log('Creation already in progress, skipping');
-      return;
-    }
-
-    try {
-      setIsLoading(true);
-      console.log('Starting agent creation process');
-
-      if (currentCount >= maxAgents) {
-        toast({
-          title: "Agent limit reached",
-          description: "Please upgrade your plan to create more agents.",
-          variant: "destructive",
-        });
-        return;
-      }
-
+  return useMutation({
+    mutationFn: async (formData: AgentFormData) => {
       const { data: { session } } = await supabase.auth.getSession();
-      
       if (!session) {
-        toast({
-          title: "Authentication required",
-          description: "Please log in to create an agent.",
-          variant: "destructive",
-        });
         throw new Error("Not authenticated");
       }
 
-      console.log("Creating new agent in database...");
-      const insertData = {
-        name: data.name,
-        description: data.description,
-        greeting: data.greeting,
-        goodbye: data.goodbye,
-        status: "draft",
+      // Prepare the agent config data
+      const agentConfig = {
+        name: formData.name,
+        description: formData.description,
+        greeting: formData.greeting,
+        goodbye: formData.goodbye,
+        voice_id: formData.voice_id,
+        phone_number: formData.phone_number,
+        transfer_directory: formData.transfer_directory || {},
+        hipaa_enabled: formData.hipaa_enabled || false,
+        agent_type: formData.agent_type || 'inbound',
+        advanced_config: formData.advanced_config,
         config: {
-          voice_id: data.voice_id,
-          vapi_assistant_id: null,
-          transfer_tool_id: null
-        } as Json,
-        transfer_directory: data.transfer_directory as unknown as Json,
+          ...formData.config,
+          calendar_booking: formData.calendar_booking
+        },
         user_id: session.user.id,
-        advanced_config: data.advanced_config as unknown as Json,
-        agent_type: data.agent_type || 'inbound' as const
+        status: 'inactive'
       };
 
-      const { data: newAgent, error } = await supabase
+      // Create the agent in the database
+      const { data: agent, error } = await supabase
         .from("agent_configs")
-        .insert(insertData)
+        .insert(agentConfig)
         .select()
         .single();
 
@@ -69,54 +46,50 @@ export const useCreateAgent = (onSuccess: () => void) => {
         console.error("Error creating agent:", error);
         throw error;
       }
-      
-      console.log("Agent created successfully:", newAgent);
 
-      // Request Twilio number assignment for both inbound and outbound agents
-      console.log("Requesting Twilio number assignment...");
-      const response = await fetch('/.netlify/functions/manage-twilio-number', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          agentId: newAgent.id,
-          agentType: data.agent_type || 'inbound'
-        })
-      });
+      // If calendar booking is enabled, create calendar tools entry
+      if (formData.calendar_booking?.enabled) {
+        const calendarToolConfig = {
+          agent_id: agent.id,
+          tool_name: 'calendar_booking',
+          is_enabled: true,
+          configuration: {
+            default_duration: formData.calendar_booking.default_duration || 30,
+            buffer_time: formData.calendar_booking.buffer_time || 10,
+            business_hours_start: formData.calendar_booking.business_hours_start || '09:00',
+            business_hours_end: formData.calendar_booking.business_hours_end || '17:00',
+            booking_lead_time_hours: formData.calendar_booking.booking_lead_time_hours || 2,
+            require_phone_verification: formData.calendar_booking.require_phone_verification ?? true,
+            allowed_days: formData.calendar_booking.booking_lead_time_hours || [1, 2, 3, 4, 5]
+          }
+        };
 
-      if (!response.ok) {
-        const errorData = await response.text();
-        console.error('Failed to assign phone number. Response:', errorData);
-        throw new Error(`Failed to assign phone number: ${errorData}`);
+        const { error: toolError } = await supabase
+          .from("calendar_tools")
+          .insert(calendarToolConfig);
+
+        if (toolError) {
+          console.error("Error creating calendar tool:", toolError);
+          // Don't throw here as the agent was created successfully
+        }
       }
 
-      const responseData = await response.json();
-      console.log("Twilio number assignment response:", responseData);
-
+      return agent;
+    },
+    onSuccess: () => {
       toast({
-        title: "Agent created",
-        description: "Your new AI agent has been created successfully.",
+        title: "Agent created successfully",
+        description: "Your AI agent has been created and is ready to configure.",
       });
-
       queryClient.invalidateQueries({ queryKey: ["agents"] });
-      queryClient.invalidateQueries({ queryKey: ["agents-count"] });
-      onSuccess();
-    } catch (error: any) {
-      console.error("Error in createAgent:", error);
+    },
+    onError: (error: any) => {
+      console.error("Error creating agent:", error);
       toast({
-        title: "Error creating agent",
-        description: error.message,
+        title: "Failed to create agent",
+        description: error.message || "An error occurred while creating the agent.",
         variant: "destructive",
       });
-
-      if (error.message.includes('Failed to assign phone number')) {
-        console.log('Cleaning up failed agent...');
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  return { createAgent, isLoading };
+    },
+  });
 };

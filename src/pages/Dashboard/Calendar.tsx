@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CalendarToolsManagement } from "@/components/calendar/CalendarToolsManagement";
 import { BookingRequestsDashboard } from "@/components/calendar/BookingRequestsDashboard";
 import { CalendarBookings } from "@/components/campaigns/CalendarBookings";
+import { AgentCalendarToolsManagement } from "@/components/calendar/AgentCalendarToolsManagement";
 import { Calendar as CalendarIcon, Settings, Clock, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -23,6 +24,39 @@ export default function Calendar() {
 
       if (error) throw error;
       return data;
+    },
+  });
+
+  const { data: calendarBookingsCount } = useQuery({
+    queryKey: ["calendar-bookings-count"],
+    queryFn: async () => {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+
+      const { count, error } = await supabase
+        .from("calendar_bookings")
+        .select("*", { count: 'exact', head: true })
+        .gte("appointment_datetime", today.toISOString())
+        .lt("appointment_datetime", tomorrow.toISOString())
+        .eq("booking_status", "confirmed");
+
+      if (error) throw error;
+      return count || 0;
+    },
+  });
+
+  const { data: pendingRequestsCount } = useQuery({
+    queryKey: ["booking-requests-count"],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("booking_requests")
+        .select("*", { count: 'exact', head: true })
+        .eq("status", "pending_verification");
+
+      if (error) throw error;
+      return count || 0;
     },
   });
 
@@ -76,7 +110,7 @@ export default function Calendar() {
                 <Clock className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">0</div>
+                <div className="text-2xl font-bold">{pendingRequestsCount || 0}</div>
                 <p className="text-xs text-muted-foreground">
                   Awaiting verification
                 </p>
@@ -91,7 +125,7 @@ export default function Calendar() {
                 <CalendarIcon className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">0</div>
+                <div className="text-2xl font-bold">{calendarBookingsCount || 0}</div>
                 <p className="text-xs text-muted-foreground">
                   Confirmed appointments
                 </p>
@@ -106,7 +140,11 @@ export default function Calendar() {
                 <Users className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">0%</div>
+                <div className="text-2xl font-bold">
+                  {pendingRequestsCount && calendarBookingsCount 
+                    ? Math.round((calendarBookingsCount / (pendingRequestsCount + calendarBookingsCount)) * 100)
+                    : 0}%
+                </div>
                 <p className="text-xs text-muted-foreground">
                   Verification to booking
                 </p>
@@ -179,7 +217,7 @@ export default function Calendar() {
           </Card>
 
           {agents?.map((agent) => (
-            <CalendarToolsManagement key={agent.id} agentId={agent.id} />
+            <AgentCalendarToolsManagement key={agent.id} agentId={agent.id} />
           ))}
 
           {(!agents || agents.length === 0) && (

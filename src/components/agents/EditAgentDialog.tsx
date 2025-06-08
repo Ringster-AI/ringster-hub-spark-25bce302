@@ -1,106 +1,162 @@
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { useSubscriptionFeatures } from "@/hooks/useSubscriptionFeatures";
-import { DialogHeader } from "./DialogHeader";
-import { AgentForm } from "./AgentForm";
-import { useToast } from "@/hooks/use-toast";
-import { AgentFormData } from "@/types/agents";
-import { supabase } from "@/integrations/supabase/client";
+
+import React from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AgentConfig } from "@/types/database/agents";
-import { Json } from "@/types/database/auth";
+import { AgentForm } from "./AgentForm";
+import { useForm } from "react-hook-form";
+import { AgentFormData } from "@/types/agents";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { useSubscriptionFeatures } from "@/hooks/useSubscriptionFeatures";
 
 interface EditAgentDialogProps {
   agent: AgentConfig;
-  onUpdate: () => void;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-export const EditAgentDialog = ({ agent, onUpdate, open, onOpenChange }: EditAgentDialogProps) => {
-  const [isLoading, setIsLoading] = useState(false);
-  const { features } = useSubscriptionFeatures();
+export const EditAgentDialog = ({ agent, open, onOpenChange }: EditAgentDialogProps) => {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const { canCustomizeVoice } = useSubscriptionFeatures();
 
   const form = useForm<AgentFormData>({
     defaultValues: {
-      name: agent.name,
+      name: agent.name || "",
       description: agent.description || "",
       greeting: agent.greeting || "",
       goodbye: agent.goodbye || "",
-      voice_id: ((agent.config as any)?.voice_id as string) || "9BWtsMINqrJLrRacOk9x",
-      transfer_directory: (agent.transfer_directory as Record<string, { keywords: string[]; number: string; transfer_message: string }>) || {},
+      voice_id: agent.voice_id || "",
+      phone_number: agent.phone_number || "",
+      transfer_directory: agent.transfer_directory || {},
+      hipaa_enabled: agent.hipaa_enabled || false,
+      agent_type: agent.agent_type || 'inbound',
+      advanced_config: agent.advanced_config,
+      config: agent.config,
+      calendar_booking: agent.config?.calendar_booking || {
+        enabled: false,
+        default_duration: 30,
+        buffer_time: 10,
+        business_hours_start: "09:00",
+        business_hours_end: "17:00",
+        booking_lead_time_hours: 2,
+        require_phone_verification: true
+      }
     },
   });
 
-  const onSubmit = async (data: AgentFormData) => {
-    if (isLoading) return;
-    setIsLoading(true);
-
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        throw new Error("User not authenticated");
+  const updateMutation = useMutation({
+    mutationFn: async (formData: AgentFormData) => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error("Not authenticated");
       }
 
-      // Preserve existing config values while updating voice_id
-      const existingConfig = (agent.config || {}) as Record<string, unknown>;
-      const updatedConfig = {
-        ...existingConfig,
-        voice_id: data.voice_id,
+      // Update agent config
+      const updateData = {
+        name: formData.name,
+        description: formData.description,
+        greeting: formData.greeting,
+        goodbye: formData.goodbye,
+        voice_id: formData.voice_id,
+        phone_number: formData.phone_number,
+        transfer_directory: formData.transfer_directory || {},
+        hipaa_enabled: formData.hipaa_enabled || false,
+        agent_type: formData.agent_type || 'inbound',
+        advanced_config: formData.advanced_config,
+        config: {
+          ...formData.config,
+          calendar_booking: formData.calendar_booking
+        },
+        updated_at: new Date().toISOString()
       };
 
-      const { error } = await supabase
-        .from('agent_configs')
-        .update({
-          name: data.name,
-          description: data.description,
-          greeting: data.greeting,
-          goodbye: data.goodbye,
-          config: updatedConfig as Json,
-          transfer_directory: data.transfer_directory as unknown as Json,
-        })
-        .eq('id', agent.id);
+      const { data: updatedAgent, error } = await supabase
+        .from("agent_configs")
+        .update(updateData)
+        .eq("id", agent.id)
+        .eq("user_id", session.user.id)
+        .select()
+        .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error updating agent:", error);
+        throw error;
+      }
 
+      // Handle calendar booking tools
+      if (formData.calendar_booking?.enabled) {
+        const calendarToolConfig = {
+          agent_id: agent.id,
+          tool_name: 'calendar_booking',
+          is_enabled: true,
+          configuration: {
+            default_duration: formData.calendar_booking.default_duration || 30,
+            buffer_time: formData.calendar_booking.buffer_time || 10,
+            business_hours_start: formData.calendar_booking.business_hours_start || '09:00',
+            business_hours_end: formData.calendar_booking.business_hours_end || '17:00',
+            booking_lead_time_hours: formData.calendar_booking.booking_lead_time_hours || 2,
+            require_phone_verification: formData.calendar_booking.require_phone_verification ?? true
+          }
+        };
+
+        const { error: toolError } = await supabase
+          .from("calendar_tools")
+          .upsert(calendarToolConfig, { onConflict: "agent_id,tool_name" });
+
+        if (toolError) {
+          console.error("Error updating calendar tool:", toolError);
+        }
+      } else {
+        // Disable calendar tool if it exists
+        await supabase
+          .from("calendar_tools")
+          .update({ is_enabled: false })
+          .eq("agent_id", agent.id)
+          .eq("tool_name", "calendar_booking");
+      }
+
+      return updatedAgent;
+    },
+    onSuccess: () => {
       toast({
-        title: "Agent updated",
-        description: "Your AI agent has been updated successfully.",
+        title: "Agent updated successfully",
+        description: "Your AI agent has been updated with the new settings.",
       });
-
-      onUpdate();
+      queryClient.invalidateQueries({ queryKey: ["agents"] });
       onOpenChange(false);
-    } catch (error: any) {
+    },
+    onError: (error: any) => {
       console.error("Error updating agent:", error);
       toast({
-        title: "Error updating agent",
-        description: error.message,
+        title: "Failed to update agent",
+        description: error.message || "An error occurred while updating the agent.",
         variant: "destructive",
       });
-    } finally {
-      setIsLoading(false);
-    }
+    },
+  });
+
+  const handleSubmit = (data: AgentFormData) => {
+    updateMutation.mutate(data);
+  };
+
+  const handleCancel = () => {
+    onOpenChange(false);
   };
 
   return (
-    <Dialog open={open} onOpenChange={(newOpen) => {
-      if (isLoading) return;
-      onOpenChange(newOpen);
-    }}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
-        <DialogTitle className="sr-only">Edit AI Agent</DialogTitle>
-        <DialogHeader 
-          features={features} 
-          currentAgentCount={0}
-        />
-        <AgentForm 
-          form={form} 
-          onSubmit={onSubmit} 
-          onCancel={() => !isLoading && onOpenChange(false)}
-          canCustomizeVoice={() => features.limits.canCustomizeVoices}
-          disabled={isLoading}
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Edit Agent</DialogTitle>
+        </DialogHeader>
+        <AgentForm
+          form={form}
+          onSubmit={handleSubmit}
+          onCancel={handleCancel}
+          canCustomizeVoice={canCustomizeVoice}
+          disabled={updateMutation.isPending}
         />
       </DialogContent>
     </Dialog>
