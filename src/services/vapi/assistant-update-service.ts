@@ -94,9 +94,9 @@ export class VapiAssistantUpdateService {
       return;
     }
 
-    // Update VAPI assistant
+    // Update VAPI assistant - convert vapiAssistantId to string to ensure type safety
     try {
-      await this.updateAssistant(vapiAssistantId, agent);
+      await this.updateAssistant(String(vapiAssistantId), agent);
       console.log(`Successfully synced agent ${agentId} with VAPI assistant ${vapiAssistantId}`);
     } catch (error) {
       console.error(`Failed to sync agent ${agentId} with VAPI:`, error);
