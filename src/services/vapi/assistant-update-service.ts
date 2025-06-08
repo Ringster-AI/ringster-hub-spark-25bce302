@@ -85,22 +85,11 @@ export class VapiAssistantUpdateService {
       throw new Error("Failed to fetch agent data");
     }
 
-    // Get VAPI assistant ID from config
-    const config = typeof agent.config === 'object' ? agent.config : JSON.parse(agent.config || '{}');
-    const rawVapiAssistantId = config.vapi_assistant_id;
+    // Use the dedicated vapi_assistant_id column from the database
+    const assistantId = agent.vapi_assistant_id;
 
-    // Type guard to ensure we have a valid assistant ID
-    if (!rawVapiAssistantId || rawVapiAssistantId === true) {
-      console.log("No valid VAPI assistant ID found for agent, skipping sync");
-      return;
-    }
-
-    // Convert to string - this ensures TypeScript knows assistantId is definitely a string
-    const assistantId = String(rawVapiAssistantId);
-    
-    // Validate that we have a meaningful string (not just "true" or empty)
-    if (!assistantId || assistantId === "true" || assistantId.trim() === "") {
-      console.log("Invalid VAPI assistant ID value, skipping sync");
+    if (!assistantId) {
+      console.log("No VAPI assistant ID found for agent, skipping sync");
       return;
     }
 
