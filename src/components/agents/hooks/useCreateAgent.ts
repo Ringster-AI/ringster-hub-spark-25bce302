@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { AgentFormData } from "@/types/agents";
 import { generateToolInstructions, appendToolInstructionsToDescription } from "@/utils/agentDescriptionUtils";
+import { VapiAssistantUpdateService } from "@/services/vapi/assistant-update-service";
 
 export const useCreateAgent = () => {
   const { toast } = useToast();

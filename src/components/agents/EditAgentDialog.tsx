@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useSubscriptionFeatures } from "@/hooks/useSubscriptionFeatures";
 import { generateToolInstructions, appendToolInstructionsToDescription } from "@/utils/agentDescriptionUtils";
+import { VapiAssistantUpdateService } from "@/services/vapi/assistant-update-service";
 
 interface EditAgentDialogProps {
   agent: AgentConfig;
@@ -153,6 +154,15 @@ export const EditAgentDialog = ({ agent, open, onOpenChange }: EditAgentDialogPr
           .update({ is_enabled: false })
           .eq("agent_id", agent.id)
           .eq("tool_name", "calendar_booking");
+      }
+
+      // Sync with VAPI assistant
+      try {
+        await VapiAssistantUpdateService.syncAgentWithVapi(agent.id);
+        console.log("Successfully synced agent with VAPI assistant");
+      } catch (vapiError) {
+        console.error("Failed to sync with VAPI assistant:", vapiError);
+        // Don't throw here as the main operation succeeded
       }
 
       return updatedAgent;

@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { AgentFormData } from "@/types/agents";
 import { generateToolInstructions, appendToolInstructionsToDescription } from "@/utils/agentDescriptionUtils";
+import { VapiAssistantUpdateService } from "@/services/vapi/assistant-update-service";
 
 export const useAgentCalendarData = (agentId: string) => {
   const { toast } = useToast();
@@ -109,6 +110,15 @@ export const useAgentCalendarData = (agentId: string) => {
         .eq("id", agentId);
 
       if (agentError) throw agentError;
+
+      // Sync with VAPI assistant
+      try {
+        await VapiAssistantUpdateService.syncAgentWithVapi(agentId);
+        console.log("Successfully synced agent with VAPI assistant");
+      } catch (vapiError) {
+        console.error("Failed to sync with VAPI assistant:", vapiError);
+        // Don't throw here as the main operation succeeded
+      }
     },
     onSuccess: () => {
       toast({
@@ -175,6 +185,15 @@ export const useAgentCalendarData = (agentId: string) => {
         .eq("id", agentId);
 
       if (agentError) throw agentError;
+
+      // Sync with VAPI assistant
+      try {
+        await VapiAssistantUpdateService.syncAgentWithVapi(agentId);
+        console.log("Successfully synced agent with VAPI assistant");
+      } catch (vapiError) {
+        console.error("Failed to sync with VAPI assistant:", vapiError);
+        // Don't throw here as the main operation succeeded
+      }
     },
     onSuccess: () => {
       toast({
