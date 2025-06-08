@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { AgentFormData } from "@/types/agents";
+import { generateToolInstructions, appendToolInstructionsToDescription } from "@/utils/agentDescriptionUtils";
 
 export const useCreateAgent = () => {
   const { toast } = useToast();
@@ -15,10 +16,14 @@ export const useCreateAgent = () => {
         throw new Error("Not authenticated");
       }
 
+      // Generate tool instructions and append to description
+      const toolInstructions = generateToolInstructions(formData);
+      const enhancedDescription = appendToolInstructionsToDescription(formData.description, toolInstructions);
+
       // Prepare the agent config data with proper type casting
       const agentConfig = {
         name: formData.name,
-        description: formData.description,
+        description: enhancedDescription,
         greeting: formData.greeting,
         goodbye: formData.goodbye,
         voice_id: formData.voice_id,

@@ -9,6 +9,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useSubscriptionFeatures } from "@/hooks/useSubscriptionFeatures";
+import { generateToolInstructions, appendToolInstructionsToDescription } from "@/utils/agentDescriptionUtils";
 
 interface EditAgentDialogProps {
   agent: AgentConfig;
@@ -87,10 +88,14 @@ export const EditAgentDialog = ({ agent, open, onOpenChange }: EditAgentDialogPr
         throw new Error("Not authenticated");
       }
 
+      // Generate tool instructions and append to description
+      const toolInstructions = generateToolInstructions(formData);
+      const enhancedDescription = appendToolInstructionsToDescription(formData.description, toolInstructions);
+
       // Prepare update data with proper JSON conversion
       const updateData = {
         name: formData.name,
-        description: formData.description,
+        description: enhancedDescription,
         greeting: formData.greeting,
         goodbye: formData.goodbye,
         voice_id: formData.voice_id,
@@ -155,7 +160,7 @@ export const EditAgentDialog = ({ agent, open, onOpenChange }: EditAgentDialogPr
     onSuccess: () => {
       toast({
         title: "Agent updated successfully",
-        description: "Your AI agent has been updated with the new settings.",
+        description: "Your AI agent has been updated with the new settings and tool instructions.",
       });
       queryClient.invalidateQueries({ queryKey: ["agents"] });
       onOpenChange(false);

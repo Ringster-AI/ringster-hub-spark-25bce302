@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { CalendarBookingConfig } from "@/components/agents/CalendarBookingConfig";
 import { useForm } from "react-hook-form";
 import { AgentFormData } from "@/types/agents";
+import { generateToolInstructions, appendToolInstructionsToDescription } from "@/utils/agentDescriptionUtils";
 
 interface AgentCalendarToolsManagementProps {
   agentId: string;
@@ -149,13 +150,29 @@ export function AgentCalendarToolsManagement({ agentId }: AgentCalendarToolsMana
         if (error) throw error;
       }
 
-      // Also update agent config
+      // Update agent config and description with tool instructions
       const currentConfig = agent?.config ? 
         (typeof agent.config === 'object' ? agent.config : JSON.parse(agent.config as string)) : {};
+      
+      const formData = {
+        ...form.getValues(),
+        calendar_booking: {
+          ...form.getValues("calendar_booking"),
+          enabled
+        },
+        transfer_directory: agent?.transfer_directory ? 
+          (typeof agent.transfer_directory === 'object' ? agent.transfer_directory : JSON.parse(agent.transfer_directory as string)) : {},
+        description: agent?.description || ""
+      };
+
+      // Generate tool instructions and update description
+      const toolInstructions = generateToolInstructions(formData);
+      const enhancedDescription = appendToolInstructionsToDescription(formData.description, toolInstructions);
       
       const { error: agentError } = await supabase
         .from("agent_configs")
         .update({
+          description: enhancedDescription,
           config: {
             ...currentConfig,
             calendar_booking: {
@@ -171,7 +188,7 @@ export function AgentCalendarToolsManagement({ agentId }: AgentCalendarToolsMana
     onSuccess: () => {
       toast({
         title: "Calendar booking updated",
-        description: "Calendar booking settings have been updated successfully.",
+        description: "Calendar booking settings and agent instructions have been updated successfully.",
       });
       queryClient.invalidateQueries({ queryKey: ["calendar-tool", agentId] });
       queryClient.invalidateQueries({ queryKey: ["agent", agentId] });
@@ -206,13 +223,25 @@ export function AgentCalendarToolsManagement({ agentId }: AgentCalendarToolsMana
 
       if (toolError) throw toolError;
 
-      // Also update agent config
+      // Update agent config and description with tool instructions
       const currentConfig = agent?.config ? 
         (typeof agent.config === 'object' ? agent.config : JSON.parse(agent.config as string)) : {};
+      
+      const formData = {
+        ...data,
+        transfer_directory: agent?.transfer_directory ? 
+          (typeof agent.transfer_directory === 'object' ? agent.transfer_directory : JSON.parse(agent.transfer_directory as string)) : {},
+        description: agent?.description || ""
+      };
+
+      // Generate tool instructions and update description
+      const toolInstructions = generateToolInstructions(formData);
+      const enhancedDescription = appendToolInstructionsToDescription(formData.description, toolInstructions);
       
       const { error: agentError } = await supabase
         .from("agent_configs")
         .update({
+          description: enhancedDescription,
           config: {
             ...currentConfig,
             calendar_booking: data.calendar_booking
@@ -225,7 +254,7 @@ export function AgentCalendarToolsManagement({ agentId }: AgentCalendarToolsMana
     onSuccess: () => {
       toast({
         title: "Settings saved",
-        description: "Calendar booking configuration has been saved.",
+        description: "Calendar booking configuration and agent instructions have been saved.",
       });
       setShowConfig(false);
       queryClient.invalidateQueries({ queryKey: ["calendar-tool", agentId] });
