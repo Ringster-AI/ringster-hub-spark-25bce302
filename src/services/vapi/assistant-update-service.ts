@@ -87,16 +87,19 @@ export class VapiAssistantUpdateService {
 
     // Get VAPI assistant ID from config
     const config = typeof agent.config === 'object' ? agent.config : JSON.parse(agent.config || '{}');
-    const vapiAssistantId = config.vapi_assistant_id;
+    const rawVapiAssistantId = config.vapi_assistant_id;
 
-    if (!vapiAssistantId) {
+    // Convert to string and validate
+    if (!rawVapiAssistantId) {
       console.log("No VAPI assistant ID found for agent, skipping sync");
       return;
     }
 
-    // Update VAPI assistant - convert vapiAssistantId to string to ensure type safety
+    const vapiAssistantId = String(rawVapiAssistantId);
+
+    // Update VAPI assistant
     try {
-      await this.updateAssistant(String(vapiAssistantId), agent);
+      await this.updateAssistant(vapiAssistantId, agent);
       console.log(`Successfully synced agent ${agentId} with VAPI assistant ${vapiAssistantId}`);
     } catch (error) {
       console.error(`Failed to sync agent ${agentId} with VAPI:`, error);
