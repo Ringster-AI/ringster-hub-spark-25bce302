@@ -10,6 +10,5 @@ export const vapiService = {
   ...transcriptService,
   ...analyticsService,
   // Add assistant update functionality
-  updateAssistant: VapiAssistantUpdateService.updateAssistant,
   syncAgentWithVapi: VapiAssistantUpdateService.syncAgentWithVapi,
 };
