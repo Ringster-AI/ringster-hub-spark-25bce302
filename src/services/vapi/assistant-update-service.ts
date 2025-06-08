@@ -1,75 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 
-interface VapiAssistantUpdateData {
-  name?: string;
-  firstMessage?: string;
-  systemMessage?: string;
-  model?: {
-    provider: string;
-    model: string;
-    toolIds?: string[];
-  };
-  voice?: {
-    provider: string;
-    voiceId: string;
-  };
-}
-
 export class VapiAssistantUpdateService {
-  private static async makeVapiRequest(endpoint: string, method: string, data?: any) {
-    console.log(`Making ${method} request to VAPI: ${endpoint}`);
-    
-    // Get VAPI API key from environment
-    const vapiApiKey = import.meta.env.VITE_VAPI_PUBLIC_KEY;
-    if (!vapiApiKey) {
-      throw new Error('VAPI API key not configured');
-    }
-
-    const response = await fetch(`https://api.vapi.ai${endpoint}`, {
-      method,
-      headers: {
-        'Authorization': `Bearer ${vapiApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: data ? JSON.stringify(data) : undefined,
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`VAPI request failed: ${errorText}`);
-      throw new Error(`VAPI request failed: ${errorText}`);
-    }
-
-    return response.json();
-  }
-
-  static async updateAssistant(assistantId: string, agentData: any) {
-    console.log(`Updating VAPI assistant ${assistantId} with new data`);
-    
-    const updateData: VapiAssistantUpdateData = {
-      name: agentData.name,
-      firstMessage: agentData.greeting,
-      systemMessage: agentData.description,
-    };
-
-    // Add voice configuration if available
-    if (agentData.voice_id) {
-      updateData.voice = {
-        provider: "11labs",
-        voiceId: String(agentData.voice_id),
-      };
-    }
-
-    // Add model configuration
-    updateData.model = {
-      provider: "openai",
-      model: "gpt-4",
-    };
-
-    return this.makeVapiRequest(`/assistant/${assistantId}`, 'PATCH', updateData);
-  }
-
   static async syncAgentWithVapi(agentId: string) {
     console.log(`Syncing agent ${agentId} with VAPI assistant`);
     
@@ -93,10 +25,28 @@ export class VapiAssistantUpdateService {
       return;
     }
 
-    // Update VAPI assistant
+    // Call the Netlify function to update the VAPI assistant
     try {
-      await this.updateAssistant(assistantId, agent);
-      console.log(`Successfully synced agent ${agentId} with VAPI assistant ${assistantId}`);
+      const response = await fetch('/.netlify/functions/manage-vapi-assistant', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          agentId: agentId,
+          action: 'update' // Add action parameter to distinguish from creation
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`Netlify function request failed: ${errorText}`);
+        throw new Error(`Failed to update VAPI assistant: ${errorText}`);
+      }
+
+      const result = await response.json();
+      console.log(`Successfully synced agent ${agentId} with VAPI assistant ${assistantId}`, result);
+      return result;
     } catch (error) {
       console.error(`Failed to sync agent ${agentId} with VAPI:`, error);
       throw error;
