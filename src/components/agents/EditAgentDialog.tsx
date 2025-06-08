@@ -188,7 +188,7 @@ export const EditAgentDialog = ({ agent, open, onOpenChange }: EditAgentDialogPr
           form={form}
           onSubmit={handleSubmit}
           onCancel={handleCancel}
-          canCustomizeVoice={() => features.canCustomizeVoices}
+          canCustomizeVoice={() => features.limits.canCustomizeVoices}
           disabled={updateMutation.isPending}
         />
       </DialogContent>
