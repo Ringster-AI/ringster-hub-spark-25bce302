@@ -95,14 +95,12 @@ export class VapiAssistantUpdateService {
       return;
     }
 
-    // Ensure we have a string assistant ID
-    let assistantId: string;
-    if (typeof rawVapiAssistantId === 'string') {
-      assistantId = rawVapiAssistantId;
-    } else if (typeof rawVapiAssistantId === 'number') {
-      assistantId = String(rawVapiAssistantId);
-    } else {
-      console.log("Invalid VAPI assistant ID type, skipping sync");
+    // Convert to string - this ensures TypeScript knows assistantId is definitely a string
+    const assistantId = String(rawVapiAssistantId);
+    
+    // Validate that we have a meaningful string (not just "true" or empty)
+    if (!assistantId || assistantId === "true" || assistantId.trim() === "") {
+      console.log("Invalid VAPI assistant ID value, skipping sync");
       return;
     }
 
