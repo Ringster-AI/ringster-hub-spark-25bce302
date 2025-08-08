@@ -18,14 +18,14 @@ const Offer = () => {
     setIsSubmitting(true);
 
     try {
-      // Add email to SendGrid
-      const sendGridResponse = await supabase.functions.invoke('add-to-sendgrid', {
+      // Save email to waitlist
+      const { error } = await supabase.functions.invoke('add-to-waitlist', {
         body: { email }
       });
 
-      if (sendGridResponse.error) {
-        console.error('Error adding to SendGrid:', sendGridResponse.error);
-        throw new Error("Error adding to SendGrid");
+      if (error) {
+        console.error('Error saving to waitlist:', error);
+        throw new Error("Error saving to waitlist");
       }
       
       // Set email in session storage to use on thank you page
