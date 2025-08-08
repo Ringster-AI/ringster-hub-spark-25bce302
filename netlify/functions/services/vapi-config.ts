@@ -38,7 +38,7 @@ export const createVapiAssistantConfig = (
     firstMessage: agent.greeting || "Hello! How can I help you today?",
     model: {
       provider: "openai",
-      model: "gpt-3.5-turbo",
+      model: "gpt-4o-mini",
       temperature: 0.7,
       messages: [
         {

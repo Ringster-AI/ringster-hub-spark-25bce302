@@ -25,31 +25,40 @@ export class VapiAssistantUpdateService {
       return;
     }
 
-    // Call the Netlify function to update the VAPI assistant
-    try {
-      const response = await fetch('/.netlify/functions/manage-vapi-assistant', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          agentId: agentId,
-          action: 'update' // Add action parameter to distinguish from creation
-        }),
-      });
+    // Call the Netlify function to update the VAPI assistant with retry
+    const requestId = `assist-sync-${agentId}-${Date.now()}`;
+    const maxRetries = 2;
+    const baseDelayMs = 300;
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error(`Netlify function request failed: ${errorText}`);
-        throw new Error(`Failed to update VAPI assistant: ${errorText}`);
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        const response = await fetch('/.netlify/functions/manage-vapi-assistant', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-request-id': requestId,
+          },
+          body: JSON.stringify({
+            agentId: agentId,
+            action: 'update'
+          }),
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Failed to update VAPI assistant: ${errorText}`);
+        }
+
+        const result = await response.json();
+        console.log(`Successfully synced agent ${agentId} with VAPI assistant ${assistantId}`, { requestId, result });
+        return result;
+      } catch (error) {
+        console.error(`Sync attempt ${attempt + 1} failed for agent ${agentId}`, { requestId, error });
+        if (attempt === maxRetries) throw error;
+        const delay = baseDelayMs * Math.pow(2, attempt);
+        await new Promise((res) => setTimeout(res, delay));
       }
-
-      const result = await response.json();
-      console.log(`Successfully synced agent ${agentId} with VAPI assistant ${assistantId}`, result);
-      return result;
-    } catch (error) {
-      console.error(`Failed to sync agent ${agentId} with VAPI:`, error);
-      throw error;
     }
+
   }
 }

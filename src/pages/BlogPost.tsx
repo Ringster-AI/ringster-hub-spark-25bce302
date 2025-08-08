@@ -47,8 +47,10 @@ const BlogPost = () => {
 
   if (!post) return null;
 
+  const description = post.excerpt || (post.content ? post.content.replace(/\s+/g, ' ').slice(0, 150) : '');
   return (
     <main className="min-h-screen bg-white">
+      <Seo title={`${post.title} | Ringster Blog`} description={description} image={post.featured_image || undefined} />
       <article className="container mx-auto px-6 py-32 max-w-4xl">
         <h1 className="text-4xl font-bold text-[#1A1F2C] mb-6">{post.title}</h1>
         

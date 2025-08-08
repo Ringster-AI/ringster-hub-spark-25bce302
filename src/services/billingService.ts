@@ -152,7 +152,7 @@ export const billingService = {
   },
 
   /**
-   * Fetch data from the Netlify function
+   * Fetch data from the Supabase Edge Function
    */
   async getDetailedUsageData() {
     try {
