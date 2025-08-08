@@ -146,12 +146,12 @@ export const handler: Handler = async (event) => {
       }
 
       // Import Twilio number if provided
-      if (phoneNumber && process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN) {
+      if (phoneNumber && process.env.TWILIO_ACCOUNT_SID && process.env["TWILIO_AUTH _TOKEN"]) {
         await withRetry(() => vapiService.importTwilioNumber(
           vapiData.id,
           phoneNumber,
           process.env.TWILIO_ACCOUNT_SID as string,
-          process.env.TWILIO_AUTH_TOKEN as string
+          process.env["TWILIO_AUTH _TOKEN"] as string
         ))
       }
 

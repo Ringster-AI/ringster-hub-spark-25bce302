@@ -6,6 +6,7 @@ import { BlogPost } from "@/types/blog";
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import ReactMarkdown from "react-markdown";
+import { Seo } from "@/components/seo/Seo";
 
 const BlogPostFormatted = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -44,8 +45,10 @@ const BlogPostFormatted = () => {
     );
   }
 
+  const description = post.excerpt || (post.content ? post.content.replace(/\s+/g, ' ').slice(0, 150) : '');
   return (
     <main className="min-h-screen bg-white">
+      <Seo title={`${post.title} | Ringster Blog`} description={description} image={post.featured_image || undefined} jsonLd={{ "@context": "https://schema.org", "@type": "BlogPosting", headline: post.title, description: description, image: post.featured_image || undefined, datePublished: post.published_at || undefined, dateModified: (post as any).updated_at || post.published_at || undefined, mainEntityOfPage: { "@type": "WebPage", "@id": typeof window !== "undefined" ? window.location.href : "" } }} />
       <article className="container mx-auto px-6 py-24 max-w-3xl">
         {post.featured_image && (
           <div className="mb-8 rounded-lg overflow-hidden">
