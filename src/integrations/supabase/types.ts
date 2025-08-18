@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -1815,16 +1815,16 @@ export type Database = {
     Functions: {
       handle_subscription_update: {
         Args: {
-          user_id: string
+          new_period_end: string
+          new_period_start: string
           new_plan_id: string
           new_status: string
-          new_period_start: string
-          new_period_end: string
+          user_id: string
         }
         Returns: undefined
       }
       has_role: {
-        Args: { user_id: string; role_name: string }
+        Args: { role_name: string; user_id: string }
         Returns: boolean
       }
       is_admin: {
@@ -1840,11 +1840,11 @@ export type Database = {
         Returns: undefined
       }
       sync_user_subscription: {
-        Args: { p_user_id: string; p_plan_id?: string }
+        Args: { p_plan_id?: string; p_user_id: string }
         Returns: undefined
       }
       update_minutes_used: {
-        Args: { p_user_id: string; p_minutes: number }
+        Args: { p_minutes: number; p_user_id: string }
         Returns: undefined
       }
     }
