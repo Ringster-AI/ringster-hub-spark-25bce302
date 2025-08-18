@@ -28,7 +28,7 @@ const Index = () => {
                 className="h-12 sm:h-16 md:h-20 w-auto"
               />
             </Link>
-            <div className="hidden sm:flex gap-6">
+            <div className="hidden sm:flex gap-6 items-center">
               <Link to="/about" className="text-gray-600 hover:text-[#DD2476] transition-colors">
                 About
               </Link>
@@ -37,6 +37,11 @@ const Index = () => {
               </Link>
               <Link to="/contact" className="text-gray-600 hover:text-[#DD2476] transition-colors">
                 Contact
+              </Link>
+              <Link to="/dashboard/campaigns">
+                <Button className="bg-gradient-to-r from-primary to-primary-glow hover:opacity-90">
+                  Launch Campaign
+                </Button>
               </Link>
             </div>
             {isMobile && (
