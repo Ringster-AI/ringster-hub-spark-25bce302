@@ -1,5 +1,9 @@
 
 import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import { Plus, Sparkles } from "lucide-react";
+import { NextGenCampaignBuilder } from "./NextGenCampaignBuilder";
+import { CampaignForm } from "./CampaignForm";
 import {
   Dialog,
   DialogContent,
@@ -7,19 +11,21 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { useState } from "react";
-import { Plus } from "lucide-react";
-import { CampaignForm } from "./CampaignForm";
 
 export function CreateCampaignDialog() {
   const [open, setOpen] = useState(false);
+  const [useNextGen, setUseNextGen] = useState(true);
+
+  if (useNextGen && open) {
+    return <NextGenCampaignBuilder onClose={() => setOpen(false)} />;
+  }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
-          <Plus className="mr-2 h-4 w-4" />
-          New Campaign
+        <Button className="bg-gradient-to-r from-primary to-primary-glow hover:opacity-90">
+          <Sparkles className="mr-2 h-4 w-4" />
+          Create Campaign
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0">
