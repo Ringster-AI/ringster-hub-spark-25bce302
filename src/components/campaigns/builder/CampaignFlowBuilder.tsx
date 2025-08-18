@@ -102,7 +102,7 @@ export function CampaignFlowBuilder({ wizardData, onSave, onPreview }: CampaignF
       id: '4',
       type: 'action',
       title: 'Book Appointment',
-      content: 'Great! I'd love to schedule a quick 15-minute call to discuss this further. What works better for you - this afternoon or tomorrow morning?'
+      content: 'Great! I\'d love to schedule a quick 15-minute call to discuss this further. What works better for you - this afternoon or tomorrow morning?'
     },
     {
       id: '5',
