@@ -18,6 +18,8 @@ import {
   RefreshCw
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface Contact {
   id: string;
@@ -40,6 +42,8 @@ export function SmartContactManager({ onContactsReady }: SmartContactManagerProp
   const [uploadMethod, setUploadMethod] = useState<'csv' | 'paste' | 'manual'>('csv');
   const [pastedData, setPastedData] = useState('');
   const [processingProgress, setProcessingProgress] = useState(0);
+  const [isValidating, setIsValidating] = useState(false);
+  const { toast } = useToast();
 
   // Mock AI tagging suggestions
   const suggestedTags = [
@@ -139,11 +143,81 @@ export function SmartContactManager({ onContactsReady }: SmartContactManagerProp
     setContacts(prev => prev.filter(c => c.id !== id));
   };
 
-  const validateContacts = () => {
-    setContacts(prev => prev.map(contact => ({
-      ...contact,
-      status: contact.phoneNumber.length >= 10 ? 'validated' : 'invalid'
-    })));
+  const validateContacts = async () => {
+    if (contacts.length === 0) {
+      toast({
+        title: "No contacts to validate",
+        description: "Please add some contacts first.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsValidating(true);
+    toast({
+      title: "Validating phone numbers...",
+      description: "This may take a moment for large lists.",
+    });
+
+    try {
+      const { data, error } = await supabase.functions.invoke('validate-phone-numbers', {
+        body: {
+          phoneNumbers: contacts.map(contact => ({
+            id: contact.id,
+            phoneNumber: contact.phoneNumber,
+            firstName: contact.firstName,
+            lastName: contact.lastName
+          }))
+        }
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      if (data?.results) {
+        setContacts(prev => prev.map(contact => {
+          const result = data.results.find((r: any) => r.id === contact.id);
+          if (result) {
+            return {
+              ...contact,
+              status: result.isValid ? 'validated' : 'invalid',
+              phoneNumber: result.format || contact.phoneNumber,
+              metadata: {
+                ...contact.metadata,
+                carrier: result.carrier,
+                lineType: result.lineType,
+                validationError: result.error
+              }
+            };
+          }
+          return contact;
+        }));
+
+        const validCount = data.results.filter((r: any) => r.isValid).length;
+        const invalidCount = data.results.length - validCount;
+
+        toast({
+          title: "Validation complete!",
+          description: `${validCount} valid, ${invalidCount} invalid numbers found.`,
+        });
+      }
+    } catch (error: any) {
+      console.error('Validation error:', error);
+      toast({
+        title: "Validation failed",
+        description: error.message || "Failed to validate phone numbers. Please try again.",
+        variant: "destructive",
+      });
+      
+      // Fallback to basic validation
+      setContacts(prev => prev.map(contact => ({
+        ...contact,
+        status: contact.phoneNumber.replace(/\D/g, '').length >= 10 ? 'validated' : 'invalid'
+      })));
+    } finally {
+      setIsValidating(false);
+    }
   };
 
   const validContacts = contacts.filter(c => c.status === 'validated');
@@ -329,9 +403,13 @@ export function SmartContactManager({ onContactsReady }: SmartContactManagerProp
 
           {/* Actions */}
           <div className="flex gap-2">
-            <Button onClick={validateContacts} variant="outline">
+            <Button 
+              onClick={validateContacts} 
+              variant="outline" 
+              disabled={isValidating || contacts.length === 0}
+            >
               <CheckCircle className="h-4 w-4 mr-2" />
-              Validate All
+              {isValidating ? 'Validating...' : 'Validate All'}
             </Button>
             <Button onClick={() => onContactsReady(validContacts)} disabled={validContacts.length === 0}>
               <Users className="h-4 w-4 mr-2" />
@@ -358,14 +436,24 @@ export function SmartContactManager({ onContactsReady }: SmartContactManagerProp
                           contact.status === 'validated' ? 'bg-green-500' : 
                           contact.status === 'invalid' ? 'bg-red-500' : 'bg-yellow-500'
                         }`} />
-                        <div>
-                          <div className="font-medium">
-                            {contact.firstName} {contact.lastName}
-                          </div>
-                          <div className="text-sm text-muted-foreground">
-                            {contact.phoneNumber}
-                          </div>
-                        </div>
+                         <div>
+                           <div className="font-medium">
+                             {contact.firstName} {contact.lastName}
+                           </div>
+                           <div className="text-sm text-muted-foreground">
+                             {contact.phoneNumber}
+                           </div>
+                           {contact.metadata?.carrier && (
+                             <div className="text-xs text-muted-foreground">
+                               {contact.metadata.carrier} • {contact.metadata.lineType}
+                             </div>
+                           )}
+                           {contact.metadata?.validationError && (
+                             <div className="text-xs text-red-500">
+                               {contact.metadata.validationError}
+                             </div>
+                           )}
+                         </div>
                       </div>
                       <div className="flex items-center gap-2">
                         {contact.tags.map((tag) => (
