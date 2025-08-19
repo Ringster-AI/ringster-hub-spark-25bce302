@@ -146,23 +146,23 @@ export function NextGenCampaignBuilder({ onClose }: NextGenCampaignBuilderProps)
       if (error) throw error;
 
       // Sync with VAPI assistant to update the system prompt
-      const response = await fetch('/.netlify/functions/manage-vapi-assistant', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      const { data: vapiResult, error: vapiError } = await supabase.functions.invoke('manage-vapi-assistant', {
+        body: {
           agentId: agentId,
           action: 'update'
-        }),
+        }
       });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Failed to sync with VAPI: ${errorText}`);
+      if (vapiError) {
+        console.error('VAPI sync error:', vapiError);
+        throw new Error(`Failed to sync with VAPI: ${vapiError.message}`);
       }
 
-      return await response.json();
+      if (!vapiResult?.success) {
+        throw new Error(`Failed to sync with VAPI: ${vapiResult?.error || 'Unknown error'}`);
+      }
+
+      return vapiResult;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["agent_configs"] });
