@@ -156,6 +156,40 @@ export function CampaignFlowBuilder({ wizardData, onSave, onPreview }: CampaignF
     setBlocks(prev => prev.filter(block => block.id !== id));
   };
 
+  const convertFlowToSystemPrompt = useCallback((blocks: FlowBlock[]): string => {
+    let prompt = `You are an AI sales agent conducting outbound calls. Follow this conversation flow:
+
+`;
+
+    blocks.forEach((block, index) => {
+      prompt += `${index + 1}. ${block.title.toUpperCase()}:\n`;
+      prompt += `   ${block.content}\n`;
+      
+      if (block.tone) {
+        prompt += `   (Use a ${block.tone} tone)\n`;
+      }
+      
+      if (block.conditions && block.conditions.length > 0) {
+        prompt += `   Handle responses:\n`;
+        block.conditions.forEach(condition => {
+          prompt += `   - If they say "${condition.response}" or similar: ${condition.label}\n`;
+        });
+      }
+      
+      prompt += `\n`;
+    });
+
+    prompt += `IMPORTANT GUIDELINES:
+- Stay on script but sound natural and conversational
+- Listen for buying signals and adapt accordingly
+- If asked to be removed from list, politely comply and end call
+- Keep responses concise (under 30 seconds)
+- Always be respectful of their time
+- If scheduling, confirm date, time, and contact details`;
+
+    return prompt;
+  }, []);
+
   const renderBlock = (block: FlowBlock, index: number) => {
     const BlockIcon = blockTypes[block.type].icon;
     const isSelected = selectedBlock === block.id;

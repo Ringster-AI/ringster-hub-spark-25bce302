@@ -123,13 +123,132 @@ export function NextGenCampaignBuilder({ onClose }: NextGenCampaignBuilderProps)
     }
   };
 
-  const handleFlowSave = (blocks: FlowBlock[]) => {
-    setFlowBlocks(blocks);
-    setCurrentStep('contacts');
-    toast({
-      title: "Flow saved!",
-      description: "Your conversation flow looks great. Now let's add contacts."
+  const updateAgentWithFlow = useMutation({
+    mutationFn: async ({ agentId, systemPrompt }: { agentId: string; systemPrompt: string }) => {
+      // Update agent description with the generated system prompt
+      const { error } = await supabase
+        .from("agent_configs")
+        .update({ 
+          description: systemPrompt,
+          status: 'active' 
+        })
+        .eq('id', agentId);
+
+      if (error) throw error;
+
+      // Sync with VAPI assistant to update the system prompt
+      const response = await fetch('/.netlify/functions/manage-vapi-assistant', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          agentId: agentId,
+          action: 'update'
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to sync with VAPI: ${errorText}`);
+      }
+
+      return await response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["agent_configs"] });
+      toast({
+        title: "Flow saved and synced!",
+        description: "Your agent's conversation flow has been configured and synced with VAPI."
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error syncing flow",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+
+  const convertFlowToSystemPrompt = (blocks: FlowBlock[]): string => {
+    let prompt = `You are an AI sales agent conducting outbound calls for ${wizardData?.businessName}. Follow this conversation flow:
+
+`;
+
+    blocks.forEach((block, index) => {
+      prompt += `${index + 1}. ${block.title.toUpperCase()}:\n`;
+      prompt += `   ${block.content}\n`;
+      
+      if (block.tone) {
+        prompt += `   (Use a ${block.tone} tone)\n`;
+      }
+      
+      if (block.conditions && block.conditions.length > 0) {
+        prompt += `   Handle responses:\n`;
+        block.conditions.forEach(condition => {
+          prompt += `   - If they say "${condition.response}" or similar: ${condition.label}\n`;
+        });
+      }
+      
+      prompt += `\n`;
     });
+
+    prompt += `IMPORTANT GUIDELINES:
+- Stay on script but sound natural and conversational
+- Listen for buying signals and adapt accordingly
+- If asked to be removed from list, politely comply and end call
+- Keep responses concise (under 30 seconds)
+- Always be respectful of their time
+- If scheduling, confirm date, time, and contact details
+- Your goal is: ${wizardData?.goalDescription}
+- Target audience: ${wizardData?.targetAudience}`;
+
+    return prompt;
+  };
+
+  const handleFlowSave = async (blocks: FlowBlock[]) => {
+    console.log('Saving flow blocks:', blocks);
+    setFlowBlocks(blocks);
+    
+    if (!campaignId) {
+      toast({
+        title: "Error",
+        description: "No campaign ID found. Please restart the campaign creation process.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // Get the associated agent ID from the campaign
+      const { data: campaign, error: campaignError } = await supabase
+        .from("campaigns")
+        .select("agent_id")
+        .eq('id', campaignId)
+        .single();
+
+      if (campaignError || !campaign) {
+        throw new Error("Failed to fetch campaign data");
+      }
+
+      // Convert flow blocks to system prompt
+      const systemPrompt = convertFlowToSystemPrompt(blocks);
+      
+      // Update the agent and sync with VAPI
+      await updateAgentWithFlow.mutateAsync({ 
+        agentId: campaign.agent_id, 
+        systemPrompt 
+      });
+
+      setCurrentStep('contacts');
+    } catch (error: any) {
+      toast({
+        title: "Error saving flow",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   };
 
   const handleFlowPreview = (blocks: FlowBlock[]) => {
