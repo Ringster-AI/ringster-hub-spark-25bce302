@@ -18,6 +18,8 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 type BuilderStep = 'wizard' | 'flow' | 'contacts' | 'schedule' | 'dashboard';
 
@@ -44,6 +46,7 @@ export function NextGenCampaignBuilder({ onClose }: NextGenCampaignBuilderProps)
   const [campaignId, setCampaignId] = useState<string | null>(null);
   const [campaignStatus, setCampaignStatus] = useState<'scheduled' | 'running' | 'paused' | 'completed'>('scheduled');
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const steps = {
     wizard: { title: 'Campaign Setup', icon: Sparkles, description: 'Tell us about your campaign' },
@@ -53,13 +56,71 @@ export function NextGenCampaignBuilder({ onClose }: NextGenCampaignBuilderProps)
     dashboard: { title: 'Live Dashboard', icon: Target, description: 'Monitor performance' }
   };
 
-  const handleWizardComplete = (data: WizardData) => {
-    setWizardData(data);
-    setCurrentStep('flow');
-    toast({
-      title: "Campaign created!",
-      description: "Now let's design your agent's conversation flow."
-    });
+  const handleWizardComplete = async (data: WizardData) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast({
+          title: "Authentication required",
+          description: "Please log in to create campaigns.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Create agent config first
+      const { data: agent, error: agentError } = await supabase
+        .from("agent_configs")
+        .insert({
+          name: `${data.campaignName} Agent`,
+          description: data.goalDescription,
+          greeting: `Hello! I'm calling from ${data.businessName} about ${data.campaignName}.`,
+          goodbye: "Thank you for your time. Have a great day!",
+          agent_type: "outbound",
+          status: "draft",
+          user_id: session.user.id,
+        })
+        .select()
+        .single();
+
+      if (agentError) throw agentError;
+
+      // Create campaign
+      const { data: campaign, error: campaignError } = await supabase
+        .from("campaigns")
+        .insert({
+          name: data.campaignName,
+          description: data.goalDescription,
+          agent_id: agent.id,
+          status: "draft",
+          user_id: session.user.id,
+          config: {
+            targetAudience: data.targetAudience,
+            goal: data.goal,
+            tone: data.tone,
+            businessName: data.businessName,
+          },
+        })
+        .select()
+        .single();
+
+      if (campaignError) throw campaignError;
+
+      setCampaignId(campaign.id);
+      setWizardData(data);
+      setCurrentStep('flow');
+      
+      toast({
+        title: "Campaign created!",
+        description: "Now let's design your agent's conversation flow."
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error creating campaign",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   };
 
   const handleFlowSave = (blocks: FlowBlock[]) => {
@@ -88,17 +149,33 @@ export function NextGenCampaignBuilder({ onClose }: NextGenCampaignBuilderProps)
     });
   };
 
-  const handleLaunchCampaign = () => {
-    // Mock campaign creation and launch
-    const mockCampaignId = `campaign_${Date.now()}`;
-    setCampaignId(mockCampaignId);
-    setCampaignStatus('running');
-    setCurrentStep('dashboard');
+  const handleLaunchCampaign = async () => {
+    if (!campaignId) return;
     
-    toast({
-      title: "Campaign launched! 🚀",
-      description: `Your agent is now calling ${contacts.length} contacts.`
-    });
+    try {
+      // Update campaign status to running
+      const { error } = await supabase
+        .from("campaigns")
+        .update({ status: 'running' })
+        .eq('id', campaignId);
+
+      if (error) throw error;
+
+      setCampaignStatus('running');
+      setCurrentStep('dashboard');
+      queryClient.invalidateQueries({ queryKey: ["campaigns"] });
+      
+      toast({
+        title: "Campaign launched! 🚀",
+        description: `Your agent is now calling ${contacts.length} contacts.`
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error launching campaign",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   };
 
   const handleStatusChange = (status: string) => {
