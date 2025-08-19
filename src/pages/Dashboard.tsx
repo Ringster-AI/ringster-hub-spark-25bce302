@@ -8,6 +8,8 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import Overview from "./Dashboard/Overview";
 import Agents from "./Dashboard/Agents";
 import Campaigns from "./Dashboard/Campaigns";
+import CampaignDetails from "./Dashboard/CampaignDetails";
+import CampaignDashboard from "./Dashboard/CampaignDashboard";
 import Recordings from "./Dashboard/Recordings";
 import Analytics from "./Dashboard/Analytics";
 import Team from "./Dashboard/Team";
@@ -47,6 +49,8 @@ const Dashboard = () => {
               <Route path="/" element={<Overview />} />
               <Route path="/agents" element={<Agents />} />
               <Route path="/campaigns" element={<Campaigns />} />
+              <Route path="/campaigns/:campaignId" element={<CampaignDetails />} />
+              <Route path="/campaigns/:campaignId/dashboard" element={<CampaignDashboard />} />
               <Route path="/recordings" element={<Recordings />} />
               <Route path="/calendar" element={<Calendar />} />
               <Route path="/analytics" element={<Analytics />} />

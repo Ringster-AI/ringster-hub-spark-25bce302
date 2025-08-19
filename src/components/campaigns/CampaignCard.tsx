@@ -43,6 +43,7 @@ export function CampaignCard({ campaign }: CampaignCardProps) {
               campaign={campaign}
               onEditClick={() => setShowEditDialog(true)}
               onContactsClick={() => setShowContactsDialog(true)}
+              onDashboardClick={() => window.open(`/dashboard/campaigns/${campaign.id}/dashboard`, '_blank')}
             />
             <StatusBadge status={campaign.status} />
           </div>

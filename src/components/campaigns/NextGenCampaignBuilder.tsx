@@ -233,7 +233,7 @@ export function NextGenCampaignBuilder({ onClose }: NextGenCampaignBuilderProps)
       // Get the associated agent ID from the campaign
       const { data: campaign, error: campaignError } = await supabase
         .from("campaigns")
-        .select("agent_id")
+        .select("agent_id, config")
         .eq('id', campaignId)
         .single();
 
@@ -243,6 +243,28 @@ export function NextGenCampaignBuilder({ onClose }: NextGenCampaignBuilderProps)
 
       // Convert flow blocks to system prompt
       const systemPrompt = convertFlowToSystemPrompt(blocks);
+      
+      // Save flow blocks to campaign config for persistence
+      const existingConfig = campaign.config as Record<string, any> || {};
+      const updatedConfig = {
+        ...existingConfig,
+        flowBlocks: blocks.map(block => ({
+          id: block.id,
+          type: block.type,
+          title: block.title,
+          content: block.content,
+          tone: block.tone,
+          conditions: block.conditions
+        })),
+        systemPrompt
+      };
+
+      const { error: configUpdateError } = await supabase
+        .from("campaigns")
+        .update({ config: updatedConfig })
+        .eq('id', campaignId);
+
+      if (configUpdateError) throw configUpdateError;
       
       // Update the agent and sync with VAPI
       await updateAgentWithFlow.mutateAsync({ 
