@@ -6,6 +6,7 @@ import { LiveCampaignDashboard } from "./dashboard/LiveCampaignDashboard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { 
   Sparkles, 
   ArrowLeft, 
@@ -45,6 +46,14 @@ export function NextGenCampaignBuilder({ onClose }: NextGenCampaignBuilderProps)
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [campaignId, setCampaignId] = useState<string | null>(null);
   const [campaignStatus, setCampaignStatus] = useState<'scheduled' | 'running' | 'paused' | 'completed'>('scheduled');
+  const [scheduleType, setScheduleType] = useState<'now' | 'scheduled'>('now');
+  const [scheduledDateTime, setScheduledDateTime] = useState<Date | null>(null);
+  const [businessHours, setBusinessHours] = useState({
+    start: '09:00',
+    end: '17:00',
+    timezone: 'America/New_York',
+    days: [1, 2, 3, 4, 5] // Monday to Friday
+  });
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -272,21 +281,60 @@ export function NextGenCampaignBuilder({ onClose }: NextGenCampaignBuilderProps)
     if (!campaignId) return;
     
     try {
-      // Update campaign status to running
+      // Save contacts to database first
+      if (contacts.length > 0) {
+        const { error: contactsError } = await supabase
+          .from("campaign_contacts")
+          .insert(
+            contacts.map(contact => ({
+              campaign_id: campaignId,
+              first_name: contact.firstName,
+              last_name: contact.lastName,
+              phone_number: contact.phoneNumber,
+              metadata: contact.metadata || {},
+              status: 'pending'
+            }))
+          );
+
+        if (contactsError) throw contactsError;
+      }
+
+      // Update campaign with schedule information
+      const updateData: any = {
+        status: scheduleType === 'now' ? 'running' : 'scheduled',
+        config: {
+          ...wizardData,
+          businessHours,
+          retrySettings: {
+            maxAttempts: 3,
+            retryDelayMinutes: [60, 180, 360], // 1hr, 3hr, 6hr delays
+            respectBusinessHours: true
+          }
+        }
+      };
+
+      if (scheduleType === 'scheduled' && scheduledDateTime) {
+        updateData.scheduled_start = scheduledDateTime.toISOString();
+      }
+
       const { error } = await supabase
         .from("campaigns")
-        .update({ status: 'running' })
+        .update(updateData)
         .eq('id', campaignId);
 
       if (error) throw error;
 
-      setCampaignStatus('running');
+      setCampaignStatus(scheduleType === 'now' ? 'running' : 'scheduled');
       setCurrentStep('dashboard');
       queryClient.invalidateQueries({ queryKey: ["campaigns"] });
       
+      const message = scheduleType === 'now' 
+        ? `Your agent is now calling ${contacts.length} contacts.`
+        : `Campaign scheduled for ${scheduledDateTime?.toLocaleString()}.`;
+      
       toast({
         title: "Campaign launched! 🚀",
-        description: `Your agent is now calling ${contacts.length} contacts.`
+        description: message
       });
     } catch (error: any) {
       toast({
@@ -454,7 +502,14 @@ export function NextGenCampaignBuilder({ onClose }: NextGenCampaignBuilderProps)
                 <CardContent className="space-y-4">
                   <div className="space-y-3">
                     <label className="flex items-center space-x-3 cursor-pointer">
-                      <input type="radio" name="launch" value="now" defaultChecked className="text-primary" />
+                      <input 
+                        type="radio" 
+                        name="launch" 
+                        value="now" 
+                        checked={scheduleType === 'now'}
+                        onChange={() => setScheduleType('now')}
+                        className="text-primary" 
+                      />
                       <div>
                         <div className="font-medium">Start Now</div>
                         <div className="text-sm text-muted-foreground">Begin calling immediately</div>
@@ -462,13 +517,70 @@ export function NextGenCampaignBuilder({ onClose }: NextGenCampaignBuilderProps)
                     </label>
                     
                     <label className="flex items-center space-x-3 cursor-pointer">
-                      <input type="radio" name="launch" value="scheduled" className="text-primary" />
+                      <input 
+                        type="radio" 
+                        name="launch" 
+                        value="scheduled" 
+                        checked={scheduleType === 'scheduled'}
+                        onChange={() => setScheduleType('scheduled')}
+                        className="text-primary" 
+                      />
                       <div>
                         <div className="font-medium">Schedule for Later</div>
                         <div className="text-sm text-muted-foreground">Pick a specific date and time</div>
                       </div>
                     </label>
                   </div>
+
+                  {scheduleType === 'scheduled' && (
+                    <div className="space-y-3 p-3 border rounded-lg bg-accent/20">
+                      <div>
+                        <label className="text-sm font-medium">Start Date & Time</label>
+                        <Input
+                          type="datetime-local"
+                          value={scheduledDateTime ? scheduledDateTime.toISOString().slice(0, 16) : ''}
+                          onChange={(e) => setScheduledDateTime(e.target.value ? new Date(e.target.value) : null)}
+                          min={new Date().toISOString().slice(0, 16)}
+                          className="mt-1"
+                        />
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="text-sm font-medium">Business Hours Start</label>
+                          <Input
+                            type="time"
+                            value={businessHours.start}
+                            onChange={(e) => setBusinessHours(prev => ({ ...prev, start: e.target.value }))}
+                            className="mt-1"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium">Business Hours End</label>
+                          <Input
+                            type="time"
+                            value={businessHours.end}
+                            onChange={(e) => setBusinessHours(prev => ({ ...prev, end: e.target.value }))}
+                            className="mt-1"
+                          />
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <label className="text-sm font-medium">Timezone</label>
+                        <select 
+                          value={businessHours.timezone}
+                          onChange={(e) => setBusinessHours(prev => ({ ...prev, timezone: e.target.value }))}
+                          className="mt-1 w-full p-2 border rounded text-sm"
+                        >
+                          <option value="America/New_York">Eastern Time</option>
+                          <option value="America/Chicago">Central Time</option>
+                          <option value="America/Denver">Mountain Time</option>
+                          <option value="America/Los_Angeles">Pacific Time</option>
+                        </select>
+                      </div>
+                    </div>
+                  )}
 
                   <div className="pt-4 border-t">
                     <h4 className="font-medium mb-2">Compliance Check</h4>
@@ -488,9 +600,13 @@ export function NextGenCampaignBuilder({ onClose }: NextGenCampaignBuilderProps)
                     </div>
                   </div>
 
-                  <Button onClick={handleLaunchCampaign} className="w-full bg-gradient-to-r from-primary to-primary-glow">
+                  <Button 
+                    onClick={handleLaunchCampaign} 
+                    className="w-full bg-gradient-to-r from-primary to-primary-glow"
+                    disabled={scheduleType === 'scheduled' && !scheduledDateTime}
+                  >
                     <Play className="h-4 w-4 mr-2" />
-                    Launch Campaign
+                    {scheduleType === 'now' ? 'Launch Campaign' : 'Schedule Campaign'}
                   </Button>
                 </CardContent>
               </Card>
