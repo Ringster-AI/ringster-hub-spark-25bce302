@@ -14,8 +14,14 @@ import {
   Edit3,
   Play,
   Pause,
-  Settings
+  Settings,
+  Save,
+  X,
+  Trash2
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { motion, Reorder } from "framer-motion";
 import { WizardData } from "../wizard/ConversationalWizard";
 
@@ -120,6 +126,8 @@ export function CampaignFlowBuilder({ wizardData, onSave, onPreview }: CampaignF
 
   const [selectedBlock, setSelectedBlock] = useState<string | null>(null);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
+  const [editingBlock, setEditingBlock] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<Partial<FlowBlock>>({});
 
   const addBlock = (type: FlowBlock['type'], afterId?: string) => {
     const newBlock: FlowBlock = {
@@ -154,6 +162,49 @@ export function CampaignFlowBuilder({ wizardData, onSave, onPreview }: CampaignF
 
   const removeBlock = (id: string) => {
     setBlocks(prev => prev.filter(block => block.id !== id));
+    if (selectedBlock === id) setSelectedBlock(null);
+    if (editingBlock === id) setEditingBlock(null);
+  };
+
+  const startEditing = (block: FlowBlock) => {
+    setEditingBlock(block.id);
+    setEditForm(block);
+  };
+
+  const saveEdit = () => {
+    if (editingBlock && editForm) {
+      updateBlock(editingBlock, editForm);
+      setEditingBlock(null);
+      setEditForm({});
+    }
+  };
+
+  const cancelEdit = () => {
+    setEditingBlock(null);
+    setEditForm({});
+  };
+
+  const updateEditForm = (updates: Partial<FlowBlock>) => {
+    setEditForm(prev => ({ ...prev, ...updates }));
+  };
+
+  const addCondition = () => {
+    const currentConditions = editForm.conditions || [];
+    updateEditForm({
+      conditions: [...currentConditions, { label: 'New Option', response: 'User response', nextBlock: undefined }]
+    });
+  };
+
+  const updateCondition = (index: number, updates: Partial<FlowBlock['conditions'][0]>) => {
+    const currentConditions = editForm.conditions || [];
+    const newConditions = [...currentConditions];
+    newConditions[index] = { ...newConditions[index], ...updates };
+    updateEditForm({ conditions: newConditions });
+  };
+
+  const removeCondition = (index: number) => {
+    const currentConditions = editForm.conditions || [];
+    updateEditForm({ conditions: currentConditions.filter((_, i) => i !== index) });
   };
 
   const convertFlowToSystemPrompt = useCallback((blocks: FlowBlock[]): string => {
@@ -201,10 +252,10 @@ export function CampaignFlowBuilder({ wizardData, onSave, onPreview }: CampaignF
         className={`relative ${isSelected ? 'z-10' : ''}`}
       >
         <Card 
-          className={`cursor-pointer transition-all duration-200 hover:shadow-[var(--shadow-card-hover)] ${
+          className={`group cursor-pointer transition-all duration-200 hover:shadow-[var(--shadow-card-hover)] ${
             isSelected ? 'ring-2 ring-primary shadow-[var(--shadow-flow-node)]' : ''
-          }`}
-          onClick={() => setSelectedBlock(isSelected ? null : block.id)}
+          } ${editingBlock === block.id ? 'ring-2 ring-blue-500' : ''}`}
+          onClick={() => editingBlock !== block.id && setSelectedBlock(isSelected ? null : block.id)}
           style={{
             borderLeft: `4px solid ${blockTypes[block.type].color}`
           }}
@@ -234,27 +285,137 @@ export function CampaignFlowBuilder({ wizardData, onSave, onPreview }: CampaignF
             </div>
           </CardHeader>
           <CardContent className="pt-0">
-            <p className="text-sm text-muted-foreground line-clamp-2">
-              {block.content}
-            </p>
-            {block.conditions && (
-              <div className="mt-3 space-y-1">
-                {block.conditions.map((condition, idx) => (
-                  <div key={idx} className="flex items-center gap-2 text-xs">
-                    <div className="w-2 h-2 rounded-full bg-muted-foreground/40" />
-                    <span className="text-muted-foreground">
-                      {condition.label}: {condition.response}
-                    </span>
+            {editingBlock === block.id ? (
+              <div className="space-y-4">
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">Title</label>
+                  <Input
+                    value={editForm.title || ''}
+                    onChange={(e) => updateEditForm({ title: e.target.value })}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">Content</label>
+                  <Textarea
+                    value={editForm.content || ''}
+                    onChange={(e) => updateEditForm({ content: e.target.value })}
+                    className="mt-1 min-h-[80px]"
+                    placeholder="Enter your message here..."
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">Tone</label>
+                  <Select
+                    value={editForm.tone || 'professional'}
+                    onValueChange={(value: 'friendly' | 'professional' | 'persuasive') => 
+                      updateEditForm({ tone: value })
+                    }
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="friendly">Friendly</SelectItem>
+                      <SelectItem value="professional">Professional</SelectItem>
+                      <SelectItem value="persuasive">Persuasive</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                {block.type === 'branch' && (
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="text-xs font-medium text-muted-foreground">Response Options</label>
+                      <Button size="sm" variant="outline" onClick={addCondition}>
+                        <Plus className="h-3 w-3 mr-1" />
+                        Add Option
+                      </Button>
+                    </div>
+                    <div className="space-y-2">
+                      {(editForm.conditions || []).map((condition, idx) => (
+                        <div key={idx} className="flex gap-2">
+                          <div className="flex-1 space-y-1">
+                            <Input
+                              value={condition.label}
+                              onChange={(e) => updateCondition(idx, { label: e.target.value })}
+                              placeholder="Option label"
+                              className="text-xs"
+                            />
+                            <Input
+                              value={condition.response}
+                              onChange={(e) => updateCondition(idx, { response: e.target.value })}
+                              placeholder="User response"
+                              className="text-xs"
+                            />
+                          </div>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => removeCondition(idx)}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                ))}
+                )}
+                <div className="flex gap-2 pt-2">
+                  <Button size="sm" onClick={saveEdit}>
+                    <Save className="h-3 w-3 mr-1" />
+                    Save
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={cancelEdit}>
+                    Cancel
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    onClick={() => removeBlock(block.id)}
+                    className="ml-auto text-destructive hover:text-destructive"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                </div>
               </div>
-            )}
-            {block.tone && (
-              <div className="mt-3">
-                <Badge variant="outline" className="text-xs capitalize">
-                  {block.tone} tone
-                </Badge>
-              </div>
+            ) : (
+              <>
+                <div className="flex items-start justify-between">
+                  <p className="text-sm text-muted-foreground line-clamp-2 flex-1">
+                    {block.content}
+                  </p>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      startEditing(block);
+                    }}
+                    className="opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <Edit3 className="h-3 w-3" />
+                  </Button>
+                </div>
+                {block.conditions && (
+                  <div className="mt-3 space-y-1">
+                    {block.conditions.map((condition, idx) => (
+                      <div key={idx} className="flex items-center gap-2 text-xs">
+                        <div className="w-2 h-2 rounded-full bg-muted-foreground/40" />
+                        <span className="text-muted-foreground">
+                          {condition.label}: {condition.response}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {block.tone && (
+                  <div className="mt-3">
+                    <Badge variant="outline" className="text-xs capitalize">
+                      {block.tone} tone
+                    </Badge>
+                  </div>
+                )}
+              </>
             )}
           </CardContent>
         </Card>
