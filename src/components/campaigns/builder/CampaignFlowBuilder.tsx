@@ -463,7 +463,22 @@ export function CampaignFlowBuilder({ wizardData, onSave, onPreview }: CampaignF
               <Play className="h-4 w-4 mr-2" />
               Preview
             </Button>
-            <Button onClick={() => onSave(blocks)}>
+            <Button onClick={() => {
+              // Clean blocks to prevent JSON serialization errors
+              const cleanBlocks = blocks.map(block => ({
+                id: block.id,
+                type: block.type,
+                title: block.title || '',
+                content: block.content || '',
+                tone: block.tone,
+                conditions: block.conditions ? block.conditions.map(condition => ({
+                  label: condition.label || '',
+                  response: condition.response || '',
+                  nextBlock: condition.nextBlock
+                })) : undefined
+              }));
+              onSave(cleanBlocks);
+            }}>
               Save Campaign
             </Button>
           </div>
