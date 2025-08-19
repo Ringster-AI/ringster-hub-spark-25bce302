@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.47.10";
 
@@ -46,6 +47,40 @@ serve(async (req) => {
     }
 
     let vapiResponse;
+    let vapiConfig;
+
+    if (action === 'update' || action === 'create') {
+      // Create the correct VAPI assistant configuration
+      vapiConfig = {
+        name: agent.name,
+        model: {
+          provider: 'openai',
+          model: 'gpt-4o-mini',
+          temperature: 0.7,
+          messages: [
+            {
+              role: 'system',
+              content: agent.description || 'You are a helpful AI assistant.'
+            }
+          ]
+        },
+        voice: {
+          provider: '11labs',
+          voiceId: agent.voice_id || '21m00Tcm4TlvDq8ikWAM',
+        },
+        transcriber: {
+          provider: 'deepgram',
+          model: 'nova-2',
+          language: 'en'
+        },
+        firstMessage: agent.greeting || 'Hello! How can I help you today?',
+        endCallMessage: agent.goodbye || 'Thank you for calling. Have a great day!',
+        silenceTimeoutSeconds: 30,
+        maxDurationSeconds: 600
+      };
+
+      console.log('VAPI Configuration:', JSON.stringify(vapiConfig, null, 2));
+    }
 
     if (action === 'update') {
       // Check if assistant already exists
@@ -58,23 +93,10 @@ serve(async (req) => {
             'Authorization': `Bearer ${vapiApiKey}`,
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            name: agent.name,
-            model: {
-              provider: 'openai',
-              model: 'gpt-4o-mini',
-              systemMessage: agent.description || 'You are a helpful AI assistant.',
-            },
-            voice: {
-              provider: '11labs',
-              voiceId: agent.voice_id || 'sarah',
-            },
-            firstMessage: agent.greeting || 'Hello! How can I help you today?',
-            endCallMessage: agent.goodbye || 'Thank you for calling. Have a great day!',
-          }),
+          body: JSON.stringify(vapiConfig),
         });
       } else {
-        // Create new assistant
+        // Create new assistant if none exists
         console.log('Creating new VAPI assistant');
         vapiResponse = await fetch('https://api.vapi.ai/assistant', {
           method: 'POST',
@@ -82,22 +104,20 @@ serve(async (req) => {
             'Authorization': `Bearer ${vapiApiKey}`,
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            name: agent.name,
-            model: {
-              provider: 'openai',
-              model: 'gpt-4o-mini',
-              systemMessage: agent.description || 'You are a helpful AI assistant.',
-            },
-            voice: {
-              provider: '11labs',
-              voiceId: agent.voice_id || 'sarah',
-            },
-            firstMessage: agent.greeting || 'Hello! How can I help you today?',
-            endCallMessage: agent.goodbye || 'Thank you for calling. Have a great day!',
-          }),
+          body: JSON.stringify(vapiConfig),
         });
       }
+    } else if (action === 'create') {
+      // Create new assistant
+      console.log('Creating new VAPI assistant');
+      vapiResponse = await fetch('https://api.vapi.ai/assistant', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${vapiApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(vapiConfig),
+      });
     } else if (action === 'delete' && agent.vapi_assistant_id) {
       // Delete assistant
       console.log('Deleting VAPI assistant:', agent.vapi_assistant_id);
@@ -122,7 +142,7 @@ serve(async (req) => {
     }
 
     // Update agent with VAPI assistant ID if we created/updated one
-    if (action === 'update' && vapiData?.id) {
+    if ((action === 'update' || action === 'create') && vapiData?.id) {
       const { error: updateError } = await supabase
         .from('agent_configs')
         .update({ 
