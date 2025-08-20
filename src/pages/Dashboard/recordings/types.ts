@@ -11,10 +11,19 @@ export interface CallRecording {
     to_number: string;
     duration: number;
     start_time: string;
+    status: string;
     agent: {
       name: string;
     };
   };
+}
+
+export interface CallRecordingEnhanced extends CallRecording {
+  sentiment?: 'positive' | 'neutral' | 'negative';
+  keywords?: string[];
+  conversion_flag?: boolean;
+  contact_name?: string;
+  call_type: 'inbound' | 'outbound';
 }
 
 export interface TranscriptSegment {
