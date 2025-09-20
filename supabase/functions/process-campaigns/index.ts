@@ -195,6 +195,9 @@ async function makeOutboundCall(campaign: any, contact: Contact): Promise<boolea
     return false;
   }
 
+  // Use fixed outbound number to save costs
+  const fixedOutboundNumber = '+16204458363';
+
   const payload = {
     assistant: {
       name: campaign.name,
@@ -202,7 +205,7 @@ async function makeOutboundCall(campaign: any, contact: Contact): Promise<boolea
       firstMessageMode: 'assistant-speaks-first'
     },
     phoneNumber: {
-      twilioPhoneNumber: campaign.agent_configs?.phone_number
+      twilioPhoneNumber: fixedOutboundNumber
     },
     customer: {
       number: contact.phone_number,
