@@ -12,6 +12,7 @@ export interface PricingPlan {
   max_agents: number;
   max_team_members: number;
   minutes_allowance: number;
+  credits_allowance: number;
   is_active: boolean;
   is_pay_as_you_go: boolean;
   per_minute_rate: number | null;

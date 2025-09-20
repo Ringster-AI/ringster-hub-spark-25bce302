@@ -628,6 +628,44 @@ export type Database = {
         }
         Relationships: []
       }
+      credit_transactions: {
+        Row: {
+          call_log_id: string | null
+          created_at: string
+          credits_amount: number
+          description: string | null
+          id: string
+          transaction_type: string
+          user_id: string
+        }
+        Insert: {
+          call_log_id?: string | null
+          created_at?: string
+          credits_amount: number
+          description?: string | null
+          id?: string
+          transaction_type: string
+          user_id: string
+        }
+        Update: {
+          call_log_id?: string | null
+          created_at?: string
+          credits_amount?: number
+          description?: string | null
+          id?: string
+          transaction_type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credit_transactions_call_log_id_fkey"
+            columns: ["call_log_id"]
+            isOneToOne: false
+            referencedRelation: "call_logs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       custom_voices: {
         Row: {
           created_at: string | null
@@ -1036,6 +1074,59 @@ export type Database = {
         }
         Relationships: []
       }
+      plan_features: {
+        Row: {
+          ai_insights: boolean
+          api_access: boolean
+          appointment_booking: boolean
+          calendar_integration: boolean
+          call_recording: boolean
+          created_at: string
+          crm_integration: boolean
+          id: string
+          plan_id: string
+          retry_logic: boolean
+          sms_followup: boolean
+          updated_at: string
+        }
+        Insert: {
+          ai_insights?: boolean
+          api_access?: boolean
+          appointment_booking?: boolean
+          calendar_integration?: boolean
+          call_recording?: boolean
+          created_at?: string
+          crm_integration?: boolean
+          id?: string
+          plan_id: string
+          retry_logic?: boolean
+          sms_followup?: boolean
+          updated_at?: string
+        }
+        Update: {
+          ai_insights?: boolean
+          api_access?: boolean
+          appointment_booking?: boolean
+          calendar_integration?: boolean
+          call_recording?: boolean
+          created_at?: string
+          crm_integration?: boolean
+          id?: string
+          plan_id?: string
+          retry_logic?: boolean
+          sms_followup?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plan_features_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: true
+            referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -1109,6 +1200,7 @@ export type Database = {
         Row: {
           billing_interval: string | null
           created_at: string | null
+          credits_allowance: number
           features: Json
           id: string
           is_active: boolean | null
@@ -1127,6 +1219,7 @@ export type Database = {
         Insert: {
           billing_interval?: string | null
           created_at?: string | null
+          credits_allowance?: number
           features?: Json
           id?: string
           is_active?: boolean | null
@@ -1145,6 +1238,7 @@ export type Database = {
         Update: {
           billing_interval?: string | null
           created_at?: string | null
+          credits_allowance?: number
           features?: Json
           id?: string
           is_active?: boolean | null
@@ -1230,6 +1324,39 @@ export type Database = {
           total_transfers?: number | null
           user_id?: string | null
           year?: number
+        }
+        Relationships: []
+      }
+      user_credits: {
+        Row: {
+          add_on_credits: number
+          created_at: string
+          credits_used: number
+          id: string
+          plan_credits: number
+          reset_date: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          add_on_credits?: number
+          created_at?: string
+          credits_used?: number
+          id?: string
+          plan_credits?: number
+          reset_date?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          add_on_credits?: number
+          created_at?: string
+          credits_used?: number
+          id?: string
+          plan_credits?: number
+          reset_date?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -1334,6 +1461,24 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_credits: {
+        Args: {
+          p_credit_type?: string
+          p_credits_amount: number
+          p_description?: string
+          p_user_id: string
+        }
+        Returns: boolean
+      }
+      deduct_credits: {
+        Args: {
+          p_call_log_id?: string
+          p_credits_amount: number
+          p_description?: string
+          p_user_id: string
+        }
+        Returns: boolean
+      }
       handle_subscription_update: {
         Args: {
           new_period_end: string
@@ -1359,6 +1504,10 @@ export type Database = {
       process_campaign_contacts: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      reset_monthly_credits: {
+        Args: { p_user_id: string }
+        Returns: boolean
       }
       sync_user_subscription: {
         Args: { p_plan_id?: string; p_user_id: string }

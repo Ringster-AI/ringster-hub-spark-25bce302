@@ -6,6 +6,8 @@ import { CurrentPlanUsage } from "./CurrentPlanUsage";
 import { AgentUsageTable } from "./AgentUsageTable";
 import { MonthlySummary } from "./MonthlySummary";
 import { PricingPlans } from "@/components/subscription/PricingPlans";
+import { CreditDisplay } from "@/components/credits/CreditDisplay";
+import { CreditTransactionHistory } from "@/components/credits/CreditTransactionHistory";
 
 export const SubscriptionContent = () => {
   const { features, isLoading } = useSubscriptionFeatures();
@@ -18,6 +20,19 @@ export const SubscriptionContent = () => {
     <div className="w-full">
       <div className="p-4 md:p-6">
         <SubscriptionHeader />
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <CreditDisplay 
+            onUpgrade={() => {
+              document.getElementById('pricing-section')?.scrollIntoView({ behavior: 'smooth' });
+            }}
+            onTopUp={() => {
+              // TODO: Implement credit top-up functionality
+              console.log('Top up credits');
+            }}
+          />
+          <CreditTransactionHistory />
+        </div>
 
         <CurrentPlanUsage 
           features={features} 
@@ -32,7 +47,7 @@ export const SubscriptionContent = () => {
         )}
       </div>
 
-      <div className="p-4 md:p-6 pt-0">
+      <div id="pricing-section" className="p-4 md:p-6 pt-0">
         <PricingPlans />
       </div>
     </div>
