@@ -7,6 +7,11 @@ export type Json =
   | Json[]
 
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "13.0.5"
+  }
   public: {
     Tables: {
       agent_configs: {
@@ -93,265 +98,6 @@ export type Database = {
         }
         Relationships: []
       }
-      agent_configs_5sy83d: {
-        Row: {
-          business_hours: Json
-          calendar_integration: Json | null
-          created_at: string
-          goodbye: string
-          greeting: string
-          id: string
-          name: string
-          organization_id: string
-          phone_number: string
-          system_prompt: string
-          transfer_directory: Json | null
-          updated_at: string
-          voice_id: string | null
-        }
-        Insert: {
-          business_hours: Json
-          calendar_integration?: Json | null
-          created_at?: string
-          goodbye: string
-          greeting: string
-          id?: string
-          name: string
-          organization_id: string
-          phone_number: string
-          system_prompt: string
-          transfer_directory?: Json | null
-          updated_at?: string
-          voice_id?: string | null
-        }
-        Update: {
-          business_hours?: Json
-          calendar_integration?: Json | null
-          created_at?: string
-          goodbye?: string
-          greeting?: string
-          id?: string
-          name?: string
-          organization_id?: string
-          phone_number?: string
-          system_prompt?: string
-          transfer_directory?: Json | null
-          updated_at?: string
-          voice_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "agent_configs_5sy83d_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations_5sy83d"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      ai_phone_assistant_5sy83d_agent_configs: {
-        Row: {
-          business_hours: Json
-          calendar_integration: Json | null
-          created_at: string
-          goodbye: string
-          greeting: string
-          id: string
-          name: string
-          organization_id: string
-          phone_number: string
-          system_prompt: string
-          transfer_directory: Json | null
-          updated_at: string
-          user_email: string
-          voice_id: string | null
-        }
-        Insert: {
-          business_hours: Json
-          calendar_integration?: Json | null
-          created_at?: string
-          goodbye: string
-          greeting: string
-          id?: string
-          name: string
-          organization_id: string
-          phone_number: string
-          system_prompt: string
-          transfer_directory?: Json | null
-          updated_at?: string
-          user_email: string
-          voice_id?: string | null
-        }
-        Update: {
-          business_hours?: Json
-          calendar_integration?: Json | null
-          created_at?: string
-          goodbye?: string
-          greeting?: string
-          id?: string
-          name?: string
-          organization_id?: string
-          phone_number?: string
-          system_prompt?: string
-          transfer_directory?: Json | null
-          updated_at?: string
-          user_email?: string
-          voice_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "ai_phone_assistant_5sy83d_agent_configs_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "ai_phone_assistant_5sy83d_organizations"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      ai_phone_assistant_5sy83d_call_logs: {
-        Row: {
-          agent_id: string
-          call_sid: string
-          created_at: string
-          duration: number | null
-          from_number: string
-          id: string
-          organization_id: string
-          recording_url: string | null
-          status: string
-          summary: string | null
-          to_number: string
-          transcript: string | null
-          updated_at: string
-          user_email: string
-        }
-        Insert: {
-          agent_id: string
-          call_sid: string
-          created_at?: string
-          duration?: number | null
-          from_number: string
-          id?: string
-          organization_id: string
-          recording_url?: string | null
-          status: string
-          summary?: string | null
-          to_number: string
-          transcript?: string | null
-          updated_at?: string
-          user_email: string
-        }
-        Update: {
-          agent_id?: string
-          call_sid?: string
-          created_at?: string
-          duration?: number | null
-          from_number?: string
-          id?: string
-          organization_id?: string
-          recording_url?: string | null
-          status?: string
-          summary?: string | null
-          to_number?: string
-          transcript?: string | null
-          updated_at?: string
-          user_email?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "ai_phone_assistant_5sy83d_call_logs_agent_id_fkey"
-            columns: ["agent_id"]
-            isOneToOne: false
-            referencedRelation: "ai_phone_assistant_5sy83d_agent_configs"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "ai_phone_assistant_5sy83d_call_logs_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "ai_phone_assistant_5sy83d_organizations"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      ai_phone_assistant_5sy83d_google_integrations: {
-        Row: {
-          access_token: string
-          availability_days: string | null
-          availability_end: string | null
-          availability_start: string | null
-          calendar_id: string | null
-          created_at: string
-          email: string
-          id: string
-          refresh_token: string
-          scopes: string
-          updated_at: string
-          user_email: string
-          user_id: string
-        }
-        Insert: {
-          access_token: string
-          availability_days?: string | null
-          availability_end?: string | null
-          availability_start?: string | null
-          calendar_id?: string | null
-          created_at?: string
-          email: string
-          id?: string
-          refresh_token: string
-          scopes: string
-          updated_at?: string
-          user_email: string
-          user_id: string
-        }
-        Update: {
-          access_token?: string
-          availability_days?: string | null
-          availability_end?: string | null
-          availability_start?: string | null
-          calendar_id?: string | null
-          created_at?: string
-          email?: string
-          id?: string
-          refresh_token?: string
-          scopes?: string
-          updated_at?: string
-          user_email?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      ai_phone_assistant_5sy83d_organizations: {
-        Row: {
-          created_at: string
-          id: string
-          name: string
-          owner_id: string
-          settings: Json | null
-          updated_at: string
-          user_email: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          name: string
-          owner_id: string
-          settings?: Json | null
-          updated_at?: string
-          user_email: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          name?: string
-          owner_id?: string
-          settings?: Json | null
-          updated_at?: string
-          user_email?: string
-        }
-        Relationships: []
-      }
       blog_posts: {
         Row: {
           author_id: string
@@ -393,6 +139,226 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      booking_requests: {
+        Row: {
+          appointment_type: string | null
+          attendee_email: string | null
+          attendee_name: string
+          call_log_id: string | null
+          campaign_id: string | null
+          contact_id: string | null
+          created_at: string | null
+          duration_minutes: number | null
+          expires_at: string | null
+          id: string
+          notes: string | null
+          phone_number: string
+          requested_datetime: string
+          status: string | null
+          updated_at: string | null
+          verification_id: string | null
+        }
+        Insert: {
+          appointment_type?: string | null
+          attendee_email?: string | null
+          attendee_name: string
+          call_log_id?: string | null
+          campaign_id?: string | null
+          contact_id?: string | null
+          created_at?: string | null
+          duration_minutes?: number | null
+          expires_at?: string | null
+          id?: string
+          notes?: string | null
+          phone_number: string
+          requested_datetime: string
+          status?: string | null
+          updated_at?: string | null
+          verification_id?: string | null
+        }
+        Update: {
+          appointment_type?: string | null
+          attendee_email?: string | null
+          attendee_name?: string
+          call_log_id?: string | null
+          campaign_id?: string | null
+          contact_id?: string | null
+          created_at?: string | null
+          duration_minutes?: number | null
+          expires_at?: string | null
+          id?: string
+          notes?: string | null
+          phone_number?: string
+          requested_datetime?: string
+          status?: string | null
+          updated_at?: string | null
+          verification_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_requests_call_log_id_fkey"
+            columns: ["call_log_id"]
+            isOneToOne: false
+            referencedRelation: "call_logs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "booking_requests_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "booking_requests_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "campaign_contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "booking_requests_verification_id_fkey"
+            columns: ["verification_id"]
+            isOneToOne: false
+            referencedRelation: "phone_verifications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      calendar_bookings: {
+        Row: {
+          appointment_datetime: string
+          appointment_type: string | null
+          attendee_email: string | null
+          attendee_name: string | null
+          booking_source: string | null
+          booking_status: string
+          call_log_id: string | null
+          campaign_id: string | null
+          contact_id: string | null
+          created_at: string
+          duration_minutes: number
+          google_event_id: string | null
+          google_integration_id: string | null
+          id: string
+          notes: string | null
+          updated_at: string
+        }
+        Insert: {
+          appointment_datetime: string
+          appointment_type?: string | null
+          attendee_email?: string | null
+          attendee_name?: string | null
+          booking_source?: string | null
+          booking_status?: string
+          call_log_id?: string | null
+          campaign_id?: string | null
+          contact_id?: string | null
+          created_at?: string
+          duration_minutes?: number
+          google_event_id?: string | null
+          google_integration_id?: string | null
+          id?: string
+          notes?: string | null
+          updated_at?: string
+        }
+        Update: {
+          appointment_datetime?: string
+          appointment_type?: string | null
+          attendee_email?: string | null
+          attendee_name?: string | null
+          booking_source?: string | null
+          booking_status?: string
+          call_log_id?: string | null
+          campaign_id?: string | null
+          contact_id?: string | null
+          created_at?: string
+          duration_minutes?: number
+          google_event_id?: string | null
+          google_integration_id?: string | null
+          id?: string
+          notes?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calendar_bookings_call_log_id_fkey"
+            columns: ["call_log_id"]
+            isOneToOne: false
+            referencedRelation: "call_logs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "calendar_bookings_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "calendar_bookings_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "campaign_contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "calendar_bookings_google_integration_id_fkey"
+            columns: ["google_integration_id"]
+            isOneToOne: false
+            referencedRelation: "google_integrations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      calendar_tools: {
+        Row: {
+          agent_id: string
+          campaign_id: string | null
+          configuration: Json | null
+          created_at: string | null
+          id: string
+          is_enabled: boolean | null
+          tool_name: string
+          updated_at: string | null
+        }
+        Insert: {
+          agent_id: string
+          campaign_id?: string | null
+          configuration?: Json | null
+          created_at?: string | null
+          id?: string
+          is_enabled?: boolean | null
+          tool_name?: string
+          updated_at?: string | null
+        }
+        Update: {
+          agent_id?: string
+          campaign_id?: string | null
+          configuration?: Json | null
+          created_at?: string | null
+          id?: string
+          is_enabled?: boolean | null
+          tool_name?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calendar_tools_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agent_configs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "calendar_tools_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       call_logs: {
         Row: {
@@ -440,69 +406,6 @@ export type Database = {
             columns: ["agent_id"]
             isOneToOne: false
             referencedRelation: "agent_configs"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      call_logs_5sy83d: {
-        Row: {
-          agent_id: string
-          call_sid: string
-          created_at: string
-          duration: number | null
-          from_number: string
-          id: string
-          organization_id: string
-          recording_url: string | null
-          status: string
-          summary: string | null
-          to_number: string
-          transcript: string | null
-          updated_at: string
-        }
-        Insert: {
-          agent_id: string
-          call_sid: string
-          created_at?: string
-          duration?: number | null
-          from_number: string
-          id?: string
-          organization_id: string
-          recording_url?: string | null
-          status: string
-          summary?: string | null
-          to_number: string
-          transcript?: string | null
-          updated_at?: string
-        }
-        Update: {
-          agent_id?: string
-          call_sid?: string
-          created_at?: string
-          duration?: number | null
-          from_number?: string
-          id?: string
-          organization_id?: string
-          recording_url?: string | null
-          status?: string
-          summary?: string | null
-          to_number?: string
-          transcript?: string | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "call_logs_5sy83d_agent_id_fkey"
-            columns: ["agent_id"]
-            isOneToOne: false
-            referencedRelation: "agent_configs_5sy83d"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "call_logs_5sy83d_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations_5sy83d"
             referencedColumns: ["id"]
           },
         ]
@@ -596,6 +499,51 @@ export type Database = {
           },
         ]
       }
+      campaign_integrations: {
+        Row: {
+          campaign_id: string
+          configuration: Json
+          created_at: string
+          id: string
+          integration_id: string
+          is_enabled: boolean
+          updated_at: string
+        }
+        Insert: {
+          campaign_id: string
+          configuration?: Json
+          created_at?: string
+          id?: string
+          integration_id: string
+          is_enabled?: boolean
+          updated_at?: string
+        }
+        Update: {
+          campaign_id?: string
+          configuration?: Json
+          created_at?: string
+          id?: string
+          integration_id?: string
+          is_enabled?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_integrations_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_integrations_integration_id_fkey"
+            columns: ["integration_id"]
+            isOneToOne: false
+            referencedRelation: "integrations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       campaigns: {
         Row: {
           agent_id: string | null
@@ -679,6 +627,44 @@ export type Database = {
           phone?: string | null
         }
         Relationships: []
+      }
+      credit_transactions: {
+        Row: {
+          call_log_id: string | null
+          created_at: string
+          credits_amount: number
+          description: string | null
+          id: string
+          transaction_type: string
+          user_id: string
+        }
+        Insert: {
+          call_log_id?: string | null
+          created_at?: string
+          credits_amount: number
+          description?: string | null
+          id?: string
+          transaction_type: string
+          user_id: string
+        }
+        Update: {
+          call_log_id?: string | null
+          created_at?: string
+          credits_amount?: number
+          description?: string | null
+          id?: string
+          transaction_type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credit_transactions_call_log_id_fkey"
+            columns: ["call_log_id"]
+            isOneToOne: false
+            referencedRelation: "call_logs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       custom_voices: {
         Row: {
@@ -775,6 +761,66 @@ export type Database = {
         }
         Relationships: []
       }
+      follow_up_sequences: {
+        Row: {
+          campaign_id: string | null
+          contact_id: string | null
+          content: string | null
+          created_at: string
+          delay_hours: number
+          id: string
+          scheduled_for: string | null
+          sent_at: string | null
+          sequence_type: string
+          status: string
+          trigger_event: string
+          updated_at: string
+        }
+        Insert: {
+          campaign_id?: string | null
+          contact_id?: string | null
+          content?: string | null
+          created_at?: string
+          delay_hours?: number
+          id?: string
+          scheduled_for?: string | null
+          sent_at?: string | null
+          sequence_type: string
+          status?: string
+          trigger_event: string
+          updated_at?: string
+        }
+        Update: {
+          campaign_id?: string | null
+          contact_id?: string | null
+          content?: string | null
+          created_at?: string
+          delay_hours?: number
+          id?: string
+          scheduled_for?: string | null
+          sent_at?: string | null
+          sequence_type?: string
+          status?: string
+          trigger_event?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "follow_up_sequences_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "follow_up_sequences_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "campaign_contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       google_integrations: {
         Row: {
           access_token: string
@@ -835,46 +881,93 @@ export type Database = {
         }
         Relationships: []
       }
-      google_integrations_5sy83d: {
+      integration_logs: {
         Row: {
-          access_token: string
-          availability_days: string | null
-          availability_end: string | null
-          availability_start: string | null
-          calendar_id: string | null
+          action: string
           created_at: string
-          email: string
+          details: Json | null
           id: string
-          refresh_token: string
-          scopes: string
+          integration_id: string
+          message: string | null
+          status: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          integration_id: string
+          message?: string | null
+          status: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          integration_id?: string
+          message?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "integration_logs_integration_id_fkey"
+            columns: ["integration_id"]
+            isOneToOne: false
+            referencedRelation: "integrations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      integrations: {
+        Row: {
+          capabilities: string[]
+          configuration: Json
+          created_at: string
+          credentials: Json
+          display_name: string
+          expires_at: string | null
+          id: string
+          integration_type: string
+          is_active: boolean
+          last_sync_at: string | null
+          metadata: Json
+          provider_name: string
+          status: string
           updated_at: string
           user_id: string
         }
         Insert: {
-          access_token: string
-          availability_days?: string | null
-          availability_end?: string | null
-          availability_start?: string | null
-          calendar_id?: string | null
+          capabilities?: string[]
+          configuration?: Json
           created_at?: string
-          email: string
+          credentials?: Json
+          display_name: string
+          expires_at?: string | null
           id?: string
-          refresh_token: string
-          scopes: string
+          integration_type: string
+          is_active?: boolean
+          last_sync_at?: string | null
+          metadata?: Json
+          provider_name: string
+          status?: string
           updated_at?: string
           user_id: string
         }
         Update: {
-          access_token?: string
-          availability_days?: string | null
-          availability_end?: string | null
-          availability_start?: string | null
-          calendar_id?: string | null
+          capabilities?: string[]
+          configuration?: Json
           created_at?: string
-          email?: string
+          credentials?: Json
+          display_name?: string
+          expires_at?: string | null
           id?: string
-          refresh_token?: string
-          scopes?: string
+          integration_type?: string
+          is_active?: boolean
+          last_sync_at?: string | null
+          metadata?: Json
+          provider_name?: string
+          status?: string
           updated_at?: string
           user_id?: string
         }
@@ -948,32 +1041,91 @@ export type Database = {
           },
         ]
       }
-      organizations_5sy83d: {
+      phone_verifications: {
         Row: {
-          created_at: string
+          attempts: number | null
+          created_at: string | null
+          expires_at: string
           id: string
-          name: string
-          owner_id: string
-          settings: Json | null
+          phone_number: string
+          updated_at: string | null
+          verification_code: string
+          verified: boolean | null
+        }
+        Insert: {
+          attempts?: number | null
+          created_at?: string | null
+          expires_at?: string
+          id?: string
+          phone_number: string
+          updated_at?: string | null
+          verification_code: string
+          verified?: boolean | null
+        }
+        Update: {
+          attempts?: number | null
+          created_at?: string | null
+          expires_at?: string
+          id?: string
+          phone_number?: string
+          updated_at?: string | null
+          verification_code?: string
+          verified?: boolean | null
+        }
+        Relationships: []
+      }
+      plan_features: {
+        Row: {
+          ai_insights: boolean
+          api_access: boolean
+          appointment_booking: boolean
+          calendar_integration: boolean
+          call_recording: boolean
+          created_at: string
+          crm_integration: boolean
+          id: string
+          plan_id: string
+          retry_logic: boolean
+          sms_followup: boolean
           updated_at: string
         }
         Insert: {
+          ai_insights?: boolean
+          api_access?: boolean
+          appointment_booking?: boolean
+          calendar_integration?: boolean
+          call_recording?: boolean
           created_at?: string
+          crm_integration?: boolean
           id?: string
-          name: string
-          owner_id: string
-          settings?: Json | null
+          plan_id: string
+          retry_logic?: boolean
+          sms_followup?: boolean
           updated_at?: string
         }
         Update: {
+          ai_insights?: boolean
+          api_access?: boolean
+          appointment_booking?: boolean
+          calendar_integration?: boolean
+          call_recording?: boolean
           created_at?: string
+          crm_integration?: boolean
           id?: string
-          name?: string
-          owner_id?: string
-          settings?: Json | null
+          plan_id?: string
+          retry_logic?: boolean
+          sms_followup?: boolean
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "plan_features_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: true
+            referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -1014,51 +1166,41 @@ export type Database = {
         }
         Relationships: []
       }
-      profiles_5sy83d: {
+      rate_limits: {
         Row: {
-          created_at: string
-          email: string
-          first_name: string | null
+          action_type: string
+          count: number | null
+          created_at: string | null
           id: string
-          last_name: string | null
-          organization_id: string | null
-          updated_at: string
-          user_id: string
+          identifier: string
+          updated_at: string | null
+          window_start: string | null
         }
         Insert: {
-          created_at?: string
-          email: string
-          first_name?: string | null
+          action_type: string
+          count?: number | null
+          created_at?: string | null
           id?: string
-          last_name?: string | null
-          organization_id?: string | null
-          updated_at?: string
-          user_id: string
+          identifier: string
+          updated_at?: string | null
+          window_start?: string | null
         }
         Update: {
-          created_at?: string
-          email?: string
-          first_name?: string | null
+          action_type?: string
+          count?: number | null
+          created_at?: string | null
           id?: string
-          last_name?: string | null
-          organization_id?: string | null
-          updated_at?: string
-          user_id?: string
+          identifier?: string
+          updated_at?: string | null
+          window_start?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "profiles_5sy83d_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations_5sy83d"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       subscription_plans: {
         Row: {
           billing_interval: string | null
           created_at: string | null
+          credits_allowance: number
           features: Json
           id: string
           is_active: boolean | null
@@ -1077,6 +1219,7 @@ export type Database = {
         Insert: {
           billing_interval?: string | null
           created_at?: string | null
+          credits_allowance?: number
           features?: Json
           id?: string
           is_active?: boolean | null
@@ -1095,6 +1238,7 @@ export type Database = {
         Update: {
           billing_interval?: string | null
           created_at?: string | null
+          credits_allowance?: number
           features?: Json
           id?: string
           is_active?: boolean | null
@@ -1183,6 +1327,39 @@ export type Database = {
         }
         Relationships: []
       }
+      user_credits: {
+        Row: {
+          add_on_credits: number
+          created_at: string
+          credits_used: number
+          id: string
+          plan_credits: number
+          reset_date: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          add_on_credits?: number
+          created_at?: string
+          credits_used?: number
+          id?: string
+          plan_credits?: number
+          reset_date?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          add_on_credits?: number
+          created_at?: string
+          credits_used?: number
+          id?: string
+          plan_credits?: number
+          reset_date?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -1261,83 +1438,71 @@ export type Database = {
           },
         ]
       }
-      user_subscriptions_5sy83d: {
+      waitlist: {
         Row: {
           created_at: string
-          current_period_end: string
-          current_period_start: string
+          email: string
           id: string
-          organization_id: string
-          plan_id: string
-          status: string
-          updated_at: string
-          user_id: string
         }
         Insert: {
           created_at?: string
-          current_period_end: string
-          current_period_start: string
+          email: string
           id?: string
-          organization_id: string
-          plan_id: string
-          status: string
-          updated_at?: string
-          user_id: string
         }
         Update: {
           created_at?: string
-          current_period_end?: string
-          current_period_start?: string
+          email?: string
           id?: string
-          organization_id?: string
-          plan_id?: string
-          status?: string
-          updated_at?: string
-          user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "user_subscriptions_5sy83d_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations_5sy83d"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      add_credits: {
+        Args: {
+          p_credit_type?: string
+          p_credits_amount: number
+          p_description?: string
+          p_user_id: string
+        }
+        Returns: boolean
+      }
+      deduct_credits: {
+        Args: {
+          p_call_log_id?: string
+          p_credits_amount: number
+          p_description?: string
+          p_user_id: string
+        }
+        Returns: boolean
+      }
       handle_subscription_update: {
         Args: {
-          user_id: string
+          new_period_end: string
+          new_period_start: string
           new_plan_id: string
           new_status: string
-          new_period_start: string
-          new_period_end: string
+          user_id: string
         }
         Returns: undefined
       }
       has_role: {
-        Args: { user_id: string; role_name: string }
+        Args: { role_name: string; user_id: string }
         Returns: boolean
       }
-      is_admin: {
-        Args: { user_id: string }
-        Returns: boolean
-      }
-      process_campaign_contacts: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      is_admin: { Args: { user_id: string }; Returns: boolean }
+      migrate_google_integrations: { Args: never; Returns: undefined }
+      process_campaign_contacts: { Args: never; Returns: undefined }
+      reset_monthly_credits: { Args: { p_user_id: string }; Returns: boolean }
       sync_user_subscription: {
-        Args: { p_user_id: string; p_plan_id?: string }
+        Args: { p_plan_id?: string; p_user_id: string }
         Returns: undefined
       }
       update_minutes_used: {
-        Args: { p_user_id: string; p_minutes: number }
+        Args: { p_minutes: number; p_user_id: string }
         Returns: undefined
       }
     }
@@ -1351,21 +1516,25 @@ export type Database = {
   }
 }
 
-type DefaultSchema = Database[Extract<keyof Database, "public">]
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-        Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-      Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
     ? R
@@ -1383,14 +1552,16 @@ export type Tables<
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I
     }
     ? I
@@ -1406,14 +1577,16 @@ export type TablesInsert<
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U
     }
     ? U
@@ -1429,14 +1602,16 @@ export type TablesUpdate<
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never = never,
-> = DefaultSchemaEnumNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
     ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
     : never
@@ -1444,14 +1619,16 @@ export type Enums<
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
     : never = never,
-> = PublicCompositeTypeNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
     ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
