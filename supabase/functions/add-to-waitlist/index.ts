@@ -27,46 +27,50 @@ serve(async (req) => {
       );
     }
 
-    const SENDGRID_API_KEY = Deno.env.get('SENDGRID_API_KEY');
-    const SENDGRID_LIST_ID = Deno.env.get('SENDGRID_LIST_ID');
+    const MAILERLITE_KEY = Deno.env.get('MAILERLITE_KEY');
+    const MAILERLITE_GROUP_ID = Deno.env.get('SENDGRID_LIST_ID'); // Reusing this env var
 
-    console.log('Checking SendGrid configuration...');
-    console.log('API Key exists:', !!SENDGRID_API_KEY);
-    console.log('List ID exists:', !!SENDGRID_LIST_ID);
+    console.log('Checking MailerLite configuration...');
+    console.log('API Key exists:', !!MAILERLITE_KEY);
+    console.log('Group ID exists:', !!MAILERLITE_GROUP_ID);
 
-    if (!SENDGRID_API_KEY || !SENDGRID_LIST_ID) {
-      console.error('SendGrid configuration missing');
+    if (!MAILERLITE_KEY) {
+      console.error('MailerLite configuration missing');
       return new Response(
         JSON.stringify({ error: 'Server configuration error' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log('Sending request to SendGrid...');
-    // Add contact to SendGrid
-    const response = await fetch('https://api.sendgrid.com/v3/marketing/contacts', {
-      method: 'PUT',
+    console.log('Sending request to MailerLite...');
+    
+    const payload: any = {
+      email
+    };
+    
+    if (MAILERLITE_GROUP_ID) {
+      payload.groups = [MAILERLITE_GROUP_ID];
+    }
+    
+    // Add contact to MailerLite
+    const response = await fetch('https://connect.mailerlite.com/api/subscribers', {
+      method: 'POST',
       headers: {
-        'Authorization': `Bearer ${SENDGRID_API_KEY}`,
+        'Authorization': `Bearer ${MAILERLITE_KEY}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        list_ids: [SENDGRID_LIST_ID],
-        contacts: [{
-          email: email
-        }]
-      })
+      body: JSON.stringify(payload)
     });
 
     const responseText = await response.text();
-    console.log('SendGrid API Response:', response.status, responseText);
+    console.log('MailerLite API Response:', response.status, responseText);
 
     if (!response.ok) {
-      console.error('SendGrid API error:', responseText);
-      throw new Error('Failed to add contact to SendGrid');
+      console.error('MailerLite API error:', responseText);
+      throw new Error('Failed to add contact to MailerLite');
     }
 
-    console.log('Successfully added contact to SendGrid');
+    console.log('Successfully added contact to MailerLite');
     return new Response(
       JSON.stringify({ 
         success: true,
