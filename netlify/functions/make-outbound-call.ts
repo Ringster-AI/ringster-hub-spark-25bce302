@@ -6,7 +6,7 @@ import { createVapiAssistantConfig } from './services/vapi-config';
 const supabaseUrl = process.env.SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 const twilioAccountSid = process.env.TWILIO_ACCOUNT_SID!;
-const twilioAuthToken = process.env.TWILIO_AUTH_TOKEN!;
+const twilioAuthToken = process.env["TWILIO_AUTH _TOKEN"]!;
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
@@ -63,13 +63,8 @@ export const handler: Handler = async (event) => {
       };
     }
 
-    if (!agentData.phone_number) {
-      return {
-        statusCode: 400,
-        headers,
-        body: JSON.stringify({ error: 'Agent does not have a phone number configured' }),
-      };
-    }
+    // Use fixed outbound number to save costs
+    const fixedOutboundNumber = '+16204458363';
 
     // Get the webhook URL from environment variable
     const outboundCallWebhook = process.env.OUTBOUND_CALL_WEBHOOK;
@@ -86,7 +81,7 @@ export const handler: Handler = async (event) => {
       phoneNumber: {
         twilioAccountSid,
         twilioAuthToken,
-        twilioPhoneNumber: agentData.phone_number
+        twilioPhoneNumber: fixedOutboundNumber
       },
       customer: {
         number: user.phoneNumber,
@@ -94,7 +89,7 @@ export const handler: Handler = async (event) => {
         lastName: user.lastName || '',
         ...user.metadata // Include all metadata from the CSV directly
       },
-      phoneNumberId: agentData.twilio_sid || undefined
+      phoneNumberId: undefined // Using shared number, no specific SID needed
     };
 
     console.log('Making outbound call with payload:', JSON.stringify(vapiPayload, null, 2));

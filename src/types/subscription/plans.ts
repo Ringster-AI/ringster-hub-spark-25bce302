@@ -4,6 +4,7 @@ export interface SubscriptionPlan {
   name: string;
   price: number;
   minutes_allowance: number;
+  credits_allowance: number;
   features: Json;  // Changed from { features: string[]; max_agents: number }
   max_team_members: number;
   max_agents: number;

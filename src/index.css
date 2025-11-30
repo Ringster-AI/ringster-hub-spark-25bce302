@@ -14,8 +14,9 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 222.2 47.4% 11.2%;
+    --primary: 259 94% 51%;
     --primary-foreground: 210 40% 98%;
+    --primary-glow: 259 94% 61%;
 
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
@@ -23,17 +24,47 @@
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 259 94% 51%;
+    --accent-foreground: 210 40% 98%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
+    --success: 142 76% 36%;
+    --success-foreground: 210 40% 98%;
+    
+    --warning: 38 92% 50%;
+    --warning-foreground: 210 40% 98%;
+
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --ring: 259 94% 51%;
 
     --radius: 0.5rem;
+
+    /* Campaign Builder Colors */
+    --flow-node-greeting: 142 76% 36%;
+    --flow-node-goal: 259 94% 51%;
+    --flow-node-branch: 38 92% 50%;
+    --flow-node-action: 217 91% 60%;
+
+    /* Dashboard Colors */
+    --dashboard-success: 142 76% 36%;
+    --dashboard-pending: 38 92% 50%;
+    --dashboard-failed: 0 84.2% 60.2%;
+    --dashboard-positive: 142 76% 36%;
+    --dashboard-neutral: 38 92% 50%;
+    --dashboard-negative: 0 84.2% 60.2%;
+
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
+    --gradient-success: linear-gradient(135deg, hsl(var(--success)), hsl(142 76% 46%));
+    --gradient-flow: linear-gradient(180deg, hsl(var(--background)), hsl(210 40% 98%));
+
+    /* Shadows */
+    --shadow-flow-node: 0 4px 20px -4px hsl(var(--primary) / 0.25);
+    --shadow-card-hover: 0 8px 30px -8px hsl(var(--primary) / 0.15);
+    --shadow-wizard: 0 10px 40px -10px hsl(var(--primary) / 0.2);
 
     --sidebar-background: 0 0% 98%;
 
@@ -62,8 +93,9 @@
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 210 40% 98%;
+    --primary: 259 94% 61%;
     --primary-foreground: 222.2 47.4% 11.2%;
+    --primary-glow: 259 94% 71%;
 
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
@@ -71,15 +103,45 @@
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 259 94% 61%;
+    --accent-foreground: 222.2 47.4% 11.2%;
 
-    --destructive: 0 62.8% 30.6%;
+    --destructive: 0 62.8% 50.6%;
     --destructive-foreground: 210 40% 98%;
+
+    --success: 142 76% 46%;
+    --success-foreground: 210 40% 98%;
+    
+    --warning: 38 92% 60%;
+    --warning-foreground: 222.2 47.4% 11.2%;
 
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    --ring: 259 94% 61%;
+
+    /* Campaign Builder Colors - Dark Mode */
+    --flow-node-greeting: 142 76% 46%;
+    --flow-node-goal: 259 94% 61%;
+    --flow-node-branch: 38 92% 60%;
+    --flow-node-action: 217 91% 70%;
+
+    /* Dashboard Colors - Dark Mode */
+    --dashboard-success: 142 76% 46%;
+    --dashboard-pending: 38 92% 60%;
+    --dashboard-failed: 0 62.8% 50.6%;
+    --dashboard-positive: 142 76% 46%;
+    --dashboard-neutral: 38 92% 60%;
+    --dashboard-negative: 0 62.8% 50.6%;
+
+    /* Gradients - Dark Mode */
+    --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
+    --gradient-success: linear-gradient(135deg, hsl(var(--success)), hsl(142 76% 56%));
+    --gradient-flow: linear-gradient(180deg, hsl(var(--background)), hsl(217.2 32.6% 12.5%));
+
+    /* Shadows - Dark Mode */
+    --shadow-flow-node: 0 4px 20px -4px hsl(var(--primary) / 0.35);
+    --shadow-card-hover: 0 8px 30px -8px hsl(var(--primary) / 0.25);
+    --shadow-wizard: 0 10px 40px -10px hsl(var(--primary) / 0.3);
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;

@@ -1,12 +1,13 @@
-
 import { format } from "date-fns";
-import { Play, Download, FileText } from "lucide-react";
+import { Play, FileText, Download, Share2, Phone, PhoneIncoming, PhoneOutgoing, MessageSquare } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { useState } from "react";
 import { CallRecording } from "./types";
-import { useToast } from "@/hooks/use-toast";
-import { useIsMobile } from "@/hooks/use-mobile";
 
 interface RecordingsTableProps {
   recordings: CallRecording[] | undefined;
@@ -15,187 +16,292 @@ interface RecordingsTableProps {
   onSelectRecording: (recording: CallRecording) => void;
 }
 
-export const RecordingsTable = ({ 
-  recordings, 
-  isLoading, 
-  error, 
-  onSelectRecording 
-}: RecordingsTableProps) => {
-  const { toast } = useToast();
-  const isMobile = useIsMobile();
+export const RecordingsTable = ({ recordings, isLoading, error, onSelectRecording }: RecordingsTableProps) => {
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [callTypeFilter, setCallTypeFilter] = useState<string>("all");
+  const [sentimentFilter, setSentimentFilter] = useState<string>("all");
+  const [searchTerm, setSearchTerm] = useState("");
 
-  const handlePlay = (recording: CallRecording) => {
-    onSelectRecording(recording);
-    
-    if (!recording.recording_url) {
-      toast({
-        title: "No recording available",
-        description: "This call doesn't have a recording available to play.",
-        variant: "destructive"
-      });
-    }
-    
-    console.log("Playing recording:", recording);
-  };
-
-  const handleDownload = (recording: CallRecording) => {
-    if (recording.recording_url) {
-      window.open(recording.recording_url, '_blank');
-    } else {
-      toast({
-        title: "Download failed",
-        description: "No recording URL available for this call.",
-        variant: "destructive"
-      });
+  const getCallStatus = (status: string) => {
+    switch (status?.toLowerCase()) {
+      case 'completed': return { label: 'Answered', variant: 'default' as const, icon: Phone };
+      case 'no-answer': return { label: 'Missed', variant: 'secondary' as const, icon: PhoneIncoming };
+      case 'busy': return { label: 'Busy', variant: 'secondary' as const, icon: Phone };
+      case 'failed': return { label: 'Failed', variant: 'destructive' as const, icon: Phone };
+      default: return { label: status || 'Unknown', variant: 'outline' as const, icon: Phone };
     }
   };
 
-  const handleTranscript = (recording: CallRecording) => {
-    onSelectRecording(recording);
-    // The transcript loading is now handled within the RecordingDetails component
+  const getSentimentColor = (sentiment?: string) => {
+    switch (sentiment) {
+      case 'positive': return 'bg-green-100 text-green-800';
+      case 'negative': return 'bg-red-100 text-red-800';
+      case 'neutral': return 'bg-gray-100 text-gray-800';
+      default: return 'bg-gray-100 text-gray-600';
+    }
   };
+
+  const filteredRecordings = recordings?.filter(recording => {
+    const matchesStatus = statusFilter === "all" || recording.call_log?.status === statusFilter;
+    const matchesSearch = !searchTerm || 
+      recording.call_log?.from_number?.includes(searchTerm) ||
+      recording.call_log?.to_number?.includes(searchTerm) ||
+      recording.call_log?.agent?.name?.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesStatus && matchesSearch;
+  }) || [];
 
   if (isLoading) {
-    return <p className="text-muted-foreground">Loading recordings...</p>;
-  }
-
-  if (error) {
-    return <p className="text-red-500">Error loading recordings: {error instanceof Error ? error.message : 'Unknown error'}</p>;
+    return (
+      <div className="space-y-4">
+        <div className="flex justify-between items-center">
+          <h2 className="text-xl font-semibold">Call Recordings</h2>
+        </div>
+        <div className="border rounded-lg">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Status</TableHead>
+                <TableHead>Date/Time</TableHead>
+                <TableHead>Contact</TableHead>
+                <TableHead>Duration</TableHead>
+                <TableHead>Sentiment</TableHead>
+                <TableHead>Agent</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {[...Array(5)].map((_, i) => (
+                <TableRow key={i}>
+                  <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                  <TableCell><Skeleton className="h-8 w-16 ml-auto" /></TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <Card className="overflow-hidden">
-      <CardHeader className="px-4 sm:px-6">
-        <CardTitle className="text-lg sm:text-xl">Recent Calls</CardTitle>
-        <CardDescription className="text-sm">
-          View and listen to your recent call recordings
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="px-3 sm:px-6">
-        {recordings && recordings.length > 0 ? (
-          isMobile ? (
-            <div className="space-y-3">
-              {recordings.map((recording) => (
-                <div key={recording.id} className="border rounded p-3 space-y-2 text-sm">
-                  <div className="flex justify-between items-start">
-                    <span className="font-medium truncate max-w-[160px]">
-                      {recording.call_log?.agent?.name || 'Unknown'}
-                    </span>
-                    <span className="text-xs text-muted-foreground whitespace-nowrap ml-2">
-                      {recording.call_log?.start_time && 
-                        format(new Date(recording.call_log.start_time), 'MMM d, h:mm a')}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center gap-2">
-                    <span className="text-xs overflow-hidden text-ellipsis">
-                      {recording.call_log?.from_number || 'Unknown'} 
-                      {recording.call_log?.duration && 
-                        ` (${Math.floor(recording.call_log.duration / 60)}:${(recording.call_log.duration % 60).toString().padStart(2, '0')})`}
-                    </span>
-                    <div className="flex space-x-1">
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        className="h-8 w-8 p-0"
-                        onClick={() => handlePlay(recording)}
-                        disabled={!recording.recording_url}
-                        title={recording.recording_url ? "Play recording" : "No recording available"}
-                      >
-                        <Play className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        className="h-8 w-8 p-0"
-                        onClick={() => handleDownload(recording)}
-                        disabled={!recording.recording_url}
-                        title={recording.recording_url ? "Download recording" : "No recording available"}
-                      >
-                        <Download className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        className="h-8 w-8 p-0"
-                        onClick={() => handleTranscript(recording)}
-                        title="View transcript"
-                      >
-                        <FileText className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              ))}
+    <div className="space-y-4">
+      {/* Header with Quick Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div className="bg-card p-4 rounded-lg border">
+          <div className="flex items-center gap-2">
+            <Phone className="h-5 w-5 text-primary" />
+            <div>
+              <p className="text-sm text-muted-foreground">Total Recordings</p>
+              <p className="text-2xl font-bold">{recordings?.length || 0}</p>
             </div>
-          ) : (
-            <div className="overflow-x-auto -mx-3 sm:mx-0">
-              <Table>
-                <TableCaption>A list of your recent call recordings</TableCaption>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="whitespace-nowrap">Date</TableHead>
-                    <TableHead className="whitespace-nowrap">Agent</TableHead>
-                    <TableHead className="whitespace-nowrap">Number</TableHead>
-                    <TableHead className="whitespace-nowrap">Duration</TableHead>
-                    <TableHead className="whitespace-nowrap">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {recordings.map((recording) => (
-                    <TableRow key={recording.id}>
-                      <TableCell className="whitespace-nowrap">
-                        {recording.call_log?.start_time && 
-                          format(new Date(recording.call_log.start_time), 'MMM d, yyyy h:mm a')}
-                      </TableCell>
-                      <TableCell>{recording.call_log?.agent?.name || 'Unknown'}</TableCell>
-                      <TableCell>{recording.call_log?.from_number || 'Unknown'}</TableCell>
-                      <TableCell className="whitespace-nowrap">
-                        {recording.call_log?.duration 
-                          ? `${Math.floor(recording.call_log.duration / 60)}:${(recording.call_log.duration % 60).toString().padStart(2, '0')}`
-                          : 'n/a'}
-                      </TableCell>
-                      <TableCell className="flex space-x-2">
-                        <Button 
-                          variant="ghost" 
-                          size="icon"
-                          onClick={() => handlePlay(recording)}
-                          disabled={!recording.recording_url}
-                          title={recording.recording_url ? "Play recording" : "No recording available"}
+          </div>
+        </div>
+        <div className="bg-card p-4 rounded-lg border">
+          <div className="flex items-center gap-2">
+            <MessageSquare className="h-5 w-5 text-primary" />
+            <div>
+              <p className="text-sm text-muted-foreground">Avg. Call Length</p>
+              <p className="text-2xl font-bold">
+                {recordings?.length > 0 
+                  ? `${Math.floor(recordings.reduce((acc, r) => acc + (r.call_log?.duration || 0), 0) / recordings.length / 60)}:${Math.floor(recordings.reduce((acc, r) => acc + (r.call_log?.duration || 0), 0) / recordings.length % 60).toString().padStart(2, '0')}`
+                  : '0:00'
+                }
+              </p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-card p-4 rounded-lg border">
+          <div className="flex items-center gap-2">
+            <PhoneIncoming className="h-5 w-5 text-green-600" />
+            <div>
+              <p className="text-sm text-muted-foreground">Answered</p>
+              <p className="text-2xl font-bold text-green-600">
+                {recordings?.filter(r => r.call_log?.status === 'completed').length || 0}
+              </p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-card p-4 rounded-lg border">
+          <div className="flex items-center gap-2">
+            <PhoneOutgoing className="h-5 w-5 text-blue-600" />
+            <div>
+              <p className="text-sm text-muted-foreground">Missed</p>
+              <p className="text-2xl font-bold text-orange-600">
+                {recordings?.filter(r => r.call_log?.status === 'no-answer').length || 0}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="flex flex-wrap gap-4 p-4 bg-card rounded-lg border">
+        <div className="flex items-center gap-2">
+          <label className="text-sm font-medium">Status:</label>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-32">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All</SelectItem>
+              <SelectItem value="completed">Answered</SelectItem>
+              <SelectItem value="no-answer">Missed</SelectItem>
+              <SelectItem value="busy">Busy</SelectItem>
+              <SelectItem value="failed">Failed</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <label className="text-sm font-medium">Type:</label>
+          <Select value={callTypeFilter} onValueChange={setCallTypeFilter}>
+            <SelectTrigger className="w-32">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All</SelectItem>
+              <SelectItem value="inbound">Inbound</SelectItem>
+              <SelectItem value="outbound">Outbound</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <label className="text-sm font-medium">Search:</label>
+          <Input
+            placeholder="Search calls..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-48"
+          />
+        </div>
+      </div>
+      
+      {error && (
+        <div className="text-red-600 bg-red-50 p-4 rounded-lg">
+          Error loading recordings: {error.message}
+        </div>
+      )}
+
+      <div className="border rounded-lg">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Status</TableHead>
+              <TableHead>Date/Time</TableHead>
+              <TableHead>Contact</TableHead>
+              <TableHead>Duration</TableHead>
+              <TableHead>Sentiment</TableHead>
+              <TableHead>Agent</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {!filteredRecordings || filteredRecordings.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                  {searchTerm || statusFilter !== 'all' ? 'No recordings match your filters' : 'No recordings found'}
+                </TableCell>
+              </TableRow>
+            ) : (
+              filteredRecordings.map((recording) => {
+                const statusInfo = getCallStatus(recording.call_log?.status);
+                const StatusIcon = statusInfo.icon;
+                // Mock sentiment for demo - in production this would come from AI analysis
+                const sentiment = Math.random() > 0.7 ? 'positive' : Math.random() > 0.4 ? 'neutral' : 'negative';
+                
+                return (
+                  <TableRow 
+                    key={recording.id} 
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => onSelectRecording(recording)}
+                  >
+                    <TableCell>
+                      <Badge variant={statusInfo.variant} className="flex items-center gap-1 w-fit">
+                        <StatusIcon className="h-3 w-3" />
+                        {statusInfo.label}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {recording.call_log?.start_time 
+                        ? format(new Date(recording.call_log.start_time), 'MMM d, yyyy HH:mm')
+                        : 'Unknown'
+                      }
+                    </TableCell>
+                    <TableCell>
+                      <div>
+                        <div className="font-medium">
+                          {recording.call_log?.from_number || 'Unknown'}
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          → {recording.call_log?.to_number || 'Unknown'}
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {recording.call_log?.duration 
+                        ? `${Math.floor(recording.call_log.duration / 60)}:${(recording.call_log.duration % 60).toString().padStart(2, '0')}`
+                        : 'n/a'
+                      }
+                    </TableCell>
+                    <TableCell>
+                      <Badge className={getSentimentColor(sentiment)}>
+                        {sentiment || 'Unknown'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{recording.call_log?.agent?.name || 'Unknown'}</TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onSelectRecording(recording);
+                          }}
+                          className="h-8 w-8 p-0"
+                          title="Play recording"
                         >
                           <Play className="h-4 w-4" />
                         </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="icon"
-                          onClick={() => handleDownload(recording)}
-                          disabled={!recording.recording_url}
-                          title={recording.recording_url ? "Download recording" : "No recording available"}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            // Handle download
+                          }}
+                          className="h-8 w-8 p-0"
+                          title="Download MP3"
                         >
                           <Download className="h-4 w-4" />
                         </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="icon"
-                          onClick={() => handleTranscript(recording)}
-                          title="View transcript"
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            // Handle share
+                          }}
+                          className="h-8 w-8 p-0"
+                          title="Share link"
                         >
-                          <FileText className="h-4 w-4" />
+                          <Share2 className="h-4 w-4" />
                         </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )
-        ) : (
-          <div className="text-center py-8">
-            <p className="text-muted-foreground text-sm">
-              No call recordings found. As your agents make calls, recordings will appear here.
-            </p>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
+            )}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
   );
 };

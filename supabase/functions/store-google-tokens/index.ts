@@ -30,6 +30,18 @@ serve(async (req) => {
       );
     }
     
+    // Get authorization header
+    const authHeader = req.headers.get("Authorization");
+    console.log(`[${requestId}] Authorization header present: ${!!authHeader}`);
+    
+    if (!authHeader) {
+      console.error(`[${requestId}] No authorization header provided`);
+      return new Response(
+        JSON.stringify({ error: "Missing authorization header" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    
     // Create Supabase client with service role key (has elevated privileges)
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
     
@@ -48,50 +60,13 @@ serve(async (req) => {
       hasUserId: !!userId
     });
     
-    // Verify authorization
-    // This function can be called either with service role key directly or with a user token
-    let authorizedUserId = userId;
-    
-    if (!authorizedUserId) {
-      // Check if request comes with user token
-      const authHeader = req.headers.get("Authorization");
-      
-      if (authHeader && authHeader.startsWith("Bearer ")) {
-        const token = authHeader.replace("Bearer ", "");
-        
-        // Verify this isn't the service role key
-        if (token !== SUPABASE_SERVICE_ROLE_KEY) {
-          const { data: { user }, error: userError } = await supabase.auth.getUser(token);
-          
-          if (userError || !user) {
-            console.error(`[${requestId}] User authentication failed:`, userError);
-            return new Response(
-              JSON.stringify({ error: "Authentication error" }),
-              { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-            );
-          }
-          
-          authorizedUserId = user.id;
-          console.log(`[${requestId}] Request authenticated via user token for ${authorizedUserId}`);
-        } else {
-          console.log(`[${requestId}] Request authenticated via service role key`);
-        }
-      } else if (!req.headers.get("Authorization") || !req.headers.get("Authorization").includes(SUPABASE_SERVICE_ROLE_KEY)) {
-        // Not authenticated with service role or user token
-        console.error(`[${requestId}] Unauthorized request`);
-        return new Response(
-          JSON.stringify({ error: "Unauthorized" }),
-          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-    }
-    
-    if (!email || !accessToken || !expiresAt || !scopes) {
+    if (!email || !accessToken || !expiresAt || !scopes || !userId) {
       console.error(`[${requestId}] Missing required parameters:`, { 
-        email, 
+        email: !!email, 
         hasAccessToken: !!accessToken, 
-        expiresAt, 
-        scopes 
+        expiresAt: !!expiresAt, 
+        scopes: !!scopes,
+        userId: !!userId
       });
       return new Response(
         JSON.stringify({ error: "Missing required parameters" }),
@@ -99,108 +74,62 @@ serve(async (req) => {
       );
     }
     
-    // If we have a userId, use it directly for token storage
-    if (authorizedUserId) {
-      console.log(`[${requestId}] Storing integration for user: ${authorizedUserId}`);
+    // Check if the authorization header matches our service role key
+    const token = authHeader.replace('Bearer ', '');
+    if (token !== SUPABASE_SERVICE_ROLE_KEY) {
+      console.error(`[${requestId}] Invalid authorization token`);
+      return new Response(
+        JSON.stringify({ error: "Invalid authorization" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    
+    console.log(`[${requestId}] Storing integration for user: ${userId}`);
+    
+    try {
+      // First check if an entry already exists
+      const { data: existingData, error: fetchError } = await supabase
+        .from("google_integrations")
+        .select("id")
+        .eq("user_id", userId)
+        .maybeSingle();
+        
+      if (fetchError) {
+        console.error(`[${requestId}] Error checking for existing integration:`, fetchError);
+      }
       
-      try {
-        // First check if an entry already exists
-        const { data: existingData, error: fetchError } = await supabase
-          .from("google_integrations")
-          .select("id")
-          .eq("user_id", authorizedUserId)
-          .maybeSingle();
-          
-        if (fetchError) {
-          console.error(`[${requestId}] Error checking for existing integration:`, fetchError);
-        }
+      console.log(`[${requestId}] Existing integration check:`, existingData ? "Found" : "Not found");
+      
+      // Store the integration securely in the database
+      const { data, error } = await supabase
+        .from("google_integrations")
+        .upsert({
+          user_id: userId,
+          email: email,
+          access_token: accessToken,
+          refresh_token: refreshToken || null,
+          expires_at: expiresAt,
+          scopes: scopes
+        })
+        .select("id");
         
-        console.log(`[${requestId}] Existing integration check:`, existingData ? "Found" : "Not found");
-        
-        // Store the integration securely in the database
-        const { data, error } = await supabase
-          .from("google_integrations")
-          .upsert({
-            user_id: authorizedUserId,
-            email: email,
-            access_token: accessToken,
-            refresh_token: refreshToken || null,
-            expires_at: expiresAt,
-            scopes: scopes
-          })
-          .select("id");
-          
-        if (error) {
-          console.error(`[${requestId}] Database error storing integration:`, error);
-          throw error;
-        }
-        
-        console.log(`[${requestId}] Integration stored successfully, id: ${data?.[0]?.id}`);
-        
-        return new Response(
-          JSON.stringify({ success: true, id: data[0]?.id }),
-          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      } catch (dbError) {
-        console.error(`[${requestId}] Database operation failed:`, dbError);
-        return new Response(
-          JSON.stringify({ error: "Database operation failed", details: String(dbError) }),
-          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+      if (error) {
+        console.error(`[${requestId}] Database error storing integration:`, error);
+        throw error;
       }
-    } else {
-      // If still no userId, try to look up by email
-      console.log(`[${requestId}] Looking up user by email: ${email}`);
-      try {
-        const { data: userData, error: userLookupError } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('email', email)
-          .single();
-        
-        if (userLookupError || !userData) {
-          console.error(`[${requestId}] Failed to find user:`, userLookupError);
-          return new Response(
-            JSON.stringify({ 
-              error: "User not found", 
-              details: "Could not determine which user to store this integration for" 
-            }),
-            { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-          );
-        }
-        
-        // Store the integration
-        console.log(`[${requestId}] Found user by email lookup: ${userData.id}`);
-        const { data, error } = await supabase
-          .from("google_integrations")
-          .upsert({
-            user_id: userData.id,
-            email: email,
-            access_token: accessToken,
-            refresh_token: refreshToken || null,
-            expires_at: expiresAt,
-            scopes: scopes
-          })
-          .select("id");
-          
-        if (error) {
-          console.error(`[${requestId}] Database error storing integration:`, error);
-          throw error;
-        }
-        
-        console.log(`[${requestId}] Integration stored successfully, id: ${data?.[0]?.id}`);
-        
-        return new Response(
-          JSON.stringify({ success: true, id: data[0]?.id }),
-          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      } catch (lookupError) {
-        console.error(`[${requestId}] User lookup or integration storage failed:`, lookupError);
-        return new Response(
-          JSON.stringify({ error: "User lookup failed", details: String(lookupError) }),
-          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
+      
+      console.log(`[${requestId}] Integration stored successfully, id: ${data?.[0]?.id}`);
+      
+      return new Response(
+        JSON.stringify({ success: true, id: data[0]?.id }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    } catch (dbError) {
+      console.error(`[${requestId}] Database operation failed:`, dbError);
+      return new Response(
+        JSON.stringify({ error: "Database operation failed", details: String(dbError) }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
   } catch (err) {
     console.error(`[${requestId}] Error in store-google-tokens:`, err);

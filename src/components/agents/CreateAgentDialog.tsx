@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
@@ -36,15 +37,24 @@ export const CreateAgentDialog = ({ trigger }: { trigger: React.ReactNode }) => 
   });
 
   const { data: agentCount = 0 } = useAgentCount(open);
-  const { createAgent, isLoading } = useCreateAgent(() => {
-    setOpen(false);
-    form.reset();
-  });
+  const createAgentMutation = useCreateAgent();
 
   const onSubmit = async (data: AgentFormData) => {
-    if (isLoading) return;
+    if (createAgentMutation.isPending) return;
+    
+    if (agentCount >= features.limits.maxAgents) {
+      toast({
+        title: "Agent limit reached",
+        description: `You've reached your plan's limit of ${features.limits.maxAgents} agents. Please upgrade your plan to create more agents.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
-      await createAgent(data, features.limits.maxAgents, agentCount);
+      await createAgentMutation.mutateAsync(data);
+      setOpen(false);
+      form.reset();
     } catch (error) {
       console.error("Error creating agent:", error);
       toast({
@@ -57,7 +67,7 @@ export const CreateAgentDialog = ({ trigger }: { trigger: React.ReactNode }) => 
 
   return (
     <Dialog open={open} onOpenChange={(newOpen) => {
-      if (isLoading) return;
+      if (createAgentMutation.isPending) return;
       setOpen(newOpen);
     }}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
@@ -70,9 +80,9 @@ export const CreateAgentDialog = ({ trigger }: { trigger: React.ReactNode }) => 
           <AgentForm 
             form={form} 
             onSubmit={onSubmit} 
-            onCancel={() => !isLoading && setOpen(false)}
+            onCancel={() => !createAgentMutation.isPending && setOpen(false)}
             canCustomizeVoice={() => features.limits.canCustomizeVoices}
-            disabled={agentCount >= features.limits.maxAgents || isLoading}
+            disabled={agentCount >= features.limits.maxAgents || createAgentMutation.isPending}
           />
         </SubscriptionGate>
       </DialogContent>

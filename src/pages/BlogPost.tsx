@@ -6,6 +6,7 @@ import { BlogPost as BlogPostType } from "@/types/blog";
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import ReactMarkdown from "react-markdown";
+import { Seo } from "@/components/seo/Seo";
 
 const BlogPost = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -47,8 +48,24 @@ const BlogPost = () => {
 
   if (!post) return null;
 
+  const description = post.excerpt || (post.content ? post.content.replace(/\s+/g, ' ').slice(0, 150) : '');
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: post.title,
+    description,
+    image: post.featured_image || undefined,
+    datePublished: post.published_at || undefined,
+    dateModified: (post as any).updated_at || post.published_at || undefined,
+    author: (post as any).author_name ? { "@type": "Person", name: (post as any).author_name } : undefined,
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": typeof window !== "undefined" ? window.location.href : ""
+    }
+  } as const;
   return (
     <main className="min-h-screen bg-white">
+      <Seo title={`${post.title} | Ringster Blog`} description={description} image={post.featured_image || undefined} jsonLd={jsonLd} />
       <article className="container mx-auto px-6 py-32 max-w-4xl">
         <h1 className="text-4xl font-bold text-[#1A1F2C] mb-6">{post.title}</h1>
         

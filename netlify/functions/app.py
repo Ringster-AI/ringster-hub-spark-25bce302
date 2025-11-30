@@ -17,7 +17,7 @@ load_dotenv()
 # Initialize Twilio client
 client = Client(
     os.getenv('TWILIO_ACCOUNT_SID'),
-    os.getenv('TWILIO_AUTH_TOKEN')
+    os.getenv('TWILIO_AUTH _TOKEN')
 )
 
 class PhoneNumberRequest(BaseModel):

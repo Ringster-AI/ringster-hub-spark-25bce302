@@ -10,12 +10,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Building2, Home, Stethoscope } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Seo } from "@/components/seo/Seo";
 
 const Index = () => {
   const isMobile = useIsMobile();
   
   return (
     <main className="overflow-x-hidden">
+      <Seo title="Ringster AI Phone Agents — 24/7 Lead Capture" description="AI phone agents that answer calls, qualify leads, and book appointments. Reduce missed calls and grow revenue." />
       <nav className="fixed w-full top-0 z-50 bg-white/90 backdrop-blur-sm">
         <div className="container mx-auto px-4 sm:px-6 py-2 sm:py-4">
           <div className="flex justify-between items-center">

@@ -11,12 +11,15 @@ export const PricingPlans = () => {
   const { toast } = useToast();
   const [billingInterval, setBillingInterval] = useState<'month' | 'year'>('month');
 
-  const { data: plans, isLoading } = useQuery({
+const { data: plans, isLoading } = useQuery({
     queryKey: ["subscription-plans"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("subscription_plans")
-        .select("*")
+        .select(`
+          *,
+          plan_features(*)
+        `)
         .order("price");
 
       if (error) throw error;

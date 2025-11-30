@@ -8,12 +8,15 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import Overview from "./Dashboard/Overview";
 import Agents from "./Dashboard/Agents";
 import Campaigns from "./Dashboard/Campaigns";
+import CampaignDetails from "./Dashboard/CampaignDetails";
+import CampaignDashboard from "./Dashboard/CampaignDashboard";
 import Recordings from "./Dashboard/Recordings";
 import Analytics from "./Dashboard/Analytics";
 import Team from "./Dashboard/Team";
 import Settings from "./Dashboard/Settings";
 import Subscription from "./Dashboard/Subscription";
 import Profile from "./Dashboard/Profile";
+import Calendar from "./Dashboard/Calendar";
 import { FeedbackDialog } from "@/components/dashboard/FeedbackDialog";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -46,7 +49,10 @@ const Dashboard = () => {
               <Route path="/" element={<Overview />} />
               <Route path="/agents" element={<Agents />} />
               <Route path="/campaigns" element={<Campaigns />} />
+              <Route path="/campaigns/:campaignId" element={<CampaignDetails />} />
+              <Route path="/campaigns/:campaignId/dashboard" element={<CampaignDashboard />} />
               <Route path="/recordings" element={<Recordings />} />
+              <Route path="/calendar" element={<Calendar />} />
               <Route path="/analytics" element={<Analytics />} />
               <Route path="/team" element={<Team />} />
               <Route path="/settings" element={<Settings />} />

@@ -1,9 +1,10 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { corsHeaders } from "../_shared/cors.ts";
 import { redirectWithError, createSuccessRedirect } from "../_shared/responses.ts";
 import { lookupOAuthState, deleteOAuthState } from "../_shared/supabase-admin.ts";
-import { exchangeCodeForTokens, fetchUserInfo, storeTokens } from "./google-api.ts";
+import { exchangeCodeForTokens, fetchUserInfo } from "./google-api.ts";
 
 const CLIENT_ID = Deno.env.get("GOOGLE_CLIENT_ID");
 const CLIENT_SECRET = Deno.env.get("GOOGLE_CLIENT_SECRET");
@@ -19,11 +20,12 @@ serve(async (req) => {
   
   // Handle CORS preflight request
   if (req.method === "OPTIONS") {
+    console.log(`[${requestId}] Handling OPTIONS request`);
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    // Validate environment variables
+    // Validate environment variables first
     if (!CLIENT_ID || !CLIENT_SECRET) {
       console.error(`[${requestId}] Missing Google OAuth credentials:`, { 
         hasClientId: !!CLIENT_ID, 
@@ -116,22 +118,35 @@ serve(async (req) => {
         const hasCalendarScope = tokenData.scope.includes(calendarScope);
         console.log(`[${requestId}] Has calendar scope: ${hasCalendarScope}`);
 
-        // Store tokens securely via store-google-tokens function
+        // Store tokens directly using service role key
         if (userId) {
           try {
-            await storeTokens(
-              userId,
-              userInfo.email,
-              tokenData.access_token,
-              tokenData.refresh_token,
-              expiresAt.toISOString(),
-              tokenData.scope,
-              SUPABASE_URL,
-              SUPABASE_SERVICE_ROLE_KEY,
-              requestId
-            );
+            console.log(`[${requestId}] Storing integration for user: ${userId}`);
+            
+            // Create Supabase client with service role key for secure storage
+            const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+            
+            // Store the integration securely in the database
+            const { data, error } = await supabase
+              .from("google_integrations")
+              .upsert({
+                user_id: userId,
+                email: userInfo.email,
+                access_token: tokenData.access_token,
+                refresh_token: tokenData.refresh_token || null,
+                expires_at: expiresAt.toISOString(),
+                scopes: tokenData.scope
+              })
+              .select("id");
+              
+            if (error) {
+              console.error(`[${requestId}] Database error storing integration:`, error);
+              return redirectWithError("storage_error", requestId);
+            }
+            
+            console.log(`[${requestId}] Integration stored successfully, id: ${data?.[0]?.id}`);
           } catch (storeError) {
-            console.error(`[${requestId}] Error calling token storage function:`, storeError);
+            console.error(`[${requestId}] Error storing tokens:`, storeError);
             return redirectWithError("storage_error", requestId);
           }
         } else {

@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Campaign } from "@/types/database/campaigns";
-import { Users, Edit, Phone } from "lucide-react";
+import { Users, Edit, Phone, BarChart3 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -9,9 +9,10 @@ interface CardActionsProps {
   campaign: Campaign & { agent: any };
   onEditClick: () => void;
   onContactsClick: () => void;
+  onDashboardClick?: () => void;
 }
 
-export function CardActions({ campaign, onEditClick, onContactsClick }: CardActionsProps) {
+export function CardActions({ campaign, onEditClick, onContactsClick, onDashboardClick }: CardActionsProps) {
   const { toast } = useToast();
 
   const handleTestCall = async () => {
@@ -150,6 +151,16 @@ export function CardActions({ campaign, onEditClick, onContactsClick }: CardActi
       >
         <Phone className="h-4 w-4" />
       </Button>
+      {(campaign.status === 'running' || campaign.status === 'paused') && onDashboardClick && (
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onDashboardClick}
+          title="View Dashboard"
+        >
+          <BarChart3 className="h-4 w-4" />
+        </Button>
+      )}
     </>
   );
 }

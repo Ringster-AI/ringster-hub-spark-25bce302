@@ -2,6 +2,7 @@
 import { Home, Bot, Phone } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
+import { CreditDisplay } from "@/components/credits/CreditDisplay";
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -19,10 +20,20 @@ interface MainMenuProps {
 
 export const MainMenu = ({ agentCount, campaignCount, onLinkClick }: MainMenuProps) => {
   return (
-    <SidebarGroup>
-      <SidebarGroupLabel>Main Menu</SidebarGroupLabel>
-      <SidebarGroupContent>
-        <SidebarMenu>
+    <>
+      <div className="px-4 py-2">
+        <CreditDisplay 
+          compact={true}
+          onUpgrade={() => {
+            window.location.href = '/dashboard/subscription';
+          }}
+        />
+      </div>
+      
+      <SidebarGroup>
+        <SidebarGroupLabel>Main Menu</SidebarGroupLabel>
+        <SidebarGroupContent>
+          <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
               <Link 
@@ -73,8 +84,9 @@ export const MainMenu = ({ agentCount, campaignCount, onLinkClick }: MainMenuPro
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarGroupContent>
-    </SidebarGroup>
+          </SidebarMenu>
+        </SidebarGroupContent>
+      </SidebarGroup>
+    </>
   );
 };

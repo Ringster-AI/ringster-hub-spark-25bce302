@@ -73,6 +73,11 @@ export const AgentCard = ({ agent, onToggleStatus, onUpdate }: AgentCardProps) =
     }
   };
 
+  const handleEditComplete = () => {
+    setIsEditOpen(false);
+    onUpdate();
+  };
+
   return (
     <div className="border rounded-lg p-6 space-y-4 hover:shadow-md transition-shadow">
       {showTrialWarning && <AgentTrialWarning />}
@@ -102,9 +107,13 @@ export const AgentCard = ({ agent, onToggleStatus, onUpdate }: AgentCardProps) =
 
       <EditAgentDialog 
         agent={agent} 
-        onUpdate={onUpdate} 
         open={isEditOpen}
-        onOpenChange={setIsEditOpen}
+        onOpenChange={(open) => {
+          setIsEditOpen(open);
+          if (!open) {
+            onUpdate();
+          }
+        }}
       />
     </div>
   );

@@ -37,7 +37,7 @@ export const handler: Handler = async (event) => {
   try {
     console.log('Starting Twilio number assignment process')
     
-    if (!process.env.TWILIO_ACCOUNT_SID || !process.env.TWILIO_AUTH_TOKEN) {
+    if (!process.env.TWILIO_ACCOUNT_SID || !process.env["TWILIO_AUTH _TOKEN"]) {
       throw new Error('Twilio credentials are not configured')
     }
 
@@ -53,7 +53,7 @@ export const handler: Handler = async (event) => {
 
     const twilioService = new TwilioService(
       process.env.TWILIO_ACCOUNT_SID,
-      process.env.TWILIO_AUTH_TOKEN
+      process.env["TWILIO_AUTH _TOKEN"]
     )
     
     const databaseService = new DatabaseService(supabase)
