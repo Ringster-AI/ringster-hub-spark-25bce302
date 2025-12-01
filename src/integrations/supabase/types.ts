@@ -1493,41 +1493,10 @@ export type Database = {
         Args: { role_name: string; user_id: string }
         Returns: boolean
       }
-<<<<<<< HEAD
-      is_admin: {
-        Args: { user_id: string }
-        Returns: boolean
-      }
-      migrate_google_integrations: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      process_campaign_contacts: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      reset_monthly_credits: {
-        Args: { p_user_id: string }
-        Returns: boolean
-      }
-=======
-      is_admin: {
-        Args: { user_id: string }
-        Returns: boolean
-      }
-      migrate_google_integrations: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      process_campaign_contacts: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      reset_monthly_credits: {
-        Args: { p_user_id: string }
-        Returns: boolean
-      }
->>>>>>> devs
+      is_admin: { Args: { user_id: string }; Returns: boolean }
+      migrate_google_integrations: { Args: never; Returns: undefined }
+      process_campaign_contacts: { Args: never; Returns: undefined }
+      reset_monthly_credits: { Args: { p_user_id: string }; Returns: boolean }
       sync_user_subscription: {
         Args: { p_plan_id?: string; p_user_id: string }
         Returns: undefined

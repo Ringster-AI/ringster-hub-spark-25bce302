@@ -27,6 +27,14 @@ const Ebook = () => {
         throw new Error("Error saving to waitlist");
       }
       
+      // Track ebook download
+      if (typeof (window as any).fbq === 'function') {
+        (window as any).fbq('track', 'Lead', {
+          content_name: 'Ebook Download',
+          content_category: 'Lead Generation'
+        });
+      }
+
       // Set email in session storage to use on thank you page
       sessionStorage.setItem("subscriberEmail", email);
       

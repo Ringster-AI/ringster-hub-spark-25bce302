@@ -64,6 +64,11 @@ const Signup = () => {
 
       if (orgError) throw orgError;
 
+      // Track signup completion
+      if (typeof (window as any).fbq === 'function') {
+        (window as any).fbq('track', 'CompleteRegistration');
+      }
+
       toast.success("Account created successfully!");
       navigate("/dashboard");
     } catch (error: any) {

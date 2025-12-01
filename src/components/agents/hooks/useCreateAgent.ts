@@ -82,6 +82,13 @@ export const useCreateAgent = () => {
       return agent;
     },
     onSuccess: () => {
+      // Track agent creation
+      if (typeof (window as any).fbq === 'function') {
+        (window as any).fbq('trackCustom', 'AgentCreated', {
+          content_category: 'Agent Management'
+        });
+      }
+
       toast({
         title: "Agent created successfully",
         description: "Your AI agent has been created and is ready to configure.",

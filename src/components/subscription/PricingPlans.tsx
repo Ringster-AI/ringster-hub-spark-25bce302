@@ -2,7 +2,7 @@
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PricingHeader } from "./PricingHeader";
 import { PlanCard } from "./PlanCard";
 import { PricingPlan } from "./types";
@@ -10,6 +10,16 @@ import { PricingPlan } from "./types";
 export const PricingPlans = () => {
   const { toast } = useToast();
   const [billingInterval, setBillingInterval] = useState<'month' | 'year'>('month');
+
+  useEffect(() => {
+    // Track pricing page view
+    if (typeof (window as any).fbq === 'function') {
+      (window as any).fbq('track', 'ViewContent', {
+        content_name: 'Pricing Plans',
+        content_category: 'Subscription'
+      });
+    }
+  }, []);
 
 const { data: plans, isLoading } = useQuery({
     queryKey: ["subscription-plans"],
@@ -33,6 +43,14 @@ const { data: plans, isLoading } = useQuery({
 
   const handleUpgrade = async (priceId: string) => {
     try {
+      // Track checkout initiation
+      if (typeof (window as any).fbq === 'function') {
+        (window as any).fbq('track', 'InitiateCheckout', {
+          content_category: 'Subscription',
+          content_ids: [priceId]
+        });
+      }
+
       const { data, error } = await supabase.functions.invoke("create-checkout", {
         body: { priceId },
       });

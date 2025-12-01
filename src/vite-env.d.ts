@@ -1,4 +1,3 @@
-
 /// <reference types="vite/client" />
 
 interface ImportMetaEnv {
@@ -16,4 +15,9 @@ interface Window {
     VITE_VAPI_PUBLIC_KEY?: string;
     [key: string]: string | undefined;
   }
+  fbq?: (
+    action: 'track' | 'trackCustom',
+    eventName: string,
+    parameters?: Record<string, any>
+  ) => void;
 }
