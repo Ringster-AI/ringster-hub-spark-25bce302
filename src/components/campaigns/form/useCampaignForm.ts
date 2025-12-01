@@ -125,6 +125,13 @@ export function useCampaignForm({ initialData, onSuccess }: UseCampaignFormProps
       }
     },
     onSuccess: () => {
+      // Track campaign creation (only for new campaigns, not updates)
+      if (!initialData && typeof (window as any).fbq === 'function') {
+        (window as any).fbq('trackCustom', 'CampaignLaunched', {
+          content_category: 'Campaign Management'
+        });
+      }
+
       queryClient.invalidateQueries({ queryKey: ["campaigns"] });
       onSuccess();
     },
