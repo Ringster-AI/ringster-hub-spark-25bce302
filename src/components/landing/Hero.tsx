@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { TryRingsterModal } from "./TryRingsterModal";
 
 export const Hero = () => {
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
@@ -107,11 +108,23 @@ export const Hero = () => {
           </ul>
 
           <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Dialog open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-              <DialogTrigger asChild>
+            <TryRingsterModal
+              trigger={
                 <Button 
                   size={isMobile ? "default" : "lg"} 
                   className="group bg-white text-[#9b87f5] hover:bg-white/90 hover:text-[#9b87f5] shadow-lg text-base sm:text-lg px-6 sm:px-8 py-2 sm:py-6 w-full sm:w-auto"
+                >
+                  <Phone className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
+                  Try Ringster Now
+                </Button>
+              }
+            />
+            <Dialog open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+              <DialogTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  size={isMobile ? "default" : "lg"} 
+                  className="border-white text-white bg-transparent hover:bg-white/10 hover:text-white w-full sm:w-auto"
                   onClick={handleBookDemo}
                 >
                   Book a Demo
@@ -132,14 +145,6 @@ export const Hero = () => {
                 </div>
               </DialogContent>
             </Dialog>
-            <Button 
-              variant="outline" 
-              size={isMobile ? "default" : "lg"} 
-              className="border-white text-white bg-transparent hover:bg-white/10 hover:text-white w-full sm:w-auto"
-              onClick={() => setIsCalendarOpen(true)}
-            >
-              Learn More
-            </Button>
           </div>
 
           <div className="mt-12 sm:mt-16">
