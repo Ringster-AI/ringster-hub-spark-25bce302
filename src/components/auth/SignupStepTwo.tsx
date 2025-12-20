@@ -81,6 +81,36 @@ export const SignupStepTwo = ({ form, isLoading, onBack }: SignupStepTwoProps) =
         </div>
       </div>
 
+      <div className="space-y-3 pt-2">
+        <div className="flex items-start space-x-2">
+          <input
+            type="checkbox"
+            id="termsAccepted"
+            {...form.register("termsAccepted")}
+            className="mt-1 h-4 w-4 rounded border-gray-300"
+            required
+          />
+          <Label htmlFor="termsAccepted" className="text-sm text-muted-foreground leading-tight cursor-pointer">
+            I agree to the{" "}
+            <a href="/terms" target="_blank" className="text-primary hover:underline">Terms of Service</a>
+            {" "}and{" "}
+            <a href="/privacy" target="_blank" className="text-primary hover:underline">Privacy Policy</a> *
+          </Label>
+        </div>
+
+        <div className="flex items-start space-x-2">
+          <input
+            type="checkbox"
+            id="marketingConsent"
+            {...form.register("marketingConsent")}
+            className="mt-1 h-4 w-4 rounded border-gray-300"
+          />
+          <Label htmlFor="marketingConsent" className="text-sm text-muted-foreground leading-tight cursor-pointer">
+            I'd like to receive product updates and marketing communications (optional)
+          </Label>
+        </div>
+      </div>
+
       <div className="space-y-4">
         <Button
           type="submit"

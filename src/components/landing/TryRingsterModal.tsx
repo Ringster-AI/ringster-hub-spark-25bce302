@@ -279,10 +279,12 @@ export const TryRingsterModal = ({ trigger }: TryRingsterModalProps) => {
               />
               <Label
                 htmlFor="consent"
-                className="text-sm text-muted-foreground leading-tight cursor-pointer"
+                className="text-xs text-muted-foreground leading-tight cursor-pointer"
               >
-                I agree to receive a one-time automated call about Ringster at
-                this number.
+                By clicking "Call Me Now," I consent to receive an automated call from Ringster 
+                at the phone number provided using an automated telephone dialing system. 
+                This call may be recorded for quality assurance. This consent is not required 
+                to make a purchase. Standard message and data rates may apply.
               </Label>
             </div>
 

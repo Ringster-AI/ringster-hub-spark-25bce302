@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -13,6 +12,7 @@ import BlogAdmin from "./pages/Dashboard/BlogAdmin";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Privacy from "./pages/Privacy";
+import Terms from "./pages/Terms";
 import About from "./pages/About";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -20,6 +20,7 @@ import BlogPost from "./pages/BlogPost";
 import Ebook from "./pages/Ebook";
 import EbookThankYou from "./pages/EbookThankYou";
 import Offer from "./pages/Offer";
+import { CookieConsentBanner } from "@/components/consent/CookieConsentBanner";
 
 const queryClient = new QueryClient();
 
@@ -95,6 +96,7 @@ function App() {
             <Route path="/signup" element={<Signup />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/privacy" element={<Privacy />} />
+            <Route path="/terms" element={<Terms />} />
             <Route path="/about" element={<About />} />
             <Route path="/blog" element={<Blog />} />
             <Route path="/blog/:slug" element={<BlogPost />} />
@@ -107,6 +109,7 @@ function App() {
               </PrivateRoute>
             } />
           </Routes>
+          <CookieConsentBanner />
         </Router>
       </TooltipProvider>
     </QueryClientProvider>
