@@ -628,6 +628,53 @@ export type Database = {
         }
         Relationships: []
       }
+      cookie_consent_logs: {
+        Row: {
+          analytics: boolean
+          consent_given_at: string
+          created_at: string
+          essential: boolean
+          id: string
+          ip_address: string | null
+          marketing: boolean
+          session_id: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          analytics?: boolean
+          consent_given_at?: string
+          created_at?: string
+          essential?: boolean
+          id?: string
+          ip_address?: string | null
+          marketing?: boolean
+          session_id: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          analytics?: boolean
+          consent_given_at?: string
+          created_at?: string
+          essential?: boolean
+          id?: string
+          ip_address?: string | null
+          marketing?: boolean
+          session_id?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cookie_consent_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       credit_transactions: {
         Row: {
           call_log_id: string | null
@@ -1135,7 +1182,10 @@ export type Database = {
           email: string | null
           full_name: string | null
           id: string
+          marketing_consent: boolean | null
+          marketing_consent_at: string | null
           phone: string | null
+          terms_accepted_at: string | null
           updated_at: string
           username: string | null
           website: string | null
@@ -1147,7 +1197,10 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id: string
+          marketing_consent?: boolean | null
+          marketing_consent_at?: string | null
           phone?: string | null
+          terms_accepted_at?: string | null
           updated_at?: string
           username?: string | null
           website?: string | null
@@ -1159,7 +1212,10 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: string
+          marketing_consent?: boolean | null
+          marketing_consent_at?: string | null
           phone?: string | null
+          terms_accepted_at?: string | null
           updated_at?: string
           username?: string | null
           website?: string | null
@@ -1253,6 +1309,42 @@ export type Database = {
           prod_id?: string | null
           stripe_price_id?: string | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      tcpa_consent_logs: {
+        Row: {
+          company: string | null
+          consent_given: boolean
+          consent_text: string
+          created_at: string
+          id: string
+          ip_address: string | null
+          name: string
+          phone_number: string
+          user_agent: string | null
+        }
+        Insert: {
+          company?: string | null
+          consent_given?: boolean
+          consent_text: string
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          name: string
+          phone_number: string
+          user_agent?: string | null
+        }
+        Update: {
+          company?: string | null
+          consent_given?: boolean
+          consent_text?: string
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          name?: string
+          phone_number?: string
+          user_agent?: string | null
         }
         Relationships: []
       }

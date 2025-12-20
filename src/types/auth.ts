@@ -1,4 +1,3 @@
-
 export interface SignupFormValues {
   email: string;
   password: string;
@@ -9,6 +8,8 @@ export interface SignupFormValues {
     phone?: string;
     additionalInfo?: string;
   };
+  termsAccepted: boolean;
+  marketingConsent: boolean;
 }
 
 export const ORGANIZATION_SIZES = [

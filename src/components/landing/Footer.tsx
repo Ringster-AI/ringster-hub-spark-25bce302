@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom";
 
 export const Footer = () => {
@@ -9,7 +8,10 @@ export const Footer = () => {
           <div>
             <p className="text-sm text-gray-300">© Ringster 2025. All rights reserved.</p>
           </div>
-          <div>
+          <div className="flex items-center gap-4">
+            <Link to="/terms" className="text-sm text-gray-300 hover:text-white transition-colors">
+              Terms of Service
+            </Link>
             <Link to="/privacy" className="text-sm text-gray-300 hover:text-white transition-colors">
               Privacy Policy
             </Link>
