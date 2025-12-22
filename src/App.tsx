@@ -20,6 +20,7 @@ import BlogPost from "./pages/BlogPost";
 import Ebook from "./pages/Ebook";
 import EbookThankYou from "./pages/EbookThankYou";
 import Offer from "./pages/Offer";
+import ROICalculator from "./pages/ROICalculator";
 import { CookieConsentBanner } from "@/components/consent/CookieConsentBanner";
 
 const queryClient = new QueryClient();
@@ -103,6 +104,7 @@ function App() {
             <Route path="/ebook" element={<Ebook />} />
             <Route path="/ebook-thank-you" element={<EbookThankYou />} />
             <Route path="/offer" element={<Offer />} />
+            <Route path="/roi-calculator" element={<ROICalculator />} />
             <Route path="/dashboard/*" element={
               <PrivateRoute>
                 <Dashboard />
