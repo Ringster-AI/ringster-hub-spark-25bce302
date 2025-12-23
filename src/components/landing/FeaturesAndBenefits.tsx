@@ -1,170 +1,119 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Clock, DollarSign, Zap, Bot, TrendingUp, CheckCheck, Wrench, ThumbsUp, Plug2 } from "lucide-react";
+import { 
+  PhoneOff, 
+  Clock, 
+  DollarSign, 
+  Zap, 
+  Calendar, 
+  ArrowRightLeft,
+  Wrench,
+  Stethoscope,
+  Home,
+  Scissors,
+  Building,
+  Briefcase,
+  ArrowRight
+} from "lucide-react";
 import { Link } from "react-router-dom";
+
+const painPoints = [
+  {
+    icon: PhoneOff,
+    problem: "Missed calls = missed money",
+    solution: "Ringster answers every call instantly, 24/7/365"
+  },
+  {
+    icon: Clock,
+    problem: "Phone tag kills your productivity",
+    solution: "Callers get handled immediately—no callbacks needed"
+  },
+  {
+    icon: DollarSign,
+    problem: "Hiring staff is expensive",
+    solution: "Fraction of the cost of a receptionist, works 10x the hours"
+  }
+];
+
+const whoItsFor = [
+  { icon: Wrench, title: "Plumbers & Electricians", desc: "On a job site? Your calls still get answered." },
+  { icon: Scissors, title: "Salons & Spas", desc: "Book appointments while you're with clients." },
+  { icon: Stethoscope, title: "Clinics & Practices", desc: "Handle patient inquiries 24/7." },
+  { icon: Home, title: "Real Estate Agents", desc: "Never miss a hot lead showing interest." },
+  { icon: Building, title: "Small Agencies", desc: "Professional call handling without the overhead." },
+  { icon: Briefcase, title: "Consultants & Freelancers", desc: "Stay focused on billable work." }
+];
 
 export const FeaturesAndBenefits = () => {
   return (
-    <section className="py-16 bg-white">
-      <div className="container mx-auto px-6">
-        <div className="max-w-4xl mx-auto text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-[#1A1F2C] mb-4">
-            Features & Benefits
+    <section className="py-20 lg:py-28 bg-background">
+      <div className="container mx-auto px-4 sm:px-6">
+        {/* Section header */}
+        <div className="max-w-3xl mx-auto text-center mb-16">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-4">
+            Why <span className="text-primary">voicemail is killing</span> your business
           </h2>
-          <p className="text-xl text-gray-600">
-            Transform your business with Ringster—automate, optimize, and excel.
+          <p className="text-lg text-muted-foreground">
+            62% of callers won't leave a voicemail. They'll just call your competitor instead.
           </p>
         </div>
-        
-        <div className="grid md:grid-cols-2 gap-8 mb-16">
-          <div className="space-y-6 animate-fade-up">
-            <div className="flex gap-4 items-start">
-              <div className="flex-shrink-0 rounded-full p-2 bg-gradient-to-r from-[#FF512F] to-[#DD2476]">
-                <Clock className="h-6 w-6 text-white" />
-              </div>
-              <div>
-                <h3 className="text-xl font-semibold text-[#1A1F2C] mb-2">24/7/365 Availability</h3>
-                <p className="text-gray-600">Our AI customer service tools ensure you never miss a call, providing consistent and high-quality interactions day and night.</p>
-              </div>
-            </div>
-            
-            <div className="flex gap-4 items-start">
-              <div className="flex-shrink-0 rounded-full p-2 bg-gradient-to-r from-[#FF512F] to-[#DD2476]">
-                <DollarSign className="h-6 w-6 text-white" />
-              </div>
-              <div>
-                <h3 className="text-xl font-semibold text-[#1A1F2C] mb-2">Cost-Effective Solution</h3>
-                <p className="text-gray-600">An affordable alternative to human staff, Ringster helps you save significantly on operational costs.</p>
-              </div>
-            </div>
-            
-            <div className="flex gap-4 items-start">
-              <div className="flex-shrink-0 rounded-full p-2 bg-gradient-to-r from-[#FF512F] to-[#DD2476]">
-                <Wrench className="h-6 w-6 text-white" />
-              </div>
-              <div>
-                <h3 className="text-xl font-semibold text-[#1A1F2C] mb-2">Customizable for Your Brand</h3>
-                <p className="text-gray-600">Tailor greetings and call flows to reflect your unique business identity, enhancing customer experience.</p>
-              </div>
-            </div>
-            
-            <div className="flex gap-4 items-start">
-              <div className="flex-shrink-0 rounded-full p-2 bg-gradient-to-r from-[#FF512F] to-[#DD2476]">
-                <Bot className="h-6 w-6 text-white" />
-              </div>
-              <div>
-                <h3 className="text-xl font-semibold text-[#1A1F2C] mb-2">Human-like AI Phone Agents</h3>
-                <p className="text-gray-600">With intelligent speech detection and human-like voices, engage your customers seamlessly and professionally.</p>
-              </div>
-            </div>
-          </div>
-          
-          <div className="space-y-6 animate-fade-up delay-100">
-            <div className="flex gap-4 items-start">
-              <div className="flex-shrink-0 rounded-full p-2 bg-gradient-to-r from-[#FF512F] to-[#DD2476]">
-                <TrendingUp className="h-6 w-6 text-white" />
-              </div>
-              <div>
-                <h3 className="text-xl font-semibold text-[#1A1F2C] mb-2">Maximized Sales Opportunities</h3>
-                <p className="text-gray-600">Automate calls with AI phone agents to handle inbound calls, freeing up your team to focus on closing deals.</p>
-              </div>
-            </div>
-            
-            <div className="flex gap-4 items-start">
-              <div className="flex-shrink-0 rounded-full p-2 bg-gradient-to-r from-[#FF512F] to-[#DD2476]">
-                <CheckCheck className="h-6 w-6 text-white" />
-              </div>
-              <div>
-                <h3 className="text-xl font-semibold text-[#1A1F2C] mb-2">Consistent, High-Quality Interactions</h3>
-                <p className="text-gray-600">Ensure your customers always receive the best service with our reliable AI solutions.</p>
-              </div>
-            </div>
-            
-            <div className="flex gap-4 items-start">
-              <div className="flex-shrink-0 rounded-full p-2 bg-gradient-to-r from-[#FF512F] to-[#DD2476]">
-                <Zap className="h-6 w-6 text-white" />
-              </div>
-              <div>
-                <h3 className="text-xl font-semibold text-[#1A1F2C] mb-2">Instant Setup</h3>
-                <p className="text-gray-600">Easy setup in minutes with no tech skills needed, so you can get started right away.</p>
-              </div>
-            </div>
-            
-            <div className="flex gap-4 items-start">
-              <div className="flex-shrink-0 rounded-full p-2 bg-gradient-to-r from-[#FF512F] to-[#DD2476]">
-                <Plug2 className="h-6 w-6 text-white" />
-              </div>
-              <div>
-                <h3 className="text-xl font-semibold text-[#1A1F2C] mb-2">Seamless Integration</h3>
-                <p className="text-gray-600">Compatible with MacOS, Windows, and integrates with GHL, Hubspot, CX, ERPs, and 3000+ apps.</p>
-              </div>
-            </div>
-          </div>
+
+        {/* Pain points */}
+        <div className="grid md:grid-cols-3 gap-6 lg:gap-8 mb-20">
+          {painPoints.map((item, index) => (
+            <Card key={index} className="bg-card border-border hover:border-primary/50 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5">
+              <CardContent className="p-6 lg:p-8">
+                <div className="w-12 h-12 rounded-xl bg-destructive/10 flex items-center justify-center mb-4">
+                  <item.icon className="h-6 w-6 text-destructive" />
+                </div>
+                <p className="text-lg font-semibold text-foreground mb-2 line-through decoration-destructive/50">
+                  {item.problem}
+                </p>
+                <p className="text-muted-foreground flex items-start gap-2">
+                  <Zap className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                  {item.solution}
+                </p>
+              </CardContent>
+            </Card>
+          ))}
         </div>
-        
-        {/* Testimonial and CTA */}
-        <Card className="overflow-hidden bg-gradient-to-r from-[#1A1F2C] to-[#222222] border-0 shadow-2xl mb-16">
-          <CardContent className="p-8 md:p-12">
-            <div className="text-center space-y-6 max-w-2xl mx-auto">
-              <blockquote className="text-2xl md:text-3xl italic font-medium text-white">
-                "Ringster saved us $500/month!"
-              </blockquote>
-              <p className="text-xl text-gray-300">– Family Dental</p>
-            </div>
-          </CardContent>
-        </Card>
-        
-        {/* Founder's Discount */}
-        <div className="bg-[#F1F0FB] rounded-lg p-8 md:p-12 text-center mb-16">
-          <h2 className="text-2xl md:text-3xl font-bold text-[#1A1F2C] mb-4">
-            Claim Your Founders Discount - Up to 65% OFF!
-          </h2>
-          <p className="text-xl text-gray-600 mb-8">
-            No long-term commitment - Cancel Anytime!
+
+        {/* Who it's for */}
+        <div className="max-w-3xl mx-auto text-center mb-12">
+          <h3 className="text-2xl sm:text-3xl font-bold text-foreground mb-4">
+            Built for people who run their business from their phone
+          </h3>
+          <p className="text-muted-foreground">
+            If a missed call means lost money, Ringster is for you.
           </p>
-          
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="bg-white rounded-lg p-6 shadow-md">
-              <div className="h-12 w-12 rounded-full bg-gradient-to-r from-[#FF512F] to-[#DD2476] flex items-center justify-center mx-auto mb-4">
-                <ThumbsUp className="h-6 w-6 text-white" />
-              </div>
-              <h3 className="text-xl font-semibold text-[#1A1F2C] mb-2">Start Your Free Trial</h3>
-              <p className="text-gray-600">Experience the power of Ringster's AI phone agents today.</p>
-            </div>
-            
-            <div className="bg-white rounded-lg p-6 shadow-md">
-              <div className="h-12 w-12 rounded-full bg-gradient-to-r from-[#FF512F] to-[#DD2476] flex items-center justify-center mx-auto mb-4">
-                <Zap className="h-6 w-6 text-white" />
-              </div>
-              <h3 className="text-xl font-semibold text-[#1A1F2C] mb-2">Easy Setup</h3>
-              <p className="text-gray-600">Get going in minutes with no technical expertise required.</p>
-            </div>
-            
-            <div className="bg-white rounded-lg p-6 shadow-md">
-              <div className="h-12 w-12 rounded-full bg-gradient-to-r from-[#FF512F] to-[#DD2476] flex items-center justify-center mx-auto mb-4">
-                <Plug2 className="h-6 w-6 text-white" />
-              </div>
-              <h3 className="text-xl font-semibold text-[#1A1F2C] mb-2">Seamless Integration</h3>
-              <p className="text-gray-600">Compatible with MacOS, Windows, and integrates with popular business tools.</p>
-            </div>
-          </div>
-          
-          <div className="mt-10">
-            <Button 
-              size="lg" 
-              className="bg-[#DD2476] hover:bg-[#DD2476]/90 text-white gap-2 text-lg py-6 px-8"
-              asChild
+        </div>
+
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6 mb-16">
+          {whoItsFor.map((item, index) => (
+            <div 
+              key={index} 
+              className="flex items-start gap-4 p-4 lg:p-6 rounded-xl bg-muted/50 hover:bg-muted transition-colors"
             >
-              <Link to="/signup">
-                Join the Revolution Today
-              </Link>
-            </Button>
-          </div>
-          
-          <p className="mt-6 text-gray-600">
-            Join the revolution of AI customer service tools with Ringster, providing human-like AI phone agents who deliver unmatched efficiency and professionalism.
-          </p>
+              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                <item.icon className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <h4 className="font-semibold text-foreground mb-1">{item.title}</h4>
+                <p className="text-sm text-muted-foreground">{item.desc}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* CTA */}
+        <div className="text-center">
+          <Button size="lg" asChild className="text-lg px-8 py-6">
+            <Link to="/signup">
+              See How It Works For Your Business
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Link>
+          </Button>
         </div>
       </div>
     </section>
