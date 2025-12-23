@@ -88,7 +88,7 @@ const ROICalculator = () => {
           <div className="container mx-auto px-4 py-4 flex items-center justify-between">
             <Link to="/" className="flex items-center gap-2">
               <img 
-                src="/lovable-uploads/LG.svg" 
+                src="/lovable-uploads/059d2b53-6e4e-4788-a607-2344b4097212.png" 
                 alt="Ringster Logo" 
                 className="h-8 w-auto"
               />
