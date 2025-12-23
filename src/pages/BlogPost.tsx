@@ -7,6 +7,7 @@ import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import ReactMarkdown from "react-markdown";
 import { Seo } from "@/components/seo/Seo";
+import { OptimizedImage } from "@/components/ui/optimized-image";
 
 const BlogPost = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -63,6 +64,7 @@ const BlogPost = () => {
       "@id": typeof window !== "undefined" ? window.location.href : ""
     }
   } as const;
+  
   return (
     <main className="min-h-screen bg-white">
       <Seo title={`${post.title} | Ringster Blog`} description={description} image={post.featured_image || undefined} jsonLd={jsonLd} />
@@ -71,10 +73,13 @@ const BlogPost = () => {
         
         {post.featured_image && (
           <div className="mb-8">
-            <img
+            <OptimizedImage
               src={post.featured_image}
               alt={post.title}
-              className="w-full h-auto rounded-lg"
+              width={800}
+              height={450}
+              aspectRatio="16/9"
+              containerClassName="w-full"
             />
           </div>
         )}
