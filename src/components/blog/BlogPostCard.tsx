@@ -3,6 +3,7 @@ import { format } from "date-fns";
 import { Link } from "react-router-dom";
 import { BlogPost } from "@/types/blog";
 import ReactMarkdown from "react-markdown";
+import { OptimizedImage } from "@/components/ui/optimized-image";
 
 interface BlogPostCardProps {
   post: BlogPost;
@@ -12,16 +13,25 @@ const BlogPostCard = ({ post }: BlogPostCardProps) => {
   return (
     <article className="group">
       <Link to={`/blog/${post.slug}`}>
-        <div className="relative aspect-video mb-4 overflow-hidden rounded-lg bg-gray-100">
+        <div className="relative mb-4 overflow-hidden rounded-lg bg-muted">
           {post.featured_image ? (
-            <img 
+            <OptimizedImage
               src={post.featured_image}
               alt={post.title}
-              className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
+              width={400}
+              height={225}
+              aspectRatio="16/9"
+              className="group-hover:scale-105 transition-transform duration-300"
+              fallback={
+                <span className="text-muted-foreground">No image</span>
+              }
             />
           ) : (
-            <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-              <span className="text-gray-400">No image</span>
+            <div 
+              className="w-full bg-muted flex items-center justify-center"
+              style={{ aspectRatio: "16/9" }}
+            >
+              <span className="text-muted-foreground">No image</span>
             </div>
           )}
         </div>
