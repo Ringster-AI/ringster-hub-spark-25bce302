@@ -109,7 +109,7 @@ export const FeaturesAndBenefits = () => {
         {/* CTA */}
         <div className="text-center">
           <Button size="lg" asChild className="text-lg px-8 py-6">
-            <Link to="/signup">
+            <Link to="/roi-calculator">
               See How It Works For Your Business
               <ArrowRight className="ml-2 h-5 w-5" />
             </Link>
