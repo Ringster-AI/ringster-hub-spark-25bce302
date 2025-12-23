@@ -22,6 +22,7 @@ import EbookThankYou from "./pages/EbookThankYou";
 import Offer from "./pages/Offer";
 import ROICalculator from "./pages/ROICalculator";
 import { CookieConsentBanner } from "@/components/consent/CookieConsentBanner";
+import { ScrollToTop } from "@/components/ScrollToTop";
 
 const queryClient = new QueryClient();
 
@@ -91,6 +92,7 @@ function App() {
         <Toaster />
         <Sonner />
         <Router>
+          <ScrollToTop />
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
