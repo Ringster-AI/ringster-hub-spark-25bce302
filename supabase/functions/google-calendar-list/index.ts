@@ -2,11 +2,13 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { corsHeaders } from "../_shared/cors.ts";
+import { encryptToken, decryptToken, isEncrypted } from "../_shared/crypto.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const GOOGLE_CLIENT_ID = Deno.env.get("GOOGLE_CLIENT_ID") || "";
 const GOOGLE_CLIENT_SECRET = Deno.env.get("GOOGLE_CLIENT_SECRET") || "";
+const TOKEN_ENCRYPTION_KEY = Deno.env.get("TOKEN_ENCRYPTION_KEY") || "";
 
 serve(async (req) => {
   const requestId = crypto.randomUUID();
@@ -64,6 +66,29 @@ serve(async (req) => {
     
     console.log(`[${requestId}] Found integration for email: ${integration.email}`);
     
+    // Decrypt tokens if they're encrypted
+    let storedAccessToken = integration.access_token;
+    let storedRefreshToken = integration.refresh_token;
+    
+    if (TOKEN_ENCRYPTION_KEY) {
+      try {
+        if (isEncrypted(storedAccessToken)) {
+          storedAccessToken = await decryptToken(storedAccessToken, TOKEN_ENCRYPTION_KEY);
+          console.log(`[${requestId}] Successfully decrypted access token`);
+        }
+        if (storedRefreshToken && isEncrypted(storedRefreshToken)) {
+          storedRefreshToken = await decryptToken(storedRefreshToken, TOKEN_ENCRYPTION_KEY);
+          console.log(`[${requestId}] Successfully decrypted refresh token`);
+        }
+      } catch (decryptError) {
+        console.error(`[${requestId}] Error decrypting tokens:`, decryptError);
+        return new Response(
+          JSON.stringify({ error: "Failed to decrypt stored tokens. Please reconnect your Google account." }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
+    
     // Check if token is expired
     const now = new Date();
     const tokenExpiry = new Date(integration.expires_at);
@@ -73,13 +98,13 @@ serve(async (req) => {
     console.log(`[${requestId}] Current time: ${now.toISOString()}`);
     console.log(`[${requestId}] Token expired: ${isTokenExpired}`);
     
-    let accessToken = integration.access_token;
+    let accessToken = storedAccessToken;
     
     // If token is expired, attempt to refresh it
     if (isTokenExpired) {
       console.log(`[${requestId}] Refreshing expired token...`);
       
-      if (!integration.refresh_token) {
+      if (!storedRefreshToken) {
         console.error(`[${requestId}] No refresh token available`);
         return new Response(
           JSON.stringify({ error: "No refresh token available. Please reconnect your Google account." }),
@@ -97,7 +122,7 @@ serve(async (req) => {
           body: new URLSearchParams({
             client_id: GOOGLE_CLIENT_ID,
             client_secret: GOOGLE_CLIENT_SECRET,
-            refresh_token: integration.refresh_token,
+            refresh_token: storedRefreshToken,
             grant_type: "refresh_token",
           }),
         });
@@ -119,11 +144,18 @@ serve(async (req) => {
         const expiresAt = new Date();
         expiresAt.setSeconds(expiresAt.getSeconds() + expiresInSeconds);
         
+        // Encrypt the new access token before storing if encryption key is available
+        let tokenToStore = tokenData.access_token;
+        if (TOKEN_ENCRYPTION_KEY) {
+          tokenToStore = await encryptToken(tokenData.access_token, TOKEN_ENCRYPTION_KEY);
+          console.log(`[${requestId}] Encrypted new access token for storage`);
+        }
+        
         // Update token in database
         const { error: updateError } = await supabase
           .from("google_integrations")
           .update({
-            access_token: tokenData.access_token,
+            access_token: tokenToStore,
             expires_at: expiresAt.toISOString(),
             updated_at: new Date().toISOString()
           })

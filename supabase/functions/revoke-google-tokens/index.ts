@@ -2,11 +2,13 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { corsHeaders } from "../_shared/cors.ts";
+import { decryptToken, isEncrypted } from "../_shared/crypto.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const GOOGLE_CLIENT_ID = Deno.env.get("GOOGLE_CLIENT_ID") || "";
 const GOOGLE_CLIENT_SECRET = Deno.env.get("GOOGLE_CLIENT_SECRET") || "";
+const TOKEN_ENCRYPTION_KEY = Deno.env.get("TOKEN_ENCRYPTION_KEY") || "";
 
 serve(async (req) => {
   // Handle CORS preflight request
@@ -61,13 +63,26 @@ serve(async (req) => {
     if (integrationData?.refresh_token) {
       try {
         console.log("Revoking token for user:", userId);
+        
+        // Decrypt the refresh token if it's encrypted
+        let refreshToken = integrationData.refresh_token;
+        if (TOKEN_ENCRYPTION_KEY && isEncrypted(refreshToken)) {
+          try {
+            refreshToken = await decryptToken(refreshToken, TOKEN_ENCRYPTION_KEY);
+            console.log("Successfully decrypted refresh token for revocation");
+          } catch (decryptError) {
+            console.error("Error decrypting refresh token:", decryptError);
+            // Continue with deletion even if decryption fails
+          }
+        }
+        
         const revokeResponse = await fetch("https://oauth2.googleapis.com/revoke", {
           method: "POST",
           headers: {
             "Content-Type": "application/x-www-form-urlencoded"
           },
           body: new URLSearchParams({
-            token: integrationData.refresh_token,
+            token: refreshToken,
             client_id: GOOGLE_CLIENT_ID,
             client_secret: GOOGLE_CLIENT_SECRET
           })

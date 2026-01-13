@@ -2,9 +2,11 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { corsHeaders } from "../_shared/cors.ts";
+import { encryptToken } from "../_shared/crypto.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+const TOKEN_ENCRYPTION_KEY = Deno.env.get("TOKEN_ENCRYPTION_KEY") || "";
 
 serve(async (req) => {
   const requestId = crypto.randomUUID();
@@ -100,14 +102,28 @@ serve(async (req) => {
       
       console.log(`[${requestId}] Existing integration check:`, existingData ? "Found" : "Not found");
       
+      // Encrypt tokens before storing if encryption key is available
+      let encryptedAccessToken = accessToken;
+      let encryptedRefreshToken = refreshToken || null;
+      
+      if (TOKEN_ENCRYPTION_KEY) {
+        console.log(`[${requestId}] Encrypting tokens before storage`);
+        encryptedAccessToken = await encryptToken(accessToken, TOKEN_ENCRYPTION_KEY);
+        if (refreshToken) {
+          encryptedRefreshToken = await encryptToken(refreshToken, TOKEN_ENCRYPTION_KEY);
+        }
+      } else {
+        console.warn(`[${requestId}] TOKEN_ENCRYPTION_KEY not set - storing tokens unencrypted`);
+      }
+      
       // Store the integration securely in the database
       const { data, error } = await supabase
         .from("google_integrations")
         .upsert({
           user_id: userId,
           email: email,
-          access_token: accessToken,
-          refresh_token: refreshToken || null,
+          access_token: encryptedAccessToken,
+          refresh_token: encryptedRefreshToken,
           expires_at: expiresAt,
           scopes: scopes
         })
