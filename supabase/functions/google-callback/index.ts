@@ -5,12 +5,14 @@ import { corsHeaders } from "../_shared/cors.ts";
 import { redirectWithError, createSuccessRedirect } from "../_shared/responses.ts";
 import { lookupOAuthState, deleteOAuthState } from "../_shared/supabase-admin.ts";
 import { exchangeCodeForTokens, fetchUserInfo } from "./google-api.ts";
+import { encryptToken } from "../_shared/crypto.ts";
 
 const CLIENT_ID = Deno.env.get("GOOGLE_CLIENT_ID");
 const CLIENT_SECRET = Deno.env.get("GOOGLE_CLIENT_SECRET");
 const APP_URL = Deno.env.get("APP_URL") || "http://localhost:5173";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+const TOKEN_ENCRYPTION_KEY = Deno.env.get("TOKEN_ENCRYPTION_KEY");
 
 serve(async (req) => {
   const requestId = crypto.randomUUID();
@@ -126,14 +128,28 @@ serve(async (req) => {
             // Create Supabase client with service role key for secure storage
             const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
             
+            // Encrypt tokens before storing if encryption key is available
+            let encryptedAccessToken = tokenData.access_token;
+            let encryptedRefreshToken = tokenData.refresh_token || null;
+            
+            if (TOKEN_ENCRYPTION_KEY) {
+              console.log(`[${requestId}] Encrypting tokens before storage`);
+              encryptedAccessToken = await encryptToken(tokenData.access_token, TOKEN_ENCRYPTION_KEY);
+              if (tokenData.refresh_token) {
+                encryptedRefreshToken = await encryptToken(tokenData.refresh_token, TOKEN_ENCRYPTION_KEY);
+              }
+            } else {
+              console.warn(`[${requestId}] TOKEN_ENCRYPTION_KEY not set - storing tokens unencrypted`);
+            }
+            
             // Store the integration securely in the database
             const { data, error } = await supabase
               .from("google_integrations")
               .upsert({
                 user_id: userId,
                 email: userInfo.email,
-                access_token: tokenData.access_token,
-                refresh_token: tokenData.refresh_token || null,
+                access_token: encryptedAccessToken,
+                refresh_token: encryptedRefreshToken,
                 expires_at: expiresAt.toISOString(),
                 scopes: tokenData.scope
               })
