@@ -5,7 +5,7 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    --background: 210 20% 98%;
     --foreground: 222.2 84% 4.9%;
 
     --card: 0 0% 100%;
@@ -30,7 +30,7 @@
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    --success: 142 76% 36%;
+    --success: 152 69% 41%;
     --success-foreground: 210 40% 98%;
     
     --warning: 38 92% 50%;
@@ -40,46 +40,39 @@
     --input: 214.3 31.8% 91.4%;
     --ring: 259 94% 51%;
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
 
     /* Campaign Builder Colors */
-    --flow-node-greeting: 142 76% 36%;
+    --flow-node-greeting: 152 69% 41%;
     --flow-node-goal: 259 94% 51%;
     --flow-node-branch: 38 92% 50%;
     --flow-node-action: 217 91% 60%;
 
     /* Dashboard Colors */
-    --dashboard-success: 142 76% 36%;
+    --dashboard-success: 152 69% 41%;
     --dashboard-pending: 38 92% 50%;
     --dashboard-failed: 0 84.2% 60.2%;
-    --dashboard-positive: 142 76% 36%;
+    --dashboard-positive: 152 69% 41%;
     --dashboard-neutral: 38 92% 50%;
     --dashboard-negative: 0 84.2% 60.2%;
 
     /* Gradients */
     --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
-    --gradient-success: linear-gradient(135deg, hsl(var(--success)), hsl(142 76% 46%));
+    --gradient-success: linear-gradient(135deg, hsl(var(--success)), hsl(152 69% 51%));
     --gradient-flow: linear-gradient(180deg, hsl(var(--background)), hsl(210 40% 98%));
 
-    /* Shadows */
-    --shadow-flow-node: 0 4px 20px -4px hsl(var(--primary) / 0.25);
-    --shadow-card-hover: 0 8px 30px -8px hsl(var(--primary) / 0.15);
-    --shadow-wizard: 0 10px 40px -10px hsl(var(--primary) / 0.2);
+    /* Shadows - softer for premium feel */
+    --shadow-flow-node: 0 4px 20px -4px hsl(var(--primary) / 0.15);
+    --shadow-card-hover: 0 12px 40px -12px hsl(222 84% 4.9% / 0.12);
+    --shadow-wizard: 0 10px 40px -10px hsl(var(--primary) / 0.15);
 
-    --sidebar-background: 0 0% 98%;
-
+    --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 240 5.3% 26.1%;
-
     --sidebar-primary: 240 5.9% 10%;
-
     --sidebar-primary-foreground: 0 0% 98%;
-
     --sidebar-accent: 240 4.8% 95.9%;
-
     --sidebar-accent-foreground: 240 5.9% 10%;
-
     --sidebar-border: 220 13% 91%;
-
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
@@ -87,7 +80,7 @@
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
 
-    --card: 222.2 84% 4.9%;
+    --card: 222.2 84% 6%;
     --card-foreground: 210 40% 98%;
 
     --popover: 222.2 84% 4.9%;
@@ -109,7 +102,7 @@
     --destructive: 0 62.8% 50.6%;
     --destructive-foreground: 210 40% 98%;
 
-    --success: 142 76% 46%;
+    --success: 152 69% 46%;
     --success-foreground: 210 40% 98%;
     
     --warning: 38 92% 60%;
@@ -120,27 +113,27 @@
     --ring: 259 94% 61%;
 
     /* Campaign Builder Colors - Dark Mode */
-    --flow-node-greeting: 142 76% 46%;
+    --flow-node-greeting: 152 69% 46%;
     --flow-node-goal: 259 94% 61%;
     --flow-node-branch: 38 92% 60%;
     --flow-node-action: 217 91% 70%;
 
     /* Dashboard Colors - Dark Mode */
-    --dashboard-success: 142 76% 46%;
+    --dashboard-success: 152 69% 46%;
     --dashboard-pending: 38 92% 60%;
     --dashboard-failed: 0 62.8% 50.6%;
-    --dashboard-positive: 142 76% 46%;
+    --dashboard-positive: 152 69% 46%;
     --dashboard-neutral: 38 92% 60%;
     --dashboard-negative: 0 62.8% 50.6%;
 
     /* Gradients - Dark Mode */
     --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
-    --gradient-success: linear-gradient(135deg, hsl(var(--success)), hsl(142 76% 56%));
+    --gradient-success: linear-gradient(135deg, hsl(var(--success)), hsl(152 69% 56%));
     --gradient-flow: linear-gradient(180deg, hsl(var(--background)), hsl(217.2 32.6% 12.5%));
 
     /* Shadows - Dark Mode */
     --shadow-flow-node: 0 4px 20px -4px hsl(var(--primary) / 0.35);
-    --shadow-card-hover: 0 8px 30px -8px hsl(var(--primary) / 0.25);
+    --shadow-card-hover: 0 12px 40px -12px hsl(0 0% 0% / 0.4);
     --shadow-wizard: 0 10px 40px -10px hsl(var(--primary) / 0.3);
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
@@ -159,11 +152,20 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
   }
 }
 
 /* Ensure mobile sidebar has proper background and visibility */
 [data-mobile="true"].bg-sidebar {
   @apply bg-white dark:bg-gray-900;
+}
+
+/* Premium dashboard card styles */
+.dashboard-card {
+  @apply bg-card rounded-2xl border-0 shadow-sm transition-all duration-200;
+}
+
+.dashboard-card:hover {
+  box-shadow: var(--shadow-card-hover);
 }

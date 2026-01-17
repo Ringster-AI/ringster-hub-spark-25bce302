@@ -1,55 +1,55 @@
 
-import { useCredits } from "@/hooks/useCredits";
-import { useSubscriptionFeatures } from "@/hooks/useSubscriptionFeatures";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { KPICard } from "@/components/dashboard/overview/KPICard";
+import { PrimaryKPIs } from "@/components/dashboard/overview/PrimaryKPIs";
 import { QuickActions } from "@/components/dashboard/overview/QuickActions";
 import { ActivityTimeline } from "@/components/dashboard/overview/ActivityTimeline";
-import { UsageAlerts } from "@/components/dashboard/overview/UsageAlerts";
-import { 
-  Phone, 
-  Users, 
-  Calendar,
-  CreditCard,
-  TrendingUp,
-  Clock
-} from "lucide-react";
+import { SystemStatus } from "@/components/dashboard/overview/SystemStatus";
 
 interface DashboardStats {
   totalCalls: number;
+  callsThisWeek: number;
   activeAgents: number;
+  missedCalls: number;
+  afterHoursCalls: number;
   scheduledBookings: number;
-  callsToday: number;
-  avgCallDuration: number;
-  conversionRate: number;
 }
 
 const Overview = () => {
-  const { creditStatus, isLoading: creditsLoading } = useCredits();
-  const { features, isLoading: featuresLoading } = useSubscriptionFeatures();
-  
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ["dashboard-stats"],
     queryFn: async (): Promise<DashboardStats> => {
-      // Fetch call statistics
+      // Fetch all call logs
       const { data: callLogs, count: totalCalls } = await supabase
         .from("call_logs")
         .select("*", { count: "exact" });
 
-      // Fetch today's calls
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const { count: callsToday } = await supabase
+      // Fetch this week's calls
+      const oneWeekAgo = new Date();
+      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+      const { count: callsThisWeek } = await supabase
         .from("call_logs")
         .select("*", { count: "exact" })
-        .gte("created_at", today.toISOString());
+        .gte("created_at", oneWeekAgo.toISOString());
 
       // Fetch active agents
       const { count: activeAgents } = await supabase
         .from("agent_configs")
         .select("*", { count: "exact" })
         .eq("status", "active");
+
+      // Calculate missed calls (failed status)
+      const { count: missedCalls } = await supabase
+        .from("call_logs")
+        .select("*", { count: "exact" })
+        .eq("status", "failed")
+        .gte("created_at", oneWeekAgo.toISOString());
+
+      // Calculate after hours calls (simplified - calls between 6PM and 8AM)
+      const afterHoursCalls = callLogs?.filter(call => {
+        const callHour = new Date(call.created_at).getHours();
+        return callHour >= 18 || callHour < 8;
+      }).length || 0;
 
       // Fetch scheduled bookings
       const { count: scheduledBookings } = await supabase
@@ -58,101 +58,60 @@ const Overview = () => {
         .eq("booking_status", "confirmed")
         .gte("appointment_datetime", new Date().toISOString());
 
-      // Calculate average call duration
-      const avgCallDuration = callLogs && callLogs.length > 0
-        ? Math.round(callLogs.reduce((sum, call) => sum + (call.duration || 0), 0) / callLogs.length)
-        : 0;
-
-      // Calculate conversion rate (completed calls / total calls)
-      const completedCalls = callLogs?.filter(call => call.status === 'completed').length || 0;
-      const conversionRate = totalCalls && totalCalls > 0 
-        ? Math.round((completedCalls / totalCalls) * 100)
-        : 0;
-
       return {
         totalCalls: totalCalls || 0,
+        callsThisWeek: callsThisWeek || 0,
         activeAgents: activeAgents || 0,
-        scheduledBookings: scheduledBookings || 0,
-        callsToday: callsToday || 0,
-        avgCallDuration,
-        conversionRate
+        missedCalls: missedCalls || 0,
+        afterHoursCalls,
+        scheduledBookings: scheduledBookings || 0
       };
     },
-    refetchInterval: 60000 // Refresh every minute
+    refetchInterval: 60000
   });
 
-  const isLoading = creditsLoading || featuresLoading || statsLoading;
+  // Check if user has any agents
+  const { data: hasAgents } = useQuery({
+    queryKey: ["has-agents"],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from("agent_configs")
+        .select("*", { count: "exact" });
+      return (count || 0) > 0;
+    }
+  });
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 md:p-10 space-y-10 max-w-7xl mx-auto">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">Dashboard Overview</h1>
-        <p className="text-muted-foreground">
-          Welcome back! Here's what's happening with your Ringster account.
+      <div className="space-y-2">
+        <h1 className="text-3xl font-semibold tracking-tight text-foreground">
+          Welcome back
+        </h1>
+        <p className="text-muted-foreground text-lg">
+          Here's how your agents are performing
         </p>
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-        <KPICard
-          title="Total Calls"
-          value={stats?.totalCalls || 0}
-          icon={<Phone className="h-6 w-6" />}
-          loading={isLoading}
-          change={{
-            value: 12,
-            type: 'increase',
-            period: 'last week'
-          }}
-        />
-        <KPICard
-          title="Calls Today"
-          value={stats?.callsToday || 0}
-          icon={<TrendingUp className="h-6 w-6" />}
-          loading={isLoading}
-        />
-        <KPICard
-          title="Active Agents"
-          value={stats?.activeAgents || 0}
-          icon={<Users className="h-6 w-6" />}
-          loading={isLoading}
-        />
-        <KPICard
-          title="Scheduled Bookings"
-          value={stats?.scheduledBookings || 0}
-          icon={<Calendar className="h-6 w-6" />}
-          loading={isLoading}
-        />
-        <KPICard
-          title="Avg Call Duration"
-          value={`${stats?.avgCallDuration || 0}s`}
-          icon={<Clock className="h-6 w-6" />}
-          loading={isLoading}
-        />
-        <KPICard
-          title="Conversion Rate"
-          value={`${stats?.conversionRate || 0}%`}
-          icon={<TrendingUp className="h-6 w-6" />}
-          loading={isLoading}
-          change={{
-            value: 5,
-            type: 'increase',
-            period: 'last month'
-          }}
-        />
-      </div>
+      {/* Primary KPIs - 3 cards */}
+      <PrimaryKPIs 
+        stats={stats}
+        isLoading={statsLoading}
+        hasAgents={hasAgents ?? false}
+      />
+
+      {/* System Status - Reassurance element */}
+      <SystemStatus activeAgents={stats?.activeAgents || 0} />
 
       {/* Main Content Grid */}
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Left Column - Quick Actions & Alerts */}
-        <div className="space-y-6">
-          <QuickActions />
-          <UsageAlerts />
+      <div className="grid gap-8 lg:grid-cols-5">
+        {/* Left Column - Quick Actions */}
+        <div className="lg:col-span-2 space-y-8">
+          <QuickActions hasAgents={hasAgents ?? false} />
         </div>
 
         {/* Right Column - Activity Timeline */}
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-3">
           <ActivityTimeline />
         </div>
       </div>

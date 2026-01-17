@@ -1,7 +1,5 @@
-
 import { Home, Bot, Phone } from "lucide-react";
-import { Link } from "react-router-dom";
-import { Badge } from "@/components/ui/badge";
+import { Link, useLocation } from "react-router-dom";
 import { CreditDisplay } from "@/components/credits/CreditDisplay";
 import {
   SidebarGroup,
@@ -11,6 +9,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { cn } from "@/lib/utils";
 
 interface MainMenuProps {
   agentCount: number;
@@ -19,9 +18,24 @@ interface MainMenuProps {
 }
 
 export const MainMenu = ({ agentCount, campaignCount, onLinkClick }: MainMenuProps) => {
+  const location = useLocation();
+  
+  const isActive = (path: string, exact: boolean = false) => {
+    if (exact) {
+      return location.pathname === path;
+    }
+    return location.pathname.startsWith(path);
+  };
+
+  const menuItems = [
+    { path: "/dashboard", label: "Overview", icon: Home, exact: true, count: 0 },
+    { path: "/dashboard/agents", label: "AI Agents", icon: Bot, exact: false, count: agentCount },
+    { path: "/dashboard/campaigns", label: "Campaigns", icon: Phone, exact: false, count: campaignCount },
+  ];
+
   return (
     <>
-      <div className="px-4 py-2">
+      <div className="px-4 py-3">
         <CreditDisplay 
           compact={true}
           onUpgrade={() => {
@@ -31,59 +45,47 @@ export const MainMenu = ({ agentCount, campaignCount, onLinkClick }: MainMenuPro
       </div>
       
       <SidebarGroup>
-        <SidebarGroupLabel>Main Menu</SidebarGroupLabel>
+        <SidebarGroupLabel className="text-xs font-medium text-muted-foreground/70 uppercase tracking-wider px-6 mb-1">
+          Main Menu
+        </SidebarGroupLabel>
         <SidebarGroupContent>
-          <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild>
-              <Link 
-                to="/dashboard" 
-                className="flex items-center gap-2 text-foreground px-6"
-                onClick={onLinkClick}
-              >
-                <Home className="h-5 w-5" />
-                <span>Overview</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild>
-              <Link 
-                to="/dashboard/agents" 
-                className="flex items-center justify-between text-foreground group w-full px-6"
-                onClick={onLinkClick}
-              >
-                <div className="flex items-center gap-2">
-                  <Bot className="h-5 w-5" />
-                  <span>AI Agents</span>
-                </div>
-                {agentCount > 0 && (
-                  <Badge variant="secondary" className="ml-auto">
-                    {agentCount}
-                  </Badge>
-                )}
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild>
-              <Link 
-                to="/dashboard/campaigns" 
-                className="flex items-center justify-between text-foreground group w-full px-6"
-                onClick={onLinkClick}
-              >
-                <div className="flex items-center gap-2">
-                  <Phone className="h-5 w-5" />
-                  <span>Campaigns</span>
-                </div>
-                {campaignCount > 0 && (
-                  <Badge variant="secondary" className="ml-auto">
-                    {campaignCount}
-                  </Badge>
-                )}
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
+          <SidebarMenu className="space-y-1">
+            {menuItems.map((item) => (
+              <SidebarMenuItem key={item.path}>
+                <SidebarMenuButton asChild>
+                  <Link 
+                    to={item.path} 
+                    className={cn(
+                      "flex items-center justify-between w-full px-6 py-2.5 rounded-lg transition-all duration-150",
+                      "text-muted-foreground hover:text-foreground hover:bg-muted/50",
+                      isActive(item.path, item.exact) && [
+                        "text-foreground bg-muted",
+                        "border-l-2 border-primary ml-0 rounded-l-none"
+                      ]
+                    )}
+                    onClick={onLinkClick}
+                  >
+                    <div className="flex items-center gap-3">
+                      <item.icon className={cn(
+                        "h-4.5 w-4.5 transition-colors",
+                        isActive(item.path, item.exact) ? "text-primary" : "text-muted-foreground"
+                      )} />
+                      <span className="font-medium">{item.label}</span>
+                    </div>
+                    {item.count > 0 && (
+                      <span className={cn(
+                        "text-xs font-medium px-2 py-0.5 rounded-full",
+                        isActive(item.path, item.exact)
+                          ? "bg-primary/10 text-primary"
+                          : "bg-muted-foreground/10 text-muted-foreground"
+                      )}>
+                        {item.count}
+                      </span>
+                    )}
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            ))}
           </SidebarMenu>
         </SidebarGroupContent>
       </SidebarGroup>

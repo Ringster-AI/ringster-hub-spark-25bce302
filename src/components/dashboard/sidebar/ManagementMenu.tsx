@@ -1,6 +1,5 @@
-
-import { Mic, BarChart3, Users } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Mic, BarChart3, Users, Calendar } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -9,53 +8,55 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { cn } from "@/lib/utils";
 
 interface ManagementMenuProps {
   onLinkClick?: () => void;
 }
 
 export const ManagementMenu = ({ onLinkClick }: ManagementMenuProps) => {
+  const location = useLocation();
+  
+  const isActive = (path: string) => location.pathname.startsWith(path);
+
+  const menuItems = [
+    { path: "/dashboard/calendar", label: "Calendar", icon: Calendar },
+    { path: "/dashboard/recordings", label: "Recordings", icon: Mic },
+    { path: "/dashboard/analytics", label: "Analytics", icon: BarChart3 },
+    { path: "/dashboard/team", label: "Team", icon: Users },
+  ];
+
   return (
     <SidebarGroup>
-      <SidebarGroupLabel>Management</SidebarGroupLabel>
+      <SidebarGroupLabel className="text-xs font-medium text-muted-foreground/70 uppercase tracking-wider px-6 mb-1">
+        Management
+      </SidebarGroupLabel>
       <SidebarGroupContent>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild tooltip="Recordings">
-              <Link 
-                to="/dashboard/recordings" 
-                className="flex items-center gap-2 text-foreground px-6"
-                onClick={onLinkClick}
-              >
-                <Mic className="h-5 w-5" />
-                <span>Recordings</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild tooltip="Analytics">
-              <Link 
-                to="/dashboard/analytics" 
-                className="flex items-center gap-2 text-foreground px-6"
-                onClick={onLinkClick}
-              >
-                <BarChart3 className="h-5 w-5" />
-                <span>Analytics</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild tooltip="Team">
-              <Link 
-                to="/dashboard/team" 
-                className="flex items-center gap-2 text-foreground px-6"
-                onClick={onLinkClick}
-              >
-                <Users className="h-5 w-5" />
-                <span>Team</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
+        <SidebarMenu className="space-y-1">
+          {menuItems.map((item) => (
+            <SidebarMenuItem key={item.path}>
+              <SidebarMenuButton asChild tooltip={item.label}>
+                <Link 
+                  to={item.path} 
+                  className={cn(
+                    "flex items-center gap-3 w-full px-6 py-2.5 rounded-lg transition-all duration-150",
+                    "text-muted-foreground hover:text-foreground hover:bg-muted/50",
+                    isActive(item.path) && [
+                      "text-foreground bg-muted",
+                      "border-l-2 border-primary ml-0 rounded-l-none"
+                    ]
+                  )}
+                  onClick={onLinkClick}
+                >
+                  <item.icon className={cn(
+                    "h-4.5 w-4.5 transition-colors",
+                    isActive(item.path) ? "text-primary" : "text-muted-foreground"
+                  )} />
+                  <span className="font-medium">{item.label}</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          ))}
         </SidebarMenu>
       </SidebarGroupContent>
     </SidebarGroup>
