@@ -50,7 +50,7 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
           </Sheet>
         </div>
 
-        <main className="flex-1 p-4 sm:p-6 bg-gray-50 md:ml-0 overflow-x-hidden">{children}</main>
+        <main className="flex-1 bg-background md:ml-0 overflow-x-hidden">{children}</main>
         <FeedbackDialog />
       </div>
     </SidebarProvider>
