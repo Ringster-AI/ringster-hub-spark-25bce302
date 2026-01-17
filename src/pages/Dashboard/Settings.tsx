@@ -1,8 +1,8 @@
-
 import { useEffect, useState } from "react";
 import { PasswordResetForm } from "@/components/settings/PasswordResetForm";
 import { Integrations } from "@/components/settings/Integrations";
 import { CalendarSettings } from "@/components/settings/CalendarSettings";
+import { DeleteAccountSection } from "@/components/settings/DeleteAccountSection";
 import {
   Card,
   CardContent,
@@ -28,7 +28,7 @@ const Settings = () => {
 
   // Update active tab when URL changes
   useEffect(() => {
-    if (tabParam && ["security", "integrations", "calendar"].includes(tabParam)) {
+    if (tabParam && ["security", "integrations", "calendar", "account"].includes(tabParam)) {
       setActiveTab(tabParam);
     }
   }, [tabParam]);
@@ -42,6 +42,7 @@ const Settings = () => {
             <TabsTrigger value="security">Security</TabsTrigger>
             <TabsTrigger value="integrations">Integrations</TabsTrigger>
             <TabsTrigger value="calendar">Calendar</TabsTrigger>
+            <TabsTrigger value="account">Account</TabsTrigger>
           </TabsList>
           
           <TabsContent value="security" className="space-y-6">
@@ -64,6 +65,10 @@ const Settings = () => {
           
           <TabsContent value="calendar" className="space-y-6">
             <CalendarSettings />
+          </TabsContent>
+          
+          <TabsContent value="account" className="space-y-6">
+            <DeleteAccountSection />
           </TabsContent>
         </Tabs>
       </div>

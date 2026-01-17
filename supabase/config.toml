@@ -72,5 +72,8 @@ verify_jwt = false
 [functions.get-vapi-call-data]
 verify_jwt = false
 
+[functions.delete-account]
+verify_jwt = false
+
 [shared_schema]
 migrations_dir = "migrations"
