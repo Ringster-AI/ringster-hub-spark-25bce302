@@ -17,6 +17,18 @@ export function CardActions({ campaign, onEditClick, onContactsClick, onDashboar
 
   const handleTestCall = async () => {
     try {
+      // Get the current session for authentication
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+        toast({
+          title: "Authentication required",
+          description: "Please log in to make test calls.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const { data: contacts, error: contactsError } = await supabase
         .from("campaign_contacts")
         .select("*")
@@ -98,6 +110,7 @@ export function CardActions({ campaign, onEditClick, onContactsClick, onDashboar
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
         },
         body: JSON.stringify(payload),
       });

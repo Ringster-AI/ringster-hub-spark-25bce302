@@ -5,6 +5,14 @@ export class VapiAssistantUpdateService {
   static async syncAgentWithVapi(agentId: string) {
     console.log(`Syncing agent ${agentId} with VAPI assistant`);
     
+    // Get the current session for authentication
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    
+    if (sessionError || !session) {
+      console.error("No active session for VAPI sync");
+      throw new Error("Authentication required to sync agent");
+    }
+    
     // Get agent data from Supabase
     const { data: agent, error } = await supabase
       .from("agent_configs")
@@ -37,6 +45,7 @@ export class VapiAssistantUpdateService {
           headers: {
             'Content-Type': 'application/json',
             'x-request-id': requestId,
+            'Authorization': `Bearer ${session.access_token}`,
           },
           body: JSON.stringify({
             agentId: agentId,
