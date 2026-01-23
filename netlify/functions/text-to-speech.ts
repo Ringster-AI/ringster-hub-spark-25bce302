@@ -1,5 +1,6 @@
 import { Handler } from '@netlify/functions'
 import { ElevenLabsAPI } from './services/elevenlabs'
+import { authenticateRequest, corsHeaders, unauthorizedResponse } from './utils/auth'
 
 const elevenLabs = new ElevenLabsAPI(process.env.ELEVENLABS_API_KEY!)
 
@@ -8,19 +9,22 @@ export const handler: Handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') {
     return {
       statusCode: 200,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': 'Content-Type',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS'
-      }
+      headers: corsHeaders
     }
   }
 
   if (event.httpMethod !== 'POST') {
     return { 
       statusCode: 405, 
+      headers: corsHeaders,
       body: JSON.stringify({ error: 'Method Not Allowed' })
     }
+  }
+
+  // SECURITY: Authenticate the request
+  const authResult = await authenticateRequest(event.headers.authorization)
+  if (authResult.error || !authResult.user) {
+    return unauthorizedResponse(authResult.error || 'Authentication required')
   }
 
   try {
@@ -29,7 +33,18 @@ export const handler: Handler = async (event) => {
     if (!text || !voiceId) {
       return {
         statusCode: 400,
+        headers: corsHeaders,
         body: JSON.stringify({ error: 'Missing required parameters' })
+      }
+    }
+
+    // SECURITY: Limit text length to prevent abuse
+    const MAX_TEXT_LENGTH = 5000
+    if (text.length > MAX_TEXT_LENGTH) {
+      return {
+        statusCode: 400,
+        headers: corsHeaders,
+        body: JSON.stringify({ error: `Text exceeds maximum length of ${MAX_TEXT_LENGTH} characters` })
       }
     }
 
@@ -47,7 +62,7 @@ export const handler: Handler = async (event) => {
       statusCode: 200,
       headers: {
         'Content-Type': 'audio/mpeg',
-        'Access-Control-Allow-Origin': '*'
+        ...corsHeaders
       },
       body: audioBuffer.toString('base64'),
       isBase64Encoded: true
@@ -56,9 +71,7 @@ export const handler: Handler = async (event) => {
     console.error('Text-to-speech error:', error)
     return {
       statusCode: 500,
-      headers: {
-        'Access-Control-Allow-Origin': '*'
-      },
+      headers: corsHeaders,
       body: JSON.stringify({ error: 'Failed to generate speech' })
     }
   }

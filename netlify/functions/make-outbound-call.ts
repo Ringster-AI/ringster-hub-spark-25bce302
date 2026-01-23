@@ -2,6 +2,7 @@
 import { Handler } from '@netlify/functions';
 import { createClient } from '@supabase/supabase-js';
 import { createVapiAssistantConfig } from './services/vapi-config';
+import { authenticateRequest, corsHeaders, unauthorizedResponse, forbiddenResponse } from './utils/auth';
 
 const supabaseUrl = process.env.SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -11,18 +12,11 @@ const twilioAuthToken = process.env["TWILIO_AUTH _TOKEN"]!;
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 export const handler: Handler = async (event) => {
-  // Set CORS headers
-  const headers = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  };
-
   // Handle preflight requests
   if (event.httpMethod === 'OPTIONS') {
     return {
       statusCode: 204,
-      headers,
+      headers: corsHeaders,
       body: '',
     };
   }
@@ -30,9 +24,15 @@ export const handler: Handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return {
       statusCode: 405,
-      headers,
+      headers: corsHeaders,
       body: JSON.stringify({ error: 'Method not allowed' }),
     };
+  }
+
+  // SECURITY: Authenticate the request
+  const authResult = await authenticateRequest(event.headers.authorization);
+  if (authResult.error || !authResult.user) {
+    return unauthorizedResponse(authResult.error || 'Authentication required');
   }
 
   try {
@@ -42,7 +42,7 @@ export const handler: Handler = async (event) => {
     if (!assistant || !user || !user.phoneNumber) {
       return {
         statusCode: 400,
-        headers,
+        headers: corsHeaders,
         body: JSON.stringify({ error: 'Missing required parameters' }),
       };
     }
@@ -58,9 +58,14 @@ export const handler: Handler = async (event) => {
       console.error('Error fetching agent:', agentError);
       return {
         statusCode: 404,
-        headers,
+        headers: corsHeaders,
         body: JSON.stringify({ error: 'Agent not found' }),
       };
+    }
+
+    // SECURITY: Verify the authenticated user owns this agent
+    if (agentData.user_id !== authResult.user.id) {
+      return forbiddenResponse('You do not have permission to use this agent');
     }
 
     // Use fixed outbound number to save costs
@@ -114,7 +119,7 @@ export const handler: Handler = async (event) => {
 
     return {
       statusCode: 200,
-      headers,
+      headers: corsHeaders,
       body: JSON.stringify({
         message: 'Call initiated successfully',
         ...webhookResponse,
@@ -124,7 +129,7 @@ export const handler: Handler = async (event) => {
     console.error('Error making outbound call:', error);
     return {
       statusCode: 500,
-      headers,
+      headers: corsHeaders,
       body: JSON.stringify({ error: 'Failed to initiate call' }),
     };
   }

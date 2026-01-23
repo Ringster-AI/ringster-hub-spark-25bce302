@@ -3,6 +3,7 @@ import { Handler } from '@netlify/functions'
 import { createClient } from '@supabase/supabase-js'
 import { VapiService } from './services/vapi-service'
 import { createVapiAssistantConfig } from './services/vapi-config'
+import { authenticateRequest, verifyAgentOwnership, corsHeaders, unauthorizedResponse, forbiddenResponse } from './utils/auth'
 
 const VAPI_API_KEY = process.env.VAPI_API_KEY!
 const VAPI_API_URL = 'https://api.vapi.ai/assistant'
@@ -32,12 +33,6 @@ const withRetry = async <T>(fn: () => Promise<T>, retries = 2, baseDelayMs = 300
 };
 
 export const handler: Handler = async (event) => {
-  const corsHeaders = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Content-Type': 'application/json'
-  }
-
   if (event.httpMethod === 'OPTIONS') {
     return {
       statusCode: 200,
@@ -54,6 +49,12 @@ export const handler: Handler = async (event) => {
     }
   }
 
+  // SECURITY: Authenticate the request
+  const authResult = await authenticateRequest(event.headers.authorization)
+  if (authResult.error || !authResult.user) {
+    return unauthorizedResponse(authResult.error || 'Authentication required')
+  }
+
   try {
     const { agentId, phoneNumber, action = 'create' } = JSON.parse(event.body || '{}')
     const requestId = `manage-vapi-${agentId || 'unknown'}-${Date.now()}`
@@ -61,6 +62,12 @@ export const handler: Handler = async (event) => {
     
     if (!agentId) {
       throw new Error('Agent ID is required')
+    }
+
+    // SECURITY: Verify the authenticated user owns this agent
+    const ownershipResult = await verifyAgentOwnership(authResult.user.id, agentId)
+    if (!ownershipResult.owned) {
+      return forbiddenResponse(ownershipResult.error || 'You do not have permission to modify this agent')
     }
 
     if (!VAPI_API_KEY) {
