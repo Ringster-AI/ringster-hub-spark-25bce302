@@ -66,7 +66,21 @@ const Index = () => {
               "AI-powered conversational voice interactions"
             ],
             "offers": { "@type": "Offer", "priceCurrency": "USD", "availability": "https://schema.org/InStock", "category": "Subscription" },
-            "audience": { "@type": "Audience", "audienceType": "Small Businesses, Service Businesses, Entrepreneurs" }
+          "audience": { "@type": "Audience", "audienceType": "Small Businesses, Service Businesses, Entrepreneurs" }
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "HowTo",
+            "@id": "https://ringster.ai/how-it-works#howto",
+            "name": "How to set up Ringster for your business",
+            "description": "Set up Ringster to answer business calls, capture leads, and route callers automatically.",
+            "step": [
+              { "@type": "HowToStep", "position": 1, "name": "Create your Ringster account", "text": "Sign up and access your Ringster dashboard." },
+              { "@type": "HowToStep", "position": 2, "name": "Add your business information", "text": "Enter your business name, hours, services, and the key details Ringster should share with callers." },
+              { "@type": "HowToStep", "position": 3, "name": "Configure call handling", "text": "Set your greeting, routing rules, transfer numbers, and any lead capture questions." },
+              { "@type": "HowToStep", "position": 4, "name": "Test your AI receptionist", "text": "Call your number, review the conversation flow, and refine responses as needed." },
+              { "@type": "HowToStep", "position": 5, "name": "Go live", "text": "Publish your setup so Ringster can begin answering customer calls." }
+            ]
           }
         ]}
       />
