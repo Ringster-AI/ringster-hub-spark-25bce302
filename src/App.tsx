@@ -100,6 +100,13 @@ function App() {
           <ScrollToTop />
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/ai-receptionist" element={<AIReceptionist />} />
+            <Route path="/how-it-works" element={<HowItWorks />} />
+            <Route path="/pricing" element={<Pricing />} />
+            <Route path="/faq" element={<FAQ />} />
+            <Route path="/ai-receptionist-for-plumbers" element={<IndustryLanding industryKey="plumbers" />} />
+            <Route path="/ai-receptionist-for-hvac" element={<IndustryLanding industryKey="hvac" />} />
+            <Route path="/ai-receptionist-for-electricians" element={<IndustryLanding industryKey="electricians" />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/contact" element={<Contact />} />
