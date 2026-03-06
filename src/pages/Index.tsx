@@ -23,26 +23,52 @@ const Index = () => {
       <Seo 
         title="Ringster — Never Miss a Customer Call Again" 
         description="AI receptionist that answers calls, qualifies leads, and books appointments 24/7. Built for plumbers, electricians, clinics, realtors, and small business owners who hate missing calls."
-        jsonLd={{
-          "@context": "https://schema.org",
-          "@type": "FAQPage",
-          "mainEntity": [
-            { "@type": "Question", "name": "What is an AI front desk service?", "acceptedAnswer": { "@type": "Answer", "text": "An AI front desk service is a virtual phone assistant that answers incoming calls, responds to common questions, captures caller information, routes calls, and can help book appointments. It gives businesses a way to handle calls 24/7 without needing a full time receptionist." } },
-            { "@type": "Question", "name": "How does an AI front desk service work?", "acceptedAnswer": { "@type": "Answer", "text": "An AI front desk service answers your business phone using conversational voice technology. It can greet callers, understand what they need, provide business information, collect lead details, transfer calls to the right person, and follow rules you set for your business." } },
-            { "@type": "Question", "name": "Can an AI front desk answer calls after hours?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. One of the main benefits of an AI front desk service is that it can answer calls 24/7, including evenings, weekends, and holidays. This helps businesses capture leads and support customers even when staff are unavailable." } },
-            { "@type": "Question", "name": "What types of businesses use AI front desk services?", "acceptedAnswer": { "@type": "Answer", "text": "AI front desk services are commonly used by service businesses such as HVAC companies, plumbers, electricians, clinics, law firms, real estate teams, salons, contractors, and other businesses that need help managing incoming calls and customer inquiries." } },
-            { "@type": "Question", "name": "Can an AI front desk transfer calls to my team?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. AI front desk services can transfer calls to you or the right team member based on caller needs, business hours, urgency, or custom routing rules. This helps make sure important calls still reach a real person when needed." } },
-            { "@type": "Question", "name": "Can an AI front desk capture leads and customer details?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. AI front desk services can collect caller names, phone numbers, email addresses, appointment requests, service needs, and other important details. This helps businesses avoid losing leads when staff cannot answer the phone." } },
-            { "@type": "Question", "name": "Can an AI front desk book appointments?", "acceptedAnswer": { "@type": "Answer", "text": "Many AI front desk services can help with appointment scheduling by collecting booking details or connecting with scheduling workflows. Depending on the setup, the system can qualify the request, confirm availability, and guide callers through the next step." } },
-            { "@type": "Question", "name": "Will an AI front desk sound natural to callers?", "acceptedAnswer": { "@type": "Answer", "text": "A well configured AI front desk can sound natural, professional, and conversational. Modern voice systems are designed to understand common customer requests and respond in a way that feels helpful and easy to follow." } },
-            { "@type": "Question", "name": "What questions can an AI front desk answer?", "acceptedAnswer": { "@type": "Answer", "text": "An AI front desk can answer common questions about your business such as hours, services, pricing basics, location, availability, service areas, appointment details, and other frequently asked questions based on the information you provide." } },
-            { "@type": "Question", "name": "Is an AI front desk better than voicemail?", "acceptedAnswer": { "@type": "Answer", "text": "In most cases, yes. Unlike voicemail, an AI front desk can interact with callers in real time, answer questions, collect useful details, transfer urgent calls, and create a smoother customer experience. This can improve lead capture and reduce missed opportunities." } },
-            { "@type": "Question", "name": "How much does an AI front desk service cost?", "acceptedAnswer": { "@type": "Answer", "text": "Pricing varies by provider and usage, but AI front desk services are often more affordable than hiring full time front desk staff. Costs typically depend on factors like call volume, features, number of agents, and integrations." } },
-            { "@type": "Question", "name": "Can an AI front desk be customized for my business?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. AI front desk services can usually be customized with your business name, greeting, services, call routing rules, frequently asked questions, lead intake flow, and escalation instructions so the experience matches how your business operates." } },
-            { "@type": "Question", "name": "Can an AI front desk help reduce missed calls?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. AI front desk services are designed to answer calls instantly, which helps businesses reduce missed calls, improve response times, and capture more leads from customers who might otherwise hang up or call a competitor." } },
-            { "@type": "Question", "name": "Is an AI front desk service hard to set up?", "acceptedAnswer": { "@type": "Answer", "text": "Setup is usually straightforward. Most AI front desk services only need your business information, call handling preferences, and transfer rules to get started. More advanced setups can include appointment flows, lead qualification, and custom integrations." } }
-          ]
-        }}
+        jsonLd={[
+          {
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            "mainEntity": [
+              { "@type": "Question", "name": "What is an AI front desk service?", "acceptedAnswer": { "@type": "Answer", "text": "An AI front desk service is a virtual phone assistant that answers incoming calls, responds to common questions, captures caller information, routes calls, and can help book appointments. It gives businesses a way to handle calls 24/7 without needing a full time receptionist." } },
+              { "@type": "Question", "name": "How does an AI front desk service work?", "acceptedAnswer": { "@type": "Answer", "text": "An AI front desk service answers your business phone using conversational voice technology. It can greet callers, understand what they need, provide business information, collect lead details, transfer calls to the right person, and follow rules you set for your business." } },
+              { "@type": "Question", "name": "Can an AI front desk answer calls after hours?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. One of the main benefits of an AI front desk service is that it can answer calls 24/7, including evenings, weekends, and holidays. This helps businesses capture leads and support customers even when staff are unavailable." } },
+              { "@type": "Question", "name": "What types of businesses use AI front desk services?", "acceptedAnswer": { "@type": "Answer", "text": "AI front desk services are commonly used by service businesses such as HVAC companies, plumbers, electricians, clinics, law firms, real estate teams, salons, contractors, and other businesses that need help managing incoming calls and customer inquiries." } },
+              { "@type": "Question", "name": "Can an AI front desk transfer calls to my team?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. AI front desk services can transfer calls to you or the right team member based on caller needs, business hours, urgency, or custom routing rules. This helps make sure important calls still reach a real person when needed." } },
+              { "@type": "Question", "name": "Can an AI front desk capture leads and customer details?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. AI front desk services can collect caller names, phone numbers, email addresses, appointment requests, service needs, and other important details. This helps businesses avoid losing leads when staff cannot answer the phone." } },
+              { "@type": "Question", "name": "Can an AI front desk book appointments?", "acceptedAnswer": { "@type": "Answer", "text": "Many AI front desk services can help with appointment scheduling by collecting booking details or connecting with scheduling workflows. Depending on the setup, the system can qualify the request, confirm availability, and guide callers through the next step." } },
+              { "@type": "Question", "name": "Will an AI front desk sound natural to callers?", "acceptedAnswer": { "@type": "Answer", "text": "A well configured AI front desk can sound natural, professional, and conversational. Modern voice systems are designed to understand common customer requests and respond in a way that feels helpful and easy to follow." } },
+              { "@type": "Question", "name": "What questions can an AI front desk answer?", "acceptedAnswer": { "@type": "Answer", "text": "An AI front desk can answer common questions about your business such as hours, services, pricing basics, location, availability, service areas, appointment details, and other frequently asked questions based on the information you provide." } },
+              { "@type": "Question", "name": "Is an AI front desk better than voicemail?", "acceptedAnswer": { "@type": "Answer", "text": "In most cases, yes. Unlike voicemail, an AI front desk can interact with callers in real time, answer questions, collect useful details, transfer urgent calls, and create a smoother customer experience. This can improve lead capture and reduce missed opportunities." } },
+              { "@type": "Question", "name": "How much does an AI front desk service cost?", "acceptedAnswer": { "@type": "Answer", "text": "Pricing varies by provider and usage, but AI front desk services are often more affordable than hiring full time front desk staff. Costs typically depend on factors like call volume, features, number of agents, and integrations." } },
+              { "@type": "Question", "name": "Can an AI front desk be customized for my business?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. AI front desk services can usually be customized with your business name, greeting, services, call routing rules, frequently asked questions, lead intake flow, and escalation instructions so the experience matches how your business operates." } },
+              { "@type": "Question", "name": "Can an AI front desk help reduce missed calls?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. AI front desk services are designed to answer calls instantly, which helps businesses reduce missed calls, improve response times, and capture more leads from customers who might otherwise hang up or call a competitor." } },
+              { "@type": "Question", "name": "Is an AI front desk service hard to set up?", "acceptedAnswer": { "@type": "Answer", "text": "Setup is usually straightforward. Most AI front desk services only need your business information, call handling preferences, and transfer rules to get started. More advanced setups can include appointment flows, lead qualification, and custom integrations." } }
+            ]
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "SoftwareApplication",
+            "name": "Ringster",
+            "url": "https://ringster.ai",
+            "applicationCategory": "BusinessApplication",
+            "applicationSubCategory": "AI Receptionist Software",
+            "operatingSystem": "Cloud",
+            "description": "Ringster is an AI-powered phone agent platform that helps businesses answer calls automatically, capture leads, route callers, and provide customer information 24/7 without needing a human receptionist.",
+            "softwareVersion": "1.0",
+            "creator": { "@type": "Organization", "name": "Ringster" },
+            "publisher": { "@type": "Organization", "name": "Ringster", "url": "https://ringster.ai" },
+            "featureList": [
+              "AI phone agents that answer calls automatically",
+              "24/7 call answering for businesses",
+              "Call routing and transfers to team members",
+              "Lead capture from inbound callers",
+              "Business information responses",
+              "Custom greetings and call flows",
+              "AI-powered conversational voice interactions"
+            ],
+            "offers": { "@type": "Offer", "priceCurrency": "USD", "availability": "https://schema.org/InStock", "category": "Subscription" },
+            "audience": { "@type": "Audience", "audienceType": "Small Businesses, Service Businesses, Entrepreneurs" }
+          }
+        ]}
       />
       
       {/* Navigation */}
