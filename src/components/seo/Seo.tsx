@@ -5,7 +5,7 @@ interface SeoProps {
   description?: string;
   canonical?: string;
   image?: string;
-  jsonLd?: Record<string, any>;
+  jsonLd?: Record<string, any> | Record<string, any>[];
 }
 
 export const Seo = ({ title, description, canonical, image, jsonLd }: SeoProps) => {
@@ -52,16 +52,17 @@ export const Seo = ({ title, description, canonical, image, jsonLd }: SeoProps) 
     if (canonicalUrl) setOG('og:url', canonicalUrl);
     if (image) setOG('og:image', image);
 
-    // JSON-LD
-    const scriptId = 'seo-json-ld';
-    const existing = document.getElementById(scriptId);
-    if (existing) existing.remove();
+    // JSON-LD — remove old tags and insert new ones
+    document.querySelectorAll('script[data-seo-jsonld]').forEach(el => el.remove());
     if (jsonLd) {
-      const script = document.createElement('script');
-      script.type = 'application/ld+json';
-      script.id = scriptId;
-      script.text = JSON.stringify(jsonLd);
-      document.head.appendChild(script);
+      const schemas = Array.isArray(jsonLd) ? jsonLd : [jsonLd];
+      schemas.forEach((schema, i) => {
+        const script = document.createElement('script');
+        script.type = 'application/ld+json';
+        script.setAttribute('data-seo-jsonld', String(i));
+        script.text = JSON.stringify(schema);
+        document.head.appendChild(script);
+      });
     }
   }, [title, description, canonical, image, JSON.stringify(jsonLd)]);
 
