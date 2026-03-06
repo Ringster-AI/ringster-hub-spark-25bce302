@@ -5,6 +5,11 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import Index from "./pages/Index";
+import AIReceptionist from "./pages/AIReceptionist";
+import HowItWorks from "./pages/HowItWorks";
+import Pricing from "./pages/Pricing";
+import FAQ from "./pages/FAQ";
+import IndustryLanding from "./pages/IndustryLanding";
 import Blog from "./pages/Blog";
 import Contact from "./pages/Contact";
 import Dashboard from "./pages/Dashboard";
@@ -95,6 +100,13 @@ function App() {
           <ScrollToTop />
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/ai-receptionist" element={<AIReceptionist />} />
+            <Route path="/how-it-works" element={<HowItWorks />} />
+            <Route path="/pricing" element={<Pricing />} />
+            <Route path="/faq" element={<FAQ />} />
+            <Route path="/ai-receptionist-for-plumbers" element={<IndustryLanding industryKey="plumbers" />} />
+            <Route path="/ai-receptionist-for-hvac" element={<IndustryLanding industryKey="hvac" />} />
+            <Route path="/ai-receptionist-for-electricians" element={<IndustryLanding industryKey="electricians" />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/contact" element={<Contact />} />
