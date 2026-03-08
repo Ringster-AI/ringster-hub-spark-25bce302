@@ -106,6 +106,14 @@ export const useCookieConsent = () => {
   };
 
   const loadMarketingScripts = () => {
+    // Apollo.io Website Tracker
+    if (!document.getElementById("apollo-script")) {
+      const apolloScript = document.createElement("script");
+      apolloScript.id = "apollo-script";
+      apolloScript.innerHTML = `(function(){var n=Math.random().toString(36).substring(7),o=document.createElement("script");o.src="https://assets.apollo.io/micro/website-tracker/tracker.iife.js?nocache="+n;o.async=true;o.defer=true;o.onload=function(){if(window.trackingFunctions){window.trackingFunctions.onLoad({appId:"69acd209a859500011e96498"})}};document.head.appendChild(o)})();`;
+      document.head.appendChild(apolloScript);
+    }
+
     // Meta/Facebook Pixel
     if (!document.getElementById("fb-pixel-script")) {
       const fbScript = document.createElement("script");
