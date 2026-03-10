@@ -76,6 +76,9 @@ export const useAgentCalendarData = (agentId: string) => {
   const toggleMutation = useMutation({
     mutationFn: async ({ enabled, formData }: { enabled: boolean; formData: AgentFormData }) => {
       if (enabled) {
+        // Ensure global calendar tools are registered in Vapi
+        await ensureCalendarToolsRegistered();
+
         // Create or enable calendar tool
         const toolConfig = {
           agent_id: agentId,
