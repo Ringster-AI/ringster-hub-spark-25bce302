@@ -1,0 +1,291 @@
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
+
+const TOOL_VERSION = '1.0'
+const VAPI_API_URL = 'https://api.vapi.ai/tool'
+
+// Code tool source for check_availability
+const CHECK_AVAILABILITY_CODE = `
+async function main({ params }) {
+  try {
+    const res = await fetch(params.supabase_url + '/functions/v1/vapi-calendar-api', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-vapi-secret': params.calendar_secret,
+      },
+      body: JSON.stringify({
+        action: 'check_availability',
+        assistant_id: params.assistant_id,
+        date: params.date,
+        timezone: params.timezone || 'America/New_York',
+        duration_minutes: params.duration_minutes || 30,
+      }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: true, message: 'Calendar service error' }));
+      return err;
+    }
+    return await res.json();
+  } catch (e) {
+    return { error: true, message: 'Calendar service temporarily unavailable. Please try again.' };
+  }
+}
+`
+
+// Code tool source for book_appointment
+const BOOK_APPOINTMENT_CODE = `
+async function main({ params }) {
+  try {
+    const idempotencyKey = crypto.randomUUID();
+    const res = await fetch(params.supabase_url + '/functions/v1/vapi-calendar-api', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-vapi-secret': params.calendar_secret,
+      },
+      body: JSON.stringify({
+        action: 'book_appointment',
+        assistant_id: params.assistant_id,
+        datetime: params.datetime,
+        attendee_name: params.attendee_name,
+        attendee_email: params.attendee_email || null,
+        duration_minutes: params.duration_minutes || 30,
+        appointment_type: params.appointment_type || 'consultation',
+        timezone: params.timezone || 'America/New_York',
+        idempotency_key: idempotencyKey,
+      }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: true, message: 'Booking service error' }));
+      return err;
+    }
+    return await res.json();
+  } catch (e) {
+    return { error: true, message: 'Booking service temporarily unavailable. Please try again.' };
+  }
+}
+`
+
+function buildCheckAvailabilityTool(supabaseUrl: string, calendarSecret: string) {
+  return {
+    type: 'code',
+    function: {
+      name: 'check_availability',
+      description: 'Check available appointment slots on a specific date. Returns available time slots for booking.',
+      parameters: {
+        type: 'object',
+        properties: {
+          date: {
+            type: 'string',
+            description: 'The date to check availability for, in YYYY-MM-DD format',
+          },
+          timezone: {
+            type: 'string',
+            description: 'The caller\'s timezone (e.g., "America/New_York", "America/Los_Angeles"). Ask the caller if unsure.',
+          },
+          duration_minutes: {
+            type: 'number',
+            description: 'Duration of the appointment in minutes. Default is 30.',
+          },
+        },
+        required: ['date'],
+      },
+    },
+    code: CHECK_AVAILABILITY_CODE,
+    codeInterpreterEnabled: false,
+    environmentVariables: [
+      { key: 'supabase_url', value: supabaseUrl },
+      { key: 'calendar_secret', value: calendarSecret },
+    ],
+    // assistant_id is injected via the code using call context
+    serverUrl: undefined,
+  }
+}
+
+function buildBookAppointmentTool(supabaseUrl: string, calendarSecret: string) {
+  return {
+    type: 'code',
+    function: {
+      name: 'book_appointment',
+      description: 'Book an appointment at a specific date and time. Use check_availability first to find open slots.',
+      parameters: {
+        type: 'object',
+        properties: {
+          datetime: {
+            type: 'string',
+            description: 'The appointment date and time in ISO format (e.g., "2025-03-15T10:00:00")',
+          },
+          attendee_name: {
+            type: 'string',
+            description: 'Full name of the person booking the appointment',
+          },
+          attendee_email: {
+            type: 'string',
+            description: 'Email address of the person booking (optional but recommended)',
+          },
+          duration_minutes: {
+            type: 'number',
+            description: 'Duration of the appointment in minutes. Default is 30.',
+          },
+          appointment_type: {
+            type: 'string',
+            description: 'Type of appointment (e.g., "consultation", "follow-up", "demo")',
+          },
+          timezone: {
+            type: 'string',
+            description: 'The caller\'s timezone (e.g., "America/New_York")',
+          },
+        },
+        required: ['datetime', 'attendee_name'],
+      },
+    },
+    code: BOOK_APPOINTMENT_CODE,
+    codeInterpreterEnabled: false,
+    environmentVariables: [
+      { key: 'supabase_url', value: supabaseUrl },
+      { key: 'calendar_secret', value: calendarSecret },
+    ],
+  }
+}
+
+Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders })
+  }
+
+  // Authenticate
+  const authHeader = req.headers.get('Authorization')
+  if (!authHeader?.startsWith('Bearer ')) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
+  }
+
+  const supabase = createClient(
+    Deno.env.get('SUPABASE_URL')!,
+    Deno.env.get('SUPABASE_ANON_KEY')!,
+    { global: { headers: { Authorization: authHeader } } }
+  )
+
+  const token = authHeader.replace('Bearer ', '')
+  const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token)
+  if (claimsError || !claimsData?.claims) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
+  }
+
+  const adminSupabase = createClient(
+    Deno.env.get('SUPABASE_URL')!,
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+  )
+
+  try {
+    const vapiApiKey = Deno.env.get('VAPI_API_KEY')!
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+    const calendarSecret = Deno.env.get('VAPI_CALENDAR_SECRET')!
+
+    // Check if tools already exist with current version
+    const { data: existingConfig } = await adminSupabase
+      .from('vapi_global_config')
+      .select('*')
+      .eq('key', 'calendar_tools')
+      .single()
+
+    const existingValue = existingConfig?.value as any
+    if (existingValue?.version === TOOL_VERSION && existingValue?.check_availability_id && existingValue?.book_appointment_id) {
+      // Tools exist and are current version — update them in place (PATCH)
+      console.log('Tools exist at current version, updating code...')
+
+      const checkTool = buildCheckAvailabilityTool(supabaseUrl, calendarSecret)
+      const bookTool = buildBookAppointmentTool(supabaseUrl, calendarSecret)
+
+      await Promise.all([
+        fetch(`${VAPI_API_URL}/${existingValue.check_availability_id}`, {
+          method: 'PATCH',
+          headers: { 'Authorization': `Bearer ${vapiApiKey}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify(checkTool),
+        }),
+        fetch(`${VAPI_API_URL}/${existingValue.book_appointment_id}`, {
+          method: 'PATCH',
+          headers: { 'Authorization': `Bearer ${vapiApiKey}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify(bookTool),
+        }),
+      ])
+
+      return new Response(JSON.stringify({
+        message: 'Calendar tools updated',
+        check_availability_id: existingValue.check_availability_id,
+        book_appointment_id: existingValue.book_appointment_id,
+        version: TOOL_VERSION,
+      }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
+    // Create new tools
+    console.log('Creating new calendar tools...')
+
+    const checkTool = buildCheckAvailabilityTool(supabaseUrl, calendarSecret)
+    const bookTool = buildBookAppointmentTool(supabaseUrl, calendarSecret)
+
+    const [checkRes, bookRes] = await Promise.all([
+      fetch(VAPI_API_URL, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${vapiApiKey}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(checkTool),
+      }),
+      fetch(VAPI_API_URL, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${vapiApiKey}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(bookTool),
+      }),
+    ])
+
+    if (!checkRes.ok || !bookRes.ok) {
+      const checkErr = await checkRes.text()
+      const bookErr = await bookRes.text()
+      throw new Error(`Failed to create tools: check=${checkErr}, book=${bookErr}`)
+    }
+
+    const checkData = await checkRes.json()
+    const bookData = await bookRes.json()
+
+    // Store tool IDs in vapi_global_config
+    await adminSupabase
+      .from('vapi_global_config')
+      .upsert({
+        key: 'calendar_tools',
+        value: {
+          check_availability_id: checkData.id,
+          book_appointment_id: bookData.id,
+          version: TOOL_VERSION,
+        },
+        updated_at: new Date().toISOString(),
+      })
+
+    return new Response(JSON.stringify({
+      message: 'Calendar tools created',
+      check_availability_id: checkData.id,
+      book_appointment_id: bookData.id,
+      version: TOOL_VERSION,
+    }), {
+      status: 200,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
+  } catch (err: any) {
+    console.error('register-vapi-calendar-tools error:', err)
+    return new Response(JSON.stringify({ error: err.message }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
+  }
+})

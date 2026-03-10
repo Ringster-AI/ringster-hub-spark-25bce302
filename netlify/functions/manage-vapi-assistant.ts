@@ -85,20 +85,43 @@ export const handler: Handler = async (event) => {
       throw new Error('Failed to fetch agent details')
     }
 
+    // Check if calendar is enabled for this agent and fetch global tool IDs
+    let calendarToolIds: string[] = []
+    const { data: calendarTool } = await supabase
+      .from('calendar_tools')
+      .select('is_enabled')
+      .eq('agent_id', agentId)
+      .eq('tool_name', 'calendar_booking')
+      .eq('is_enabled', true)
+      .single()
+
+    if (calendarTool) {
+      const { data: globalConfig } = await supabase
+        .from('vapi_global_config')
+        .select('value')
+        .eq('key', 'calendar_tools')
+        .single()
+
+      if (globalConfig?.value) {
+        const toolConfig = globalConfig.value as any
+        if (toolConfig.check_availability_id) calendarToolIds.push(toolConfig.check_availability_id)
+        if (toolConfig.book_appointment_id) calendarToolIds.push(toolConfig.book_appointment_id)
+      }
+    }
+
     const vapiService = new VapiService(VAPI_API_KEY, VAPI_API_URL)
 
     if (action === 'update') {
-      // Handle update action
       const assistantId = agent.vapi_assistant_id
-      
       if (!assistantId) {
         throw new Error('No VAPI assistant ID found for agent')
       }
 
-      // Create updated configuration
       const vapiConfig = createVapiAssistantConfig(agent)
-      
-      // Update the assistant (with retry)
+      if (calendarToolIds.length > 0) {
+        vapiConfig.model.toolIds = calendarToolIds
+      }
+
       const updatedAssistant = await withRetry(async () => {
         const res = await fetch(`${VAPI_API_URL}/${assistantId}`, {
           method: 'PATCH',
@@ -138,6 +161,9 @@ export const handler: Handler = async (event) => {
 
       // Create Vapi assistant
       const vapiConfig = createVapiAssistantConfig(agent)
+      if (calendarToolIds.length > 0) {
+        vapiConfig.model.toolIds = calendarToolIds
+      }
       const vapiData = await withRetry(() => vapiService.createAssistant(vapiConfig))
       console.log('Successfully created Vapi assistant:', { requestId, assistantId: vapiData.id })
 

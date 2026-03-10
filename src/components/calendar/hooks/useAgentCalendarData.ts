@@ -6,6 +6,37 @@ import { AgentFormData } from "@/types/agents";
 import { generateToolInstructions, appendToolInstructionsToDescription } from "@/utils/agentDescriptionUtils";
 import { VapiAssistantUpdateService } from "@/services/vapi/assistant-update-service";
 
+// Ensure global calendar tools are registered in Vapi
+async function ensureCalendarToolsRegistered(): Promise<void> {
+  // Check if tools already exist by calling the registration endpoint
+  // It handles idempotency internally
+  console.log("Ensuring calendar tools are registered...");
+  const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+  const { data: sessionData } = await supabase.auth.getSession();
+  const token = sessionData?.session?.access_token;
+
+  if (!token) throw new Error("Not authenticated");
+
+  const res = await fetch(
+    `https://${projectId}.supabase.co/functions/v1/register-vapi-calendar-tools`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({}),
+    }
+  );
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: "Registration failed" }));
+    throw new Error(err.error || "Failed to register calendar tools");
+  }
+
+  console.log("Calendar tools registered successfully");
+}
+
 export const useAgentCalendarData = (agentId: string) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -45,6 +76,9 @@ export const useAgentCalendarData = (agentId: string) => {
   const toggleMutation = useMutation({
     mutationFn: async ({ enabled, formData }: { enabled: boolean; formData: AgentFormData }) => {
       if (enabled) {
+        // Ensure global calendar tools are registered in Vapi
+        await ensureCalendarToolsRegistered();
+
         // Create or enable calendar tool
         const toolConfig = {
           agent_id: agentId,
