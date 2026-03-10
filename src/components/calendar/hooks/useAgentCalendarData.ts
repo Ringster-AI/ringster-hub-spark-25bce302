@@ -6,6 +6,50 @@ import { AgentFormData } from "@/types/agents";
 import { generateToolInstructions, appendToolInstructionsToDescription } from "@/utils/agentDescriptionUtils";
 import { VapiAssistantUpdateService } from "@/services/vapi/assistant-update-service";
 
+// Ensure global calendar tools are registered in Vapi
+async function ensureCalendarToolsRegistered(): Promise<void> {
+  const { data: globalConfig } = await supabase
+    .from("vapi_global_config" as any)
+    .select("value")
+    .eq("key", "calendar_tools")
+    .single();
+
+  if (globalConfig?.value) {
+    const config = globalConfig.value as any;
+    if (config.check_availability_id && config.book_appointment_id) {
+      console.log("Calendar tools already registered");
+      return;
+    }
+  }
+
+  // Tools not registered yet, call the registration edge function
+  console.log("Registering calendar tools...");
+  const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+  const { data: sessionData } = await supabase.auth.getSession();
+  const token = sessionData?.session?.access_token;
+
+  if (!token) throw new Error("Not authenticated");
+
+  const res = await fetch(
+    `https://${projectId}.supabase.co/functions/v1/register-vapi-calendar-tools`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({}),
+    }
+  );
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: "Registration failed" }));
+    throw new Error(err.error || "Failed to register calendar tools");
+  }
+
+  console.log("Calendar tools registered successfully");
+}
+
 export const useAgentCalendarData = (agentId: string) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
