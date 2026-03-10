@@ -161,6 +161,9 @@ export const handler: Handler = async (event) => {
 
       // Create Vapi assistant
       const vapiConfig = createVapiAssistantConfig(agent)
+      if (calendarToolIds.length > 0) {
+        vapiConfig.model.toolIds = calendarToolIds
+      }
       const vapiData = await withRetry(() => vapiService.createAssistant(vapiConfig))
       console.log('Successfully created Vapi assistant:', { requestId, assistantId: vapiData.id })
 
