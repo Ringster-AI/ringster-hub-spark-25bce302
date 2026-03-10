@@ -241,7 +241,9 @@ export type Database = {
           duration_minutes: number
           google_event_id: string | null
           google_integration_id: string | null
+          google_integration_id_text: string | null
           id: string
+          idempotency_key: string | null
           notes: string | null
           updated_at: string
         }
@@ -259,7 +261,9 @@ export type Database = {
           duration_minutes?: number
           google_event_id?: string | null
           google_integration_id?: string | null
+          google_integration_id_text?: string | null
           id?: string
+          idempotency_key?: string | null
           notes?: string | null
           updated_at?: string
         }
@@ -277,7 +281,9 @@ export type Database = {
           duration_minutes?: number
           google_event_id?: string | null
           google_integration_id?: string | null
+          google_integration_id_text?: string | null
           id?: string
+          idempotency_key?: string | null
           notes?: string | null
           updated_at?: string
         }
@@ -1530,6 +1536,24 @@ export type Database = {
           },
         ]
       }
+      vapi_global_config: {
+        Row: {
+          key: string
+          updated_at: string | null
+          value: Json
+        }
+        Insert: {
+          key: string
+          updated_at?: string | null
+          value?: Json
+        }
+        Update: {
+          key?: string
+          updated_at?: string | null
+          value?: Json
+        }
+        Relationships: []
+      }
       waitlist: {
         Row: {
           created_at: string
@@ -1561,6 +1585,10 @@ export type Database = {
           p_user_id: string
         }
         Returns: boolean
+      }
+      booking_tstzrange: {
+        Args: { duration_min: number; start_time: string }
+        Returns: unknown
       }
       deduct_credits: {
         Args: {
