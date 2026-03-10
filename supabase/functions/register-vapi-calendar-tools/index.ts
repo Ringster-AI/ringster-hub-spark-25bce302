@@ -10,8 +10,12 @@ const VAPI_API_URL = 'https://api.vapi.ai/tool'
 
 // Code tool source for check_availability
 const CHECK_AVAILABILITY_CODE = `
-async function main({ params }) {
+async function main({ params, call }) {
   try {
+    const assistantId = call?.assistant?.id || params.assistant_id;
+    if (!assistantId) {
+      return { error: true, message: 'Could not determine assistant identity.' };
+    }
     const res = await fetch(params.supabase_url + '/functions/v1/vapi-calendar-api', {
       method: 'POST',
       headers: {
@@ -20,7 +24,7 @@ async function main({ params }) {
       },
       body: JSON.stringify({
         action: 'check_availability',
-        assistant_id: params.assistant_id,
+        assistant_id: assistantId,
         date: params.date,
         timezone: params.timezone || 'America/New_York',
         duration_minutes: params.duration_minutes || 30,
