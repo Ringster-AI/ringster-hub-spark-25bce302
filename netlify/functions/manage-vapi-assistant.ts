@@ -119,7 +119,7 @@ export const handler: Handler = async (event) => {
 
       const vapiConfig = createVapiAssistantConfig(agent)
       if (calendarToolIds.length > 0) {
-        vapiConfig.model.toolIds = calendarToolIds
+        vapiConfig.toolIds = calendarToolIds
       }
 
       const updatedAssistant = await withRetry(async () => {
