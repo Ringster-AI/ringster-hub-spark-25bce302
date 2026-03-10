@@ -3,6 +3,7 @@ import { AgentConfig } from '../../../src/types/database/agents';
 export interface VapiAssistantConfig {
   name: string;
   firstMessage: string;
+  toolIds?: string[];
   model: {
     provider: string;
     model: string;
@@ -11,7 +12,6 @@ export interface VapiAssistantConfig {
       role: string;
       content: string;
     }>;
-    toolIds?: string[];
   };
   voice: {
     provider: string;

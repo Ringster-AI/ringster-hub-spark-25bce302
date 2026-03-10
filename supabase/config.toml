@@ -81,6 +81,7 @@ allow_public_network_access = true
 
 [functions.register-vapi-calendar-tools]
 verify_jwt = false
+allow_public_network_access = true
 
 [shared_schema]
 migrations_dir = "migrations"
