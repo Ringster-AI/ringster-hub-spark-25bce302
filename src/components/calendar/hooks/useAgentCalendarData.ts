@@ -8,22 +8,9 @@ import { VapiAssistantUpdateService } from "@/services/vapi/assistant-update-ser
 
 // Ensure global calendar tools are registered in Vapi
 async function ensureCalendarToolsRegistered(): Promise<void> {
-  const { data: globalConfig } = await supabase
-    .from("vapi_global_config" as any)
-    .select("value")
-    .eq("key", "calendar_tools")
-    .single();
-
-  if (globalConfig?.value) {
-    const config = globalConfig.value as any;
-    if (config.check_availability_id && config.book_appointment_id) {
-      console.log("Calendar tools already registered");
-      return;
-    }
-  }
-
-  // Tools not registered yet, call the registration edge function
-  console.log("Registering calendar tools...");
+  // Check if tools already exist by calling the registration endpoint
+  // It handles idempotency internally
+  console.log("Ensuring calendar tools are registered...");
   const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
   const { data: sessionData } = await supabase.auth.getSession();
   const token = sessionData?.session?.access_token;
