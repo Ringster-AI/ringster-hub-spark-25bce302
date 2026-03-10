@@ -10,5 +10,13 @@ allow_public_network_access = true
 verify_jwt = false
 allow_public_network_access = true
 
+[vapi-calendar-api]
+verify_jwt = false
+allow_public_network_access = true
+
+[register-vapi-calendar-tools]
+verify_jwt = false
+allow_public_network_access = true
+
 [shared_schema]
 migrations_dir = "migrations"

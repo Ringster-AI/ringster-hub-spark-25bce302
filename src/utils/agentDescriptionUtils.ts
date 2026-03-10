@@ -10,7 +10,17 @@ export const generateToolInstructions = (agentData: any) => {
   
   // Calendar booking tool instructions
   if (agentData.calendar_booking?.enabled || agentData.config?.calendar_booking?.enabled) {
-    instructions.push('Use the google_calendar tool to schedule appointments when customers request to book a meeting or consultation.');
+    instructions.push(
+      'When a caller wants to schedule an appointment: ' +
+      '1) Ask what day works for them. ' +
+      '2) Use check_availability with that date to find open slots. If you are unsure of the caller\'s timezone, ask them. ' +
+      '3) Present the available times and let the caller choose. ' +
+      '4) Confirm the caller\'s full name and email (email is optional but helpful). ' +
+      '5) Use book_appointment with the chosen time and caller details to finalize the booking. ' +
+      '6) Confirm the appointment details back to the caller. ' +
+      'If no slots are available, apologize and suggest trying another day. ' +
+      'If a booking fails because the slot was taken, apologize and offer to check availability again.'
+    );
   }
   
   return instructions;

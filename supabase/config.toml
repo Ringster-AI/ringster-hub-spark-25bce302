@@ -75,5 +75,11 @@ verify_jwt = false
 [functions.delete-account]
 verify_jwt = false
 
+[functions.vapi-calendar-api]
+verify_jwt = false
+
+[functions.register-vapi-calendar-tools]
+verify_jwt = false
+
 [shared_schema]
 migrations_dir = "migrations"

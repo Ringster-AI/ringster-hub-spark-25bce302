@@ -11,6 +11,7 @@ export interface VapiAssistantConfig {
       role: string;
       content: string;
     }>;
+    toolIds?: string[];
   };
   voice: {
     provider: string;
