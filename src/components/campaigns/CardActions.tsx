@@ -4,6 +4,7 @@ import { Campaign } from "@/types/database/campaigns";
 import { Users, Edit, Phone, BarChart3 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { getNetlifyFunctionsUrl } from "@/utils/netlifyFunctions";
 
 interface CardActionsProps {
   campaign: Campaign & { agent: any };
