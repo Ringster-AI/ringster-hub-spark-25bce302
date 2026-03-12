@@ -32,6 +32,21 @@ const withRetry = async <T>(fn: () => Promise<T>, retries = 2, baseDelayMs = 300
   throw lastError;
 };
 
+const getAssistantIdFromAgent = (agent: any): string | null => {
+  if (typeof agent?.vapi_assistant_id === 'string' && agent.vapi_assistant_id.trim().length > 0) {
+    return agent.vapi_assistant_id
+  }
+
+  if (agent?.config && typeof agent.config === 'object' && !Array.isArray(agent.config)) {
+    const fallbackId = (agent.config as Record<string, unknown>).vapi_assistant_id
+    if (typeof fallbackId === 'string' && fallbackId.trim().length > 0) {
+      return fallbackId
+    }
+  }
+
+  return null
+};
+
 export const handler: Handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') {
     return {
@@ -112,10 +127,11 @@ export const handler: Handler = async (event) => {
     const vapiService = new VapiService(VAPI_API_KEY, VAPI_API_URL)
 
     if (action === 'update') {
-      const assistantId = agent.vapi_assistant_id
+      const assistantId = getAssistantIdFromAgent(agent)
       if (!assistantId) {
         throw new Error('No VAPI assistant ID found for agent')
       }
+      const shouldBackfillAssistantId = !agent.vapi_assistant_id
 
       const vapiConfig = createVapiAssistantConfig(agent)
       if (calendarToolIds.length > 0) {
@@ -139,6 +155,17 @@ export const handler: Handler = async (event) => {
         return res.json()
       })
       console.log('Successfully updated Vapi assistant:', { requestId, updatedAssistantId: updatedAssistant.id })
+
+      if (shouldBackfillAssistantId) {
+        const { error: backfillError } = await supabase
+          .from('agent_configs')
+          .update({ vapi_assistant_id: assistantId })
+          .eq('id', agentId)
+
+        if (backfillError) {
+          console.warn('Failed to backfill vapi_assistant_id column', { requestId, assistantId, backfillError })
+        }
+      }
 
       return {
         statusCode: 200,
@@ -189,11 +216,16 @@ export const handler: Handler = async (event) => {
       }
 
       // Update agent config with assistant and tool IDs
+      const currentConfig = agent.config && typeof agent.config === 'object' && !Array.isArray(agent.config)
+        ? (agent.config as Record<string, unknown>)
+        : {}
+
       const { error: updateError } = await supabase
         .from('agent_configs')
         .update({
+          vapi_assistant_id: vapiData.id,
           config: {
-            ...agent.config,
+            ...currentConfig,
             vapi_assistant_id: vapiData.id,
             transfer_tool_id: transferToolId
           }

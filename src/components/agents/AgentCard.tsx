@@ -50,7 +50,11 @@ export const AgentCard = ({ agent, onToggleStatus, onUpdate }: AgentCardProps) =
         return;
       }
 
-      const assistantId = agent.vapi_assistant_id;
+      const fallbackAssistantId = agent.config && typeof agent.config === 'object' && !Array.isArray(agent.config)
+        ? (agent.config as Record<string, unknown>).vapi_assistant_id
+        : null;
+
+      const assistantId = agent.vapi_assistant_id || (typeof fallbackAssistantId === 'string' ? fallbackAssistantId : null);
       if (!assistantId) {
         throw new Error("This agent doesn't have a valid assistant ID configured.");
       }
