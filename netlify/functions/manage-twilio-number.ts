@@ -61,7 +61,7 @@ export const handler: Handler = async (event) => {
 
     twilioService = new TwilioService(
       process.env.TWILIO_ACCOUNT_SID,
-      process.env["TWILIO_AUTH _TOKEN"]
+      process.env.TWILIO_AUTH_TOKEN
     )
     
     const databaseService = new DatabaseService(supabase)

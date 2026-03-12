@@ -184,7 +184,7 @@ export const handler: Handler = async (event) => {
           vapiData.id,
           phoneNumber,
           process.env.TWILIO_ACCOUNT_SID as string,
-          process.env["TWILIO_AUTH _TOKEN"] as string
+          process.env.TWILIO_AUTH_TOKEN as string
         ))
       }
 
