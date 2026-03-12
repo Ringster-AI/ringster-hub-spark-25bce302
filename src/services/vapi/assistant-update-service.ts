@@ -1,5 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { getNetlifyFunctionsUrl } from "@/utils/netlifyFunctions";
 
 export class VapiAssistantUpdateService {
   static async syncAgentWithVapi(agentId: string) {
