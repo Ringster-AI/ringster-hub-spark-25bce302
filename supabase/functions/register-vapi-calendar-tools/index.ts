@@ -5,7 +5,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-const TOOL_VERSION = '1.0'
+const TOOL_VERSION = '1.1'
 const VAPI_API_URL = 'https://api.vapi.ai/tool'
 
 // Code tool source for check_availability
@@ -79,12 +79,51 @@ async function main({ params, call }) {
 }
 `
 
+// Code tool source for get_current_datetime
+const GET_CURRENT_DATETIME_CODE = `
+async function main({ params }) {
+  try {
+    const tz = params.timezone || 'America/New_York';
+    const now = new Date();
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: tz,
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: true,
+    });
+    const parts = formatter.formatToParts(now);
+    const get = (type) => parts.find(p => p.type === type)?.value || '';
+    const dateFormatter = new Intl.DateTimeFormat('sv-SE', {
+      timeZone: tz,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    });
+    const isoDate = dateFormatter.format(now);
+    return {
+      current_date: isoDate,
+      day_of_week: get('weekday'),
+      current_time: get('hour') + ':' + get('minute') + ':' + get('second') + ' ' + get('dayPeriod'),
+      timezone: tz,
+      formatted: formatter.format(now),
+    };
+  } catch (e) {
+    return { error: true, message: 'Could not determine current date/time.' };
+  }
+}
+`
+
 function buildCheckAvailabilityTool(supabaseUrl: string, calendarSecret: string) {
   return {
     type: 'code',
     function: {
       name: 'check_availability',
-      description: 'Check available appointment slots on a specific date. Returns available time slots for booking.',
+      description: 'Check available appointment slots on a specific date. Returns available time slots for booking. Always call get_current_datetime first to know what today\'s date is before checking availability.',
       parameters: {
         type: 'object',
         properties: {
@@ -110,7 +149,6 @@ function buildCheckAvailabilityTool(supabaseUrl: string, calendarSecret: string)
       { key: 'supabase_url', value: supabaseUrl },
       { key: 'calendar_secret', value: calendarSecret },
     ],
-    // assistant_id is injected via the code using call context
     serverUrl: undefined,
   }
 }
@@ -120,7 +158,7 @@ function buildBookAppointmentTool(supabaseUrl: string, calendarSecret: string) {
     type: 'code',
     function: {
       name: 'book_appointment',
-      description: 'Book an appointment at a specific date and time. Use check_availability first to find open slots.',
+      description: 'Book an appointment at a specific date and time. Use check_availability first to find open slots. Requires the attendee\'s name.',
       parameters: {
         type: 'object',
         properties: {
@@ -161,6 +199,29 @@ function buildBookAppointmentTool(supabaseUrl: string, calendarSecret: string) {
   }
 }
 
+function buildGetCurrentDatetimeTool() {
+  return {
+    type: 'code',
+    function: {
+      name: 'get_current_datetime',
+      description: 'Get the current date, time, and day of the week. Call this whenever you need to know what day it is today, or before checking calendar availability. Returns the current date in YYYY-MM-DD format, the day of the week, and the current time.',
+      parameters: {
+        type: 'object',
+        properties: {
+          timezone: {
+            type: 'string',
+            description: 'The timezone to get the current date/time in (e.g., "America/New_York"). Defaults to America/New_York.',
+          },
+        },
+        required: [],
+      },
+    },
+    code: GET_CURRENT_DATETIME_CODE,
+    codeInterpreterEnabled: false,
+    environmentVariables: [],
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
@@ -182,8 +243,8 @@ Deno.serve(async (req) => {
   )
 
   const token = authHeader.replace('Bearer ', '')
-  const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token)
-  if (claimsError || !claimsData?.claims) {
+  const { data: { user }, error: userError } = await supabase.auth.getUser(token)
+  if (userError || !user) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), {
       status: 401,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -208,12 +269,13 @@ Deno.serve(async (req) => {
       .single()
 
     const existingValue = existingConfig?.value as any
-    if (existingValue?.version === TOOL_VERSION && existingValue?.check_availability_id && existingValue?.book_appointment_id) {
+    if (existingValue?.version === TOOL_VERSION && existingValue?.check_availability_id && existingValue?.book_appointment_id && existingValue?.get_current_datetime_id) {
       // Tools exist and are current version — update them in place (PATCH)
       console.log('Tools exist at current version, updating code...')
 
       const checkTool = buildCheckAvailabilityTool(supabaseUrl, calendarSecret)
       const bookTool = buildBookAppointmentTool(supabaseUrl, calendarSecret)
+      const dateTool = buildGetCurrentDatetimeTool()
 
       await Promise.all([
         fetch(`${VAPI_API_URL}/${existingValue.check_availability_id}`, {
@@ -226,12 +288,18 @@ Deno.serve(async (req) => {
           headers: { 'Authorization': `Bearer ${vapiApiKey}`, 'Content-Type': 'application/json' },
           body: JSON.stringify(bookTool),
         }),
+        fetch(`${VAPI_API_URL}/${existingValue.get_current_datetime_id}`, {
+          method: 'PATCH',
+          headers: { 'Authorization': `Bearer ${vapiApiKey}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify(dateTool),
+        }),
       ])
 
       return new Response(JSON.stringify({
         message: 'Calendar tools updated',
         check_availability_id: existingValue.check_availability_id,
         book_appointment_id: existingValue.book_appointment_id,
+        get_current_datetime_id: existingValue.get_current_datetime_id,
         version: TOOL_VERSION,
       }), {
         status: 200,
@@ -239,13 +307,14 @@ Deno.serve(async (req) => {
       })
     }
 
-    // Create new tools
-    console.log('Creating new calendar tools...')
+    // Create new tools (or recreate if version bumped)
+    console.log('Creating new calendar tools (version', TOOL_VERSION, ')...')
 
     const checkTool = buildCheckAvailabilityTool(supabaseUrl, calendarSecret)
     const bookTool = buildBookAppointmentTool(supabaseUrl, calendarSecret)
+    const dateTool = buildGetCurrentDatetimeTool()
 
-    const [checkRes, bookRes] = await Promise.all([
+    const [checkRes, bookRes, dateRes] = await Promise.all([
       fetch(VAPI_API_URL, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${vapiApiKey}`, 'Content-Type': 'application/json' },
@@ -256,16 +325,23 @@ Deno.serve(async (req) => {
         headers: { 'Authorization': `Bearer ${vapiApiKey}`, 'Content-Type': 'application/json' },
         body: JSON.stringify(bookTool),
       }),
+      fetch(VAPI_API_URL, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${vapiApiKey}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(dateTool),
+      }),
     ])
 
-    if (!checkRes.ok || !bookRes.ok) {
+    if (!checkRes.ok || !bookRes.ok || !dateRes.ok) {
       const checkErr = await checkRes.text()
       const bookErr = await bookRes.text()
-      throw new Error(`Failed to create tools: check=${checkErr}, book=${bookErr}`)
+      const dateErr = await dateRes.text()
+      throw new Error(`Failed to create tools: check=${checkErr}, book=${bookErr}, date=${dateErr}`)
     }
 
     const checkData = await checkRes.json()
     const bookData = await bookRes.json()
+    const dateData = await dateRes.json()
 
     // Store tool IDs in vapi_global_config
     await adminSupabase
@@ -275,6 +351,7 @@ Deno.serve(async (req) => {
         value: {
           check_availability_id: checkData.id,
           book_appointment_id: bookData.id,
+          get_current_datetime_id: dateData.id,
           version: TOOL_VERSION,
         },
         updated_at: new Date().toISOString(),
@@ -284,6 +361,7 @@ Deno.serve(async (req) => {
       message: 'Calendar tools created',
       check_availability_id: checkData.id,
       book_appointment_id: bookData.id,
+      get_current_datetime_id: dateData.id,
       version: TOOL_VERSION,
     }), {
       status: 200,

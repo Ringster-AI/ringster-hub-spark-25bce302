@@ -323,10 +323,21 @@ async function checkAvailability(
     status: 'success',
   })
 
+  // Include current date/time context in every availability response
+  const now = new Date()
+  const currentDateFormatter = new Intl.DateTimeFormat('sv-SE', {
+    timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit',
+  })
+  const dayFormatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: tz, weekday: 'long',
+  })
+
   return {
     available_slots: slots,
     timezone: tz,
     duration_minutes: duration,
+    current_date: currentDateFormatter.format(now),
+    current_day_of_week: dayFormatter.format(now),
     message: slots.length > 0
       ? `Found ${slots.length} available slots on ${params.date}.`
       : `No available slots on ${params.date}. Please try another day.`,
