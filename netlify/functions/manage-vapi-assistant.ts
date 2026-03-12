@@ -216,11 +216,16 @@ export const handler: Handler = async (event) => {
       }
 
       // Update agent config with assistant and tool IDs
+      const currentConfig = agent.config && typeof agent.config === 'object' && !Array.isArray(agent.config)
+        ? (agent.config as Record<string, unknown>)
+        : {}
+
       const { error: updateError } = await supabase
         .from('agent_configs')
         .update({
+          vapi_assistant_id: vapiData.id,
           config: {
-            ...agent.config,
+            ...currentConfig,
             vapi_assistant_id: vapiData.id,
             transfer_tool_id: transferToolId
           }
