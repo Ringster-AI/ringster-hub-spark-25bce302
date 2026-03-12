@@ -337,32 +337,75 @@ export const handler: Handler = async (event) => {
         console.log('Setting toolIds on assistant:', allToolIds)
       }
 
-      const updatedAssistant = await withRetry(async () => {
-        const res = await fetch(`${VAPI_API_URL}/${assistantId}`, {
-          method: 'PATCH',
-          headers: {
-            'Authorization': `Bearer ${VAPI_API_KEY}`,
-            'Content-Type': 'application/json',
-            'x-request-id': requestId,
-          },
-          body: JSON.stringify(vapiConfig),
-        })
-        if (!res.ok) {
-          const errorText = await res.text()
-          throw new Error(`VAPI update failed: ${errorText}`)
-        }
-        return res.json()
-      })
-      console.log('Successfully updated Vapi assistant:', { requestId, updatedAssistantId: updatedAssistant.id })
+      // Try PATCH, fall back to CREATE if assistant no longer exists
+      let finalAssistantId = assistantId
+      let actionTaken = 'updated'
 
-      if (shouldBackfillAssistantId) {
-        const { error: backfillError } = await supabase
+      try {
+        const updatedAssistant = await withRetry(async () => {
+          const res = await fetch(`${VAPI_API_URL}/${assistantId}`, {
+            method: 'PATCH',
+            headers: {
+              'Authorization': `Bearer ${VAPI_API_KEY}`,
+              'Content-Type': 'application/json',
+              'x-request-id': requestId,
+            },
+            body: JSON.stringify(vapiConfig),
+          })
+          if (!res.ok) {
+            const errorText = await res.text()
+            throw new Error(`VAPI update failed: ${errorText}`)
+          }
+          return res.json()
+        })
+        finalAssistantId = updatedAssistant.id
+        console.log('Successfully updated Vapi assistant:', { requestId, updatedAssistantId: finalAssistantId })
+      } catch (patchError: any) {
+        const errorMsg = String(patchError?.message || '')
+        if (errorMsg.includes("Couldn't Find") || errorMsg.includes('404') || errorMsg.includes('not found')) {
+          console.warn(`Assistant ${assistantId} not found in VAPI, recreating...`, { requestId })
+          
+          // Create a brand-new assistant
+          const newAssistant = await withRetry(() => vapiService.createAssistant(vapiConfig))
+          finalAssistantId = newAssistant.id
+          actionTaken = 'recreated'
+          console.log('Successfully recreated Vapi assistant:', { requestId, oldId: assistantId, newId: finalAssistantId })
+
+          // Re-import Twilio number if agent has one
+          if (agent.phone_number && process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN) {
+            try {
+              await withRetry(() => vapiService.importTwilioNumber(
+                finalAssistantId,
+                agent.phone_number!,
+                process.env.TWILIO_ACCOUNT_SID as string,
+                process.env.TWILIO_AUTH_TOKEN as string
+              ))
+              console.log('Re-imported Twilio number to new assistant:', { requestId, phoneNumber: agent.phone_number })
+            } catch (phoneErr) {
+              console.error('Failed to re-import Twilio number:', phoneErr)
+            }
+          }
+        } else {
+          throw patchError
+        }
+      }
+
+      // Update DB with the (possibly new) assistant ID
+      if (finalAssistantId !== assistantId || shouldBackfillAssistantId) {
+        const { error: updateIdError } = await supabase
           .from('agent_configs')
-          .update({ vapi_assistant_id: assistantId })
+          .update({
+            vapi_assistant_id: finalAssistantId,
+            config: {
+              ...currentConfig,
+              vapi_assistant_id: finalAssistantId,
+              transfer_tool_id: transferToolId || existingTransferToolId || null,
+            }
+          })
           .eq('id', agentId)
 
-        if (backfillError) {
-          console.warn('Failed to backfill vapi_assistant_id column', { requestId, assistantId, backfillError })
+        if (updateIdError) {
+          console.warn('Failed to update vapi_assistant_id', { requestId, finalAssistantId, updateIdError })
         }
       }
 
@@ -370,8 +413,8 @@ export const handler: Handler = async (event) => {
         statusCode: 200,
         headers: corsHeaders,
         body: JSON.stringify({
-          assistantId: updatedAssistant.id,
-          action: 'updated'
+          assistantId: finalAssistantId,
+          action: actionTaken
         })
       }
     } else {
