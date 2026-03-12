@@ -41,7 +41,7 @@ export class VapiAssistantUpdateService {
 
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
       try {
-        const response = await fetch('/.netlify/functions/manage-vapi-assistant', {
+        const response = await fetch(getNetlifyFunctionsUrl('manage-vapi-assistant'), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

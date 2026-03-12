@@ -107,7 +107,7 @@ export function CardActions({ campaign, onEditClick, onContactsClick, onDashboar
         }
       };
 
-      const response = await fetch('/.netlify/functions/make-outbound-call', {
+      const response = await fetch(getNetlifyFunctionsUrl('make-outbound-call'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
