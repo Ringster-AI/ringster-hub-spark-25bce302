@@ -185,7 +185,7 @@ async function main({ params }) {
           version: '1.1',
         },
         updated_at: new Date().toISOString(),
-      })
+      }, { onConflict: 'key' })
 
     console.log('Successfully created and stored global calendar tools:', {
       check: checkData.id,
