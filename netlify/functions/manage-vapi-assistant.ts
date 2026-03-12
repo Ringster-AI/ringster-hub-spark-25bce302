@@ -32,6 +32,21 @@ const withRetry = async <T>(fn: () => Promise<T>, retries = 2, baseDelayMs = 300
   throw lastError;
 };
 
+const getAssistantIdFromAgent = (agent: any): string | null => {
+  if (typeof agent?.vapi_assistant_id === 'string' && agent.vapi_assistant_id.trim().length > 0) {
+    return agent.vapi_assistant_id
+  }
+
+  if (agent?.config && typeof agent.config === 'object' && !Array.isArray(agent.config)) {
+    const fallbackId = (agent.config as Record<string, unknown>).vapi_assistant_id
+    if (typeof fallbackId === 'string' && fallbackId.trim().length > 0) {
+      return fallbackId
+    }
+  }
+
+  return null
+};
+
 export const handler: Handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') {
     return {
