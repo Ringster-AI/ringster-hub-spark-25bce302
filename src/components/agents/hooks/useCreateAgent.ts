@@ -4,7 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { AgentFormData } from "@/types/agents";
 import { generateToolInstructions, appendToolInstructionsToDescription } from "@/utils/agentDescriptionUtils";
-import { VapiAssistantUpdateService } from "@/services/vapi/assistant-update-service";
 
 export const useCreateAgent = () => {
   const { toast } = useToast();
@@ -76,6 +75,45 @@ export const useCreateAgent = () => {
         if (toolError) {
           console.error("Error creating calendar tool:", toolError);
           // Don't throw here as the agent was created successfully
+        }
+      }
+
+      // For inbound agents, assign a phone number and create Vapi assistant
+      if ((formData.agent_type || 'inbound') === 'inbound') {
+        try {
+          console.log('Assigning phone number for inbound agent:', agent.id);
+          const twilioResponse = await fetch('/.netlify/functions/manage-twilio-number', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${session.access_token}`,
+            },
+            body: JSON.stringify({
+              agentId: agent.id,
+              agentType: 'inbound'
+            }),
+          });
+
+          if (!twilioResponse.ok) {
+            const errorText = await twilioResponse.text();
+            console.error('Failed to assign phone number:', errorText);
+            // Don't throw - the agent was created, phone assignment can be retried
+            toast({
+              title: "Agent created, but phone number assignment failed",
+              description: "Your agent was created but we couldn't assign a phone number. Please try again from the agent settings.",
+              variant: "destructive",
+            });
+          } else {
+            const twilioResult = await twilioResponse.json();
+            console.log('Phone number assigned:', twilioResult.phoneNumber);
+          }
+        } catch (phoneError) {
+          console.error('Error assigning phone number:', phoneError);
+          toast({
+            title: "Agent created, but phone number assignment failed",
+            description: "Your agent was created but we couldn't assign a phone number. Please try again from the agent settings.",
+            variant: "destructive",
+          });
         }
       }
 
