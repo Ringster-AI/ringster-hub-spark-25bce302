@@ -105,6 +105,7 @@ export const EditAgentDialog = ({ agent, open, onOpenChange }: EditAgentDialogPr
         agent_type: formData.agent_type || 'inbound',
         advanced_config: formData.advanced_config as any,
         config: {
+          ...parsedConfig,
           ...formData.config,
           calendar_booking: formData.calendar_booking
         } as any,
