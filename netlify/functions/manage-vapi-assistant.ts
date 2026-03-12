@@ -133,9 +133,49 @@ export const handler: Handler = async (event) => {
       }
       const shouldBackfillAssistantId = !agent.vapi_assistant_id
 
+      // Handle transfer directory: recreate tool if directory exists
+      let transferToolId: string | null = null
+      const currentConfig = agent.config && typeof agent.config === 'object' && !Array.isArray(agent.config)
+        ? (agent.config as Record<string, unknown>)
+        : {}
+      const existingTransferToolId = currentConfig.transfer_tool_id as string | null
+
+      if (agent.transfer_directory && typeof agent.transfer_directory === 'object' && Object.keys(agent.transfer_directory).length > 0) {
+        console.log('Creating/updating transfer tool for directory:', agent.transfer_directory)
+        try {
+          const toolData = await withRetry(() => vapiService.createTransferTool(agent.transfer_directory as Record<string, any>))
+          transferToolId = toolData.id
+          console.log('Created transfer tool:', { requestId, transferToolId })
+
+          // Update config with new transfer tool ID
+          await supabase
+            .from('agent_configs')
+            .update({
+              config: {
+                ...currentConfig,
+                transfer_tool_id: transferToolId
+              }
+            })
+            .eq('id', agentId)
+        } catch (toolError) {
+          console.error('Failed to create transfer tool, using existing:', toolError)
+          transferToolId = existingTransferToolId || null
+        }
+      }
+
       const vapiConfig = createVapiAssistantConfig(agent)
-      if (calendarToolIds.length > 0) {
-        vapiConfig.toolIds = calendarToolIds
+
+      // Merge all tool IDs: calendar tools + transfer tool
+      const allToolIds: string[] = [...calendarToolIds]
+      if (transferToolId) {
+        allToolIds.push(transferToolId)
+      } else if (existingTransferToolId) {
+        allToolIds.push(existingTransferToolId)
+      }
+
+      if (allToolIds.length > 0) {
+        vapiConfig.toolIds = allToolIds
+        console.log('Setting toolIds on assistant:', allToolIds)
       }
 
       const updatedAssistant = await withRetry(async () => {
