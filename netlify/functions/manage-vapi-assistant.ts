@@ -127,10 +127,11 @@ export const handler: Handler = async (event) => {
     const vapiService = new VapiService(VAPI_API_KEY, VAPI_API_URL)
 
     if (action === 'update') {
-      const assistantId = agent.vapi_assistant_id
+      const assistantId = getAssistantIdFromAgent(agent)
       if (!assistantId) {
         throw new Error('No VAPI assistant ID found for agent')
       }
+      const shouldBackfillAssistantId = !agent.vapi_assistant_id
 
       const vapiConfig = createVapiAssistantConfig(agent)
       if (calendarToolIds.length > 0) {
