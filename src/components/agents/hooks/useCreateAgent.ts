@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { AgentFormData } from "@/types/agents";
 import { generateToolInstructions, appendToolInstructionsToDescription } from "@/utils/agentDescriptionUtils";
+import { getNetlifyFunctionsUrl } from "@/utils/netlifyFunctions";
 
 export const useCreateAgent = () => {
   const { toast } = useToast();
@@ -82,7 +83,7 @@ export const useCreateAgent = () => {
       if ((formData.agent_type || 'inbound') === 'inbound') {
         try {
           console.log('Assigning phone number for inbound agent:', agent.id);
-          const twilioResponse = await fetch('/.netlify/functions/manage-twilio-number', {
+          const twilioResponse = await fetch(getNetlifyFunctionsUrl('manage-twilio-number'), {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',

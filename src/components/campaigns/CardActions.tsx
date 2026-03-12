@@ -4,6 +4,7 @@ import { Campaign } from "@/types/database/campaigns";
 import { Users, Edit, Phone, BarChart3 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { getNetlifyFunctionsUrl } from "@/utils/netlifyFunctions";
 
 interface CardActionsProps {
   campaign: Campaign & { agent: any };
@@ -106,7 +107,7 @@ export function CardActions({ campaign, onEditClick, onContactsClick, onDashboar
         }
       };
 
-      const response = await fetch('/.netlify/functions/make-outbound-call', {
+      const response = await fetch(getNetlifyFunctionsUrl('make-outbound-call'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
