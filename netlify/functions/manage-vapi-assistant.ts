@@ -226,24 +226,18 @@ export const handler: Handler = async (event) => {
         console.log('Created transfer tool:', { requestId, transferToolId })
       }
 
-      // Create Vapi assistant
+      // Create Vapi assistant with ALL tool IDs merged
       const vapiConfig = createVapiAssistantConfig(agent)
-      if (calendarToolIds.length > 0) {
-        vapiConfig.toolIds = calendarToolIds
+      const allCreateToolIds: string[] = [...calendarToolIds]
+      if (transferToolId) {
+        allCreateToolIds.push(transferToolId)
+      }
+      if (allCreateToolIds.length > 0) {
+        vapiConfig.toolIds = allCreateToolIds
+        console.log('Setting toolIds on new assistant:', allCreateToolIds)
       }
       const vapiData = await withRetry(() => vapiService.createAssistant(vapiConfig))
       console.log('Successfully created Vapi assistant:', { requestId, assistantId: vapiData.id })
-
-      // Update assistant with transfer tool if created
-      if (transferToolId) {
-        await withRetry(() => vapiService.updateAssistantTools(
-          vapiData.id,
-          transferToolId,
-          vapiConfig.model.model,
-          vapiConfig.model.provider
-        ))
-        console.log('Updated assistant with transfer tool', { requestId, transferToolId })
-      }
 
       // Import Twilio number if provided
       if (phoneNumber && process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN) {
