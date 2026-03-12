@@ -156,6 +156,17 @@ export const handler: Handler = async (event) => {
       })
       console.log('Successfully updated Vapi assistant:', { requestId, updatedAssistantId: updatedAssistant.id })
 
+      if (shouldBackfillAssistantId) {
+        const { error: backfillError } = await supabase
+          .from('agent_configs')
+          .update({ vapi_assistant_id: assistantId })
+          .eq('id', agentId)
+
+        if (backfillError) {
+          console.warn('Failed to backfill vapi_assistant_id column', { requestId, assistantId, backfillError })
+        }
+      }
+
       return {
         statusCode: 200,
         headers: corsHeaders,
