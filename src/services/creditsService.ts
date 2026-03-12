@@ -5,10 +5,20 @@ export class CreditsService {
   // Get user's current credit status
   static async getCreditStatus(userId?: string): Promise<CreditStatus | null> {
     try {
+      let effectiveUserId = userId;
+      if (!effectiveUserId) {
+        const { data: { user } } = await supabase.auth.getUser();
+        effectiveUserId = user?.id;
+      }
+      if (!effectiveUserId) {
+        console.error('No user ID available for getCreditStatus');
+        return null;
+      }
+
       const { data: credits, error } = await supabase
         .from('user_credits')
         .select('*')
-        .eq('user_id', userId || 'current_user')
+        .eq('user_id', effectiveUserId)
         .single();
 
       if (error || !credits) {
