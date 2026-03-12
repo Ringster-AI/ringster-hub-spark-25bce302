@@ -83,7 +83,7 @@ export const useCreateAgent = () => {
       if ((formData.agent_type || 'inbound') === 'inbound') {
         try {
           console.log('Assigning phone number for inbound agent:', agent.id);
-          const twilioResponse = await fetch('/.netlify/functions/manage-twilio-number', {
+          const twilioResponse = await fetch(getNetlifyFunctionsUrl('manage-twilio-number'), {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
