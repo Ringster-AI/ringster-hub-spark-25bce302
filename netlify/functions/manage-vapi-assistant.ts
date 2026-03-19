@@ -82,9 +82,9 @@ async function main({ params, call }) {
   try {
     const assistantId = call?.assistant?.id || params.assistant_id;
     if (!assistantId) return { error: true, message: 'Could not determine assistant identity.' };
-    const res = await fetch(params.supabase_url + '/functions/v1/vapi-calendar-api', {
+    const res = await fetch(params.SUPABASE_URL + '/functions/v1/vapi-calendar-api', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-vapi-secret': params.calendar_secret },
+      headers: { 'Content-Type': 'application/json', 'x-vapi-secret': params.CALENDAR_SECRET },
       body: JSON.stringify({ action: 'check_availability', assistant_id: assistantId, date: params.date, timezone: params.timezone || 'America/New_York', duration_minutes: params.duration_minutes || 30 }),
     });
     if (!res.ok) { const err = await res.json().catch(() => ({ error: true, message: 'Calendar service error' })); return err; }
@@ -98,9 +98,9 @@ async function main({ params, call }) {
     const assistantId = call?.assistant?.id || params.assistant_id;
     if (!assistantId) return { error: true, message: 'Could not determine assistant identity.' };
     const idempotencyKey = crypto.randomUUID();
-    const res = await fetch(params.supabase_url + '/functions/v1/vapi-calendar-api', {
+    const res = await fetch(params.SUPABASE_URL + '/functions/v1/vapi-calendar-api', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-vapi-secret': params.calendar_secret },
+      headers: { 'Content-Type': 'application/json', 'x-vapi-secret': params.CALENDAR_SECRET },
       body: JSON.stringify({ action: 'book_appointment', assistant_id: assistantId, datetime: params.datetime, attendee_name: params.attendee_name, attendee_email: params.attendee_email || null, duration_minutes: params.duration_minutes || 30, appointment_type: params.appointment_type || 'consultation', timezone: params.timezone || 'America/New_York', idempotency_key: idempotencyKey }),
     });
     if (!res.ok) { const err = await res.json().catch(() => ({ error: true, message: 'Booking service error' })); return err; }
@@ -131,7 +131,7 @@ async function main({ params }) {
         parameters: { type: 'object', properties: { date: { type: 'string', description: 'Date in YYYY-MM-DD format' }, timezone: { type: 'string', description: 'Timezone' }, duration_minutes: { type: 'number', description: 'Duration in minutes' } }, required: ['date'] },
       },
       code: checkAvailabilityCode,
-      environmentVariables: [{ name: 'supabase_url', value: supabaseUrl }, { name: 'calendar_secret', value: calendarSecret }],
+      environmentVariables: [{ name: 'SUPABASE_URL', value: supabaseUrl }, { name: 'CALENDAR_SECRET', value: calendarSecret }],
     },
     {
       type: 'code',
@@ -141,7 +141,7 @@ async function main({ params }) {
         parameters: { type: 'object', properties: { datetime: { type: 'string', description: 'ISO datetime' }, attendee_name: { type: 'string', description: 'Attendee name' }, attendee_email: { type: 'string', description: 'Attendee email' }, duration_minutes: { type: 'number', description: 'Duration' }, appointment_type: { type: 'string', description: 'Type' }, timezone: { type: 'string', description: 'Timezone' } }, required: ['datetime', 'attendee_name'] },
       },
       code: bookAppointmentCode,
-      environmentVariables: [{ name: 'supabase_url', value: supabaseUrl }, { name: 'calendar_secret', value: calendarSecret }],
+      environmentVariables: [{ name: 'SUPABASE_URL', value: supabaseUrl }, { name: 'CALENDAR_SECRET', value: calendarSecret }],
     },
     {
       type: 'code',

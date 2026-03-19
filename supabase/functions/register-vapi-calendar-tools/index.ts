@@ -16,11 +16,11 @@ async function main({ params, call }) {
     if (!assistantId) {
       return { error: true, message: 'Could not determine assistant identity.' };
     }
-    const res = await fetch(params.supabase_url + '/functions/v1/vapi-calendar-api', {
+    const res = await fetch(params.SUPABASE_URL + '/functions/v1/vapi-calendar-api', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-vapi-secret': params.calendar_secret,
+        'x-vapi-secret': params.CALENDAR_SECRET,
       },
       body: JSON.stringify({
         action: 'check_availability',
@@ -50,11 +50,11 @@ async function main({ params, call }) {
       return { error: true, message: 'Could not determine assistant identity.' };
     }
     const idempotencyKey = crypto.randomUUID();
-    const res = await fetch(params.supabase_url + '/functions/v1/vapi-calendar-api', {
+    const res = await fetch(params.SUPABASE_URL + '/functions/v1/vapi-calendar-api', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-vapi-secret': params.calendar_secret,
+        'x-vapi-secret': params.CALENDAR_SECRET,
       },
       body: JSON.stringify({
         action: 'book_appointment',
@@ -136,8 +136,8 @@ function buildCheckAvailabilityTool(supabaseUrl: string, calendarSecret: string)
     },
     code: CHECK_AVAILABILITY_CODE,
     environmentVariables: [
-      { name: 'supabase_url', value: supabaseUrl },
-      { name: 'calendar_secret', value: calendarSecret },
+      { name: 'SUPABASE_URL', value: supabaseUrl },
+      { name: 'CALENDAR_SECRET', value: calendarSecret },
     ],
   }
 }
@@ -163,8 +163,8 @@ function buildBookAppointmentTool(supabaseUrl: string, calendarSecret: string) {
     },
     code: BOOK_APPOINTMENT_CODE,
     environmentVariables: [
-      { name: 'supabase_url', value: supabaseUrl },
-      { name: 'calendar_secret', value: calendarSecret },
+      { name: 'SUPABASE_URL', value: supabaseUrl },
+      { name: 'CALENDAR_SECRET', value: calendarSecret },
     ],
   }
 }
