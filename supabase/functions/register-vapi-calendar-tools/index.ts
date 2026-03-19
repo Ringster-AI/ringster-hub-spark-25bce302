@@ -136,8 +136,8 @@ function buildCheckAvailabilityTool(supabaseUrl: string, calendarSecret: string)
     },
     code: CHECK_AVAILABILITY_CODE,
     environmentVariables: [
-      { name: 'supabase_url', value: supabaseUrl },
-      { name: 'calendar_secret', value: calendarSecret },
+      { name: 'SUPABASE_URL', value: supabaseUrl },
+      { name: 'CALENDAR_SECRET', value: calendarSecret },
     ],
   }
 }
