@@ -121,27 +121,25 @@ async function main({ params }) {
 function buildCheckAvailabilityTool(supabaseUrl: string, calendarSecret: string) {
   return {
     type: 'code',
-    function: {
-      name: 'check_availability',
-      description: 'Check available appointment slots on a specific date. Returns available time slots for booking. Always call get_current_datetime first to know what today\'s date is before checking availability.',
-      parameters: {
-        type: 'object',
-        properties: {
-          date: {
-            type: 'string',
-            description: 'The date to check availability for, in YYYY-MM-DD format',
-          },
-          timezone: {
-            type: 'string',
-            description: 'The caller\'s timezone (e.g., "America/New_York", "America/Los_Angeles"). Ask the caller if unsure.',
-          },
-          duration_minutes: {
-            type: 'number',
-            description: 'Duration of the appointment in minutes. Default is 30.',
-          },
+    name: 'check_availability',
+    description: 'Check available appointment slots on a specific date. Returns available time slots for booking. Always call get_current_datetime first to know what today\'s date is before checking availability.',
+    parameters: {
+      type: 'object',
+      properties: {
+        date: {
+          type: 'string',
+          description: 'The date to check availability for, in YYYY-MM-DD format',
         },
-        required: ['date'],
+        timezone: {
+          type: 'string',
+          description: 'The caller\'s timezone (e.g., "America/New_York", "America/Los_Angeles"). Ask the caller if unsure.',
+        },
+        duration_minutes: {
+          type: 'number',
+          description: 'Duration of the appointment in minutes. Default is 30.',
+        },
       },
+      required: ['date'],
     },
     code: CHECK_AVAILABILITY_CODE,
     codeInterpreterEnabled: false,
@@ -149,46 +147,43 @@ function buildCheckAvailabilityTool(supabaseUrl: string, calendarSecret: string)
       { key: 'supabase_url', value: supabaseUrl },
       { key: 'calendar_secret', value: calendarSecret },
     ],
-    serverUrl: undefined,
   }
 }
 
 function buildBookAppointmentTool(supabaseUrl: string, calendarSecret: string) {
   return {
     type: 'code',
-    function: {
-      name: 'book_appointment',
-      description: 'Book an appointment at a specific date and time. Use check_availability first to find open slots. Requires the attendee\'s name.',
-      parameters: {
-        type: 'object',
-        properties: {
-          datetime: {
-            type: 'string',
-            description: 'The appointment date and time in ISO format (e.g., "2025-03-15T10:00:00")',
-          },
-          attendee_name: {
-            type: 'string',
-            description: 'Full name of the person booking the appointment',
-          },
-          attendee_email: {
-            type: 'string',
-            description: 'Email address of the person booking (optional but recommended)',
-          },
-          duration_minutes: {
-            type: 'number',
-            description: 'Duration of the appointment in minutes. Default is 30.',
-          },
-          appointment_type: {
-            type: 'string',
-            description: 'Type of appointment (e.g., "consultation", "follow-up", "demo")',
-          },
-          timezone: {
-            type: 'string',
-            description: 'The caller\'s timezone (e.g., "America/New_York")',
-          },
+    name: 'book_appointment',
+    description: 'Book an appointment at a specific date and time. Use check_availability first to find open slots. Requires the attendee\'s name.',
+    parameters: {
+      type: 'object',
+      properties: {
+        datetime: {
+          type: 'string',
+          description: 'The appointment date and time in ISO format (e.g., "2025-03-15T10:00:00")',
         },
-        required: ['datetime', 'attendee_name'],
+        attendee_name: {
+          type: 'string',
+          description: 'Full name of the person booking the appointment',
+        },
+        attendee_email: {
+          type: 'string',
+          description: 'Email address of the person booking (optional but recommended)',
+        },
+        duration_minutes: {
+          type: 'number',
+          description: 'Duration of the appointment in minutes. Default is 30.',
+        },
+        appointment_type: {
+          type: 'string',
+          description: 'Type of appointment (e.g., "consultation", "follow-up", "demo")',
+        },
+        timezone: {
+          type: 'string',
+          description: 'The caller\'s timezone (e.g., "America/New_York")',
+        },
       },
+      required: ['datetime', 'attendee_name'],
     },
     code: BOOK_APPOINTMENT_CODE,
     codeInterpreterEnabled: false,
@@ -202,19 +197,17 @@ function buildBookAppointmentTool(supabaseUrl: string, calendarSecret: string) {
 function buildGetCurrentDatetimeTool() {
   return {
     type: 'code',
-    function: {
-      name: 'get_current_datetime',
-      description: 'Get the current date, time, and day of the week. Call this whenever you need to know what day it is today, or before checking calendar availability. Returns the current date in YYYY-MM-DD format, the day of the week, and the current time.',
-      parameters: {
-        type: 'object',
-        properties: {
-          timezone: {
-            type: 'string',
-            description: 'The timezone to get the current date/time in (e.g., "America/New_York"). Defaults to America/New_York.',
-          },
+    name: 'get_current_datetime',
+    description: 'Get the current date, time, and day of the week. Call this whenever you need to know what day it is today, or before checking calendar availability. Returns the current date in YYYY-MM-DD format, the day of the week, and the current time.',
+    parameters: {
+      type: 'object',
+      properties: {
+        timezone: {
+          type: 'string',
+          description: 'The timezone to get the current date/time in (e.g., "America/New_York"). Defaults to America/New_York.',
         },
-        required: [],
       },
+      required: [],
     },
     code: GET_CURRENT_DATETIME_CODE,
     codeInterpreterEnabled: false,
