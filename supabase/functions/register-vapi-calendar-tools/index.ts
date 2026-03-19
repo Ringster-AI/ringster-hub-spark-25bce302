@@ -121,27 +121,25 @@ async function main({ params }) {
 function buildCheckAvailabilityTool(supabaseUrl: string, calendarSecret: string) {
   return {
     type: 'code',
-    function: {
-      name: 'check_availability',
-      description: 'Check available appointment slots on a specific date. Returns available time slots for booking. Always call get_current_datetime first to know what today\'s date is before checking availability.',
-      parameters: {
-        type: 'object',
-        properties: {
-          date: {
-            type: 'string',
-            description: 'The date to check availability for, in YYYY-MM-DD format',
-          },
-          timezone: {
-            type: 'string',
-            description: 'The caller\'s timezone (e.g., "America/New_York", "America/Los_Angeles"). Ask the caller if unsure.',
-          },
-          duration_minutes: {
-            type: 'number',
-            description: 'Duration of the appointment in minutes. Default is 30.',
-          },
+    name: 'check_availability',
+    description: 'Check available appointment slots on a specific date. Returns available time slots for booking. Always call get_current_datetime first to know what today\'s date is before checking availability.',
+    parameters: {
+      type: 'object',
+      properties: {
+        date: {
+          type: 'string',
+          description: 'The date to check availability for, in YYYY-MM-DD format',
         },
-        required: ['date'],
+        timezone: {
+          type: 'string',
+          description: 'The caller\'s timezone (e.g., "America/New_York", "America/Los_Angeles"). Ask the caller if unsure.',
+        },
+        duration_minutes: {
+          type: 'number',
+          description: 'Duration of the appointment in minutes. Default is 30.',
+        },
       },
+      required: ['date'],
     },
     code: CHECK_AVAILABILITY_CODE,
     codeInterpreterEnabled: false,
@@ -149,7 +147,6 @@ function buildCheckAvailabilityTool(supabaseUrl: string, calendarSecret: string)
       { key: 'supabase_url', value: supabaseUrl },
       { key: 'calendar_secret', value: calendarSecret },
     ],
-    serverUrl: undefined,
   }
 }
 
