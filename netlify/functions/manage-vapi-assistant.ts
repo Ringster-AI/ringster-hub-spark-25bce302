@@ -141,7 +141,7 @@ async function main({ params }) {
         parameters: { type: 'object', properties: { datetime: { type: 'string', description: 'ISO datetime' }, attendee_name: { type: 'string', description: 'Attendee name' }, attendee_email: { type: 'string', description: 'Attendee email' }, duration_minutes: { type: 'number', description: 'Duration' }, appointment_type: { type: 'string', description: 'Type' }, timezone: { type: 'string', description: 'Timezone' } }, required: ['datetime', 'attendee_name'] },
       },
       code: bookAppointmentCode,
-      environmentVariables: [{ name: 'supabase_url', value: supabaseUrl }, { name: 'calendar_secret', value: calendarSecret }],
+      environmentVariables: [{ name: 'SUPABASE_URL', value: supabaseUrl }, { name: 'CALENDAR_SECRET', value: calendarSecret }],
     },
     {
       type: 'code',

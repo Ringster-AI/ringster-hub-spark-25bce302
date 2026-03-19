@@ -163,8 +163,8 @@ function buildBookAppointmentTool(supabaseUrl: string, calendarSecret: string) {
     },
     code: BOOK_APPOINTMENT_CODE,
     environmentVariables: [
-      { name: 'supabase_url', value: supabaseUrl },
-      { name: 'calendar_secret', value: calendarSecret },
+      { name: 'SUPABASE_URL', value: supabaseUrl },
+      { name: 'CALENDAR_SECRET', value: calendarSecret },
     ],
   }
 }
