@@ -82,9 +82,9 @@ async function main({ params, call }) {
   try {
     const assistantId = call?.assistant?.id || params.assistant_id;
     if (!assistantId) return { error: true, message: 'Could not determine assistant identity.' };
-    const res = await fetch(params.supabase_url + '/functions/v1/vapi-calendar-api', {
+    const res = await fetch(params.SUPABASE_URL + '/functions/v1/vapi-calendar-api', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-vapi-secret': params.calendar_secret },
+      headers: { 'Content-Type': 'application/json', 'x-vapi-secret': params.CALENDAR_SECRET },
       body: JSON.stringify({ action: 'check_availability', assistant_id: assistantId, date: params.date, timezone: params.timezone || 'America/New_York', duration_minutes: params.duration_minutes || 30 }),
     });
     if (!res.ok) { const err = await res.json().catch(() => ({ error: true, message: 'Calendar service error' })); return err; }
