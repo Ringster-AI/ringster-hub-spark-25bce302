@@ -1,0 +1,1 @@
+ALTER TABLE public.calendar_tools ADD CONSTRAINT calendar_tools_agent_id_tool_name_key UNIQUE (agent_id, tool_name);
