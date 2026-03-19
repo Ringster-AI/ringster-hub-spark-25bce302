@@ -131,7 +131,7 @@ async function main({ params }) {
         parameters: { type: 'object', properties: { date: { type: 'string', description: 'Date in YYYY-MM-DD format' }, timezone: { type: 'string', description: 'Timezone' }, duration_minutes: { type: 'number', description: 'Duration in minutes' } }, required: ['date'] },
       },
       code: checkAvailabilityCode,
-      environmentVariables: [{ name: 'supabase_url', value: supabaseUrl }, { name: 'calendar_secret', value: calendarSecret }],
+      environmentVariables: [{ name: 'SUPABASE_URL', value: supabaseUrl }, { name: 'CALENDAR_SECRET', value: calendarSecret }],
     },
     {
       type: 'code',
