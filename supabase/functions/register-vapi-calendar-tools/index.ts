@@ -197,19 +197,17 @@ function buildBookAppointmentTool(supabaseUrl: string, calendarSecret: string) {
 function buildGetCurrentDatetimeTool() {
   return {
     type: 'code',
-    function: {
-      name: 'get_current_datetime',
-      description: 'Get the current date, time, and day of the week. Call this whenever you need to know what day it is today, or before checking calendar availability. Returns the current date in YYYY-MM-DD format, the day of the week, and the current time.',
-      parameters: {
-        type: 'object',
-        properties: {
-          timezone: {
-            type: 'string',
-            description: 'The timezone to get the current date/time in (e.g., "America/New_York"). Defaults to America/New_York.',
-          },
+    name: 'get_current_datetime',
+    description: 'Get the current date, time, and day of the week. Call this whenever you need to know what day it is today, or before checking calendar availability. Returns the current date in YYYY-MM-DD format, the day of the week, and the current time.',
+    parameters: {
+      type: 'object',
+      properties: {
+        timezone: {
+          type: 'string',
+          description: 'The timezone to get the current date/time in (e.g., "America/New_York"). Defaults to America/New_York.',
         },
-        required: [],
       },
+      required: [],
     },
     code: GET_CURRENT_DATETIME_CODE,
     codeInterpreterEnabled: false,
