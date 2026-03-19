@@ -98,9 +98,9 @@ async function main({ params, call }) {
     const assistantId = call?.assistant?.id || params.assistant_id;
     if (!assistantId) return { error: true, message: 'Could not determine assistant identity.' };
     const idempotencyKey = crypto.randomUUID();
-    const res = await fetch(params.supabase_url + '/functions/v1/vapi-calendar-api', {
+    const res = await fetch(params.SUPABASE_URL + '/functions/v1/vapi-calendar-api', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-vapi-secret': params.calendar_secret },
+      headers: { 'Content-Type': 'application/json', 'x-vapi-secret': params.CALENDAR_SECRET },
       body: JSON.stringify({ action: 'book_appointment', assistant_id: assistantId, datetime: params.datetime, attendee_name: params.attendee_name, attendee_email: params.attendee_email || null, duration_minutes: params.duration_minutes || 30, appointment_type: params.appointment_type || 'consultation', timezone: params.timezone || 'America/New_York', idempotency_key: idempotencyKey }),
     });
     if (!res.ok) { const err = await res.json().catch(() => ({ error: true, message: 'Booking service error' })); return err; }
