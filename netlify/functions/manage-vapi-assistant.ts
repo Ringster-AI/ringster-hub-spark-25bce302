@@ -125,29 +125,32 @@ async function main({ params }) {
   const tools = [
     {
       type: 'code',
-      name: 'check_availability',
-      description: 'Check available appointment slots on a specific date. Returns available time slots for booking. Always call get_current_datetime first.',
-      parameters: { type: 'object', properties: { date: { type: 'string', description: 'Date in YYYY-MM-DD format' }, timezone: { type: 'string', description: 'Timezone' }, duration_minutes: { type: 'number', description: 'Duration in minutes' } }, required: ['date'] },
+      function: {
+        name: 'check_availability',
+        description: 'Check available appointment slots on a specific date. Returns available time slots for booking. Always call get_current_datetime first.',
+        parameters: { type: 'object', properties: { date: { type: 'string', description: 'Date in YYYY-MM-DD format' }, timezone: { type: 'string', description: 'Timezone' }, duration_minutes: { type: 'number', description: 'Duration in minutes' } }, required: ['date'] },
+      },
       code: checkAvailabilityCode,
-      codeInterpreterEnabled: false,
-      environmentVariables: [{ key: 'supabase_url', value: supabaseUrl }, { key: 'calendar_secret', value: calendarSecret }],
+      environmentVariables: [{ name: 'supabase_url', value: supabaseUrl }, { name: 'calendar_secret', value: calendarSecret }],
     },
     {
       type: 'code',
-      name: 'book_appointment',
-      description: 'Book an appointment at a specific date and time. Use check_availability first.',
-      parameters: { type: 'object', properties: { datetime: { type: 'string', description: 'ISO datetime' }, attendee_name: { type: 'string', description: 'Attendee name' }, attendee_email: { type: 'string', description: 'Attendee email' }, duration_minutes: { type: 'number', description: 'Duration' }, appointment_type: { type: 'string', description: 'Type' }, timezone: { type: 'string', description: 'Timezone' } }, required: ['datetime', 'attendee_name'] },
+      function: {
+        name: 'book_appointment',
+        description: 'Book an appointment at a specific date and time. Use check_availability first.',
+        parameters: { type: 'object', properties: { datetime: { type: 'string', description: 'ISO datetime' }, attendee_name: { type: 'string', description: 'Attendee name' }, attendee_email: { type: 'string', description: 'Attendee email' }, duration_minutes: { type: 'number', description: 'Duration' }, appointment_type: { type: 'string', description: 'Type' }, timezone: { type: 'string', description: 'Timezone' } }, required: ['datetime', 'attendee_name'] },
+      },
       code: bookAppointmentCode,
-      codeInterpreterEnabled: false,
-      environmentVariables: [{ key: 'supabase_url', value: supabaseUrl }, { key: 'calendar_secret', value: calendarSecret }],
+      environmentVariables: [{ name: 'supabase_url', value: supabaseUrl }, { name: 'calendar_secret', value: calendarSecret }],
     },
     {
       type: 'code',
-      name: 'get_current_datetime',
-      description: 'Get the current date, time, and day of the week. Call this whenever you need to know what day it is today.',
-      parameters: { type: 'object', properties: { timezone: { type: 'string', description: 'Timezone' } }, required: [] },
+      function: {
+        name: 'get_current_datetime',
+        description: 'Get the current date, time, and day of the week. Call this whenever you need to know what day it is today.',
+        parameters: { type: 'object', properties: { timezone: { type: 'string', description: 'Timezone' } }, required: [] },
+      },
       code: getCurrentDatetimeCode,
-      codeInterpreterEnabled: false,
       environmentVariables: [],
     },
   ]
