@@ -50,11 +50,11 @@ async function main({ params, call }) {
       return { error: true, message: 'Could not determine assistant identity.' };
     }
     const idempotencyKey = crypto.randomUUID();
-    const res = await fetch(params.supabase_url + '/functions/v1/vapi-calendar-api', {
+    const res = await fetch(params.SUPABASE_URL + '/functions/v1/vapi-calendar-api', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-vapi-secret': params.calendar_secret,
+        'x-vapi-secret': params.CALENDAR_SECRET,
       },
       body: JSON.stringify({
         action: 'book_appointment',
