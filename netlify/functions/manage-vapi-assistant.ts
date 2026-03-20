@@ -451,8 +451,8 @@ export const handler: Handler = async (event) => {
         allCreateToolIds.push(transferToolId)
       }
       if (allCreateToolIds.length > 0) {
-        vapiConfig.toolIds = allCreateToolIds
-        console.log('Setting toolIds on new assistant:', allCreateToolIds)
+        vapiConfig.model.toolIds = allCreateToolIds
+        console.log('Setting model.toolIds on new assistant:', allCreateToolIds)
       }
       const vapiData = await withRetry(() => vapiService.createAssistant(vapiConfig))
       console.log('Successfully created Vapi assistant:', { requestId, assistantId: vapiData.id })
