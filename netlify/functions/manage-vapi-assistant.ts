@@ -250,7 +250,10 @@ export const handler: Handler = async (event) => {
       throw new Error('Failed to fetch agent details')
     }
 
-    // Check if calendar is enabled for this agent and fetch global tool IDs
+    // Always ensure global tools exist (self-healing bootstrap)
+    const allGlobalToolIds = await ensureGlobalToolsExist()
+    
+    // Check if calendar is enabled for this agent
     let calendarToolIds: string[] = []
     const { data: calendarTool } = await supabase
       .from('calendar_tools')
@@ -261,13 +264,13 @@ export const handler: Handler = async (event) => {
       .single()
 
     if (calendarTool) {
-      // Self-healing: ensure global tools exist
-      calendarToolIds = await ensureGlobalToolsExist()
+      // Calendar enabled: attach all global tools (check_availability, book_appointment, get_current_datetime)
+      calendarToolIds = allGlobalToolIds
       if (calendarToolIds.length === 0) {
         console.warn('Calendar enabled but could not ensure global tools exist')
       }
     } else {
-      // Even without calendar, attach get_current_datetime tool for date awareness
+      // Calendar not enabled: only attach get_current_datetime for date awareness
       const { data: globalConfig } = await supabase
         .from('vapi_global_config')
         .select('value')
