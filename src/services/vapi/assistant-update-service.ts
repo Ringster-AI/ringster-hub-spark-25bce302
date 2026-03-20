@@ -60,7 +60,14 @@ export class VapiAssistantUpdateService {
         }
 
         const result = await response.json();
-        console.log(`Successfully synced agent ${agentId} with VAPI assistant ${assistantId}`, { requestId, result });
+        console.log(`Successfully synced agent ${agentId} with VAPI assistant ${assistantId}`, {
+          requestId,
+          toolIds: result.toolIds,
+          transferToolId: result.transferToolId,
+          calendarToolsAttached: result.calendarToolsAttached,
+          globalToolsAvailable: result.globalToolsAvailable,
+          action: result.action,
+        });
         return result;
       } catch (error) {
         console.error(`Sync attempt ${attempt + 1} failed for agent ${agentId}`, { requestId, error });
