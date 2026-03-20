@@ -340,8 +340,8 @@ export const handler: Handler = async (event) => {
       }
 
       if (allToolIds.length > 0) {
-        vapiConfig.toolIds = allToolIds
-        console.log('Setting toolIds on assistant:', allToolIds)
+        vapiConfig.model.toolIds = allToolIds
+        console.log('Setting model.toolIds on assistant:', allToolIds)
       }
 
       // Try PATCH, fall back to CREATE if assistant no longer exists
