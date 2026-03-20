@@ -151,7 +151,7 @@ async function main({ params }) {
         parameters: { type: 'object', properties: { timezone: { type: 'string', description: 'Timezone' } }, required: [] },
       },
       code: getCurrentDatetimeCode,
-      environmentVariables: [],
+      environmentVariables: [{ name: 'TIMEZONE_DEFAULT', value: 'America/New_York' }],
     },
   ]
 
