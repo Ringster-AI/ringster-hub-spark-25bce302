@@ -184,7 +184,7 @@ function buildGetCurrentDatetimeTool() {
       },
     },
     code: GET_CURRENT_DATETIME_CODE,
-    environmentVariables: [],
+    environmentVariables: [{ name: 'TIMEZONE_DEFAULT', value: 'America/New_York' }],
   }
 }
 
