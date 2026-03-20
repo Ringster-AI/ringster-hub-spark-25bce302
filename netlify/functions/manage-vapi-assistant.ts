@@ -57,13 +57,23 @@ async function ensureGlobalToolsExist(): Promise<string[]> {
     .single()
 
   const toolConfig = globalConfig?.value as any
-  if (toolConfig?.check_availability_id && toolConfig?.book_appointment_id && toolConfig?.get_current_datetime_id) {
-    // Tools exist, return all IDs
+  const CURRENT_TOOL_VERSION = '1.2'
+  if (
+    toolConfig?.check_availability_id &&
+    toolConfig?.book_appointment_id &&
+    toolConfig?.get_current_datetime_id &&
+    toolConfig?.version === CURRENT_TOOL_VERSION
+  ) {
+    // Tools exist and are up-to-date, return all IDs
     return [
       toolConfig.check_availability_id,
       toolConfig.book_appointment_id,
       toolConfig.get_current_datetime_id,
     ].filter(Boolean)
+  }
+
+  if (toolConfig?.version && toolConfig.version !== CURRENT_TOOL_VERSION) {
+    console.log(`Global calendar tools version mismatch: ${toolConfig.version} → ${CURRENT_TOOL_VERSION}, recreating...`)
   }
 
   // Tools missing — create them inline
