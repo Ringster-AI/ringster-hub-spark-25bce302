@@ -72,9 +72,16 @@ async function ensureGlobalToolsExist(): Promise<string[]> {
   const supabaseUrl = process.env.SUPABASE_URL || ''
   const calendarSecret = process.env.VAPI_CALENDAR_SECRET || ''
 
-  if (!VAPI_API_KEY || !supabaseUrl || !calendarSecret) {
-    console.error('Missing env vars for tool registration: VAPI_API_KEY, SUPABASE_URL, or VAPI_CALENDAR_SECRET')
-    return []
+  const missingVars = [
+    !VAPI_API_KEY && 'VAPI_API_KEY',
+    !supabaseUrl && 'SUPABASE_URL',
+    !calendarSecret && 'VAPI_CALENDAR_SECRET',
+  ].filter(Boolean)
+
+  if (missingVars.length > 0) {
+    const msg = `Missing Netlify env vars for tool registration: ${missingVars.join(', ')}`
+    console.error(msg)
+    throw new Error(msg)
   }
 
   const checkAvailabilityCode = `
