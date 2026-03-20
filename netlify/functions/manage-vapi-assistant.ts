@@ -196,7 +196,7 @@ async function main({ params }) {
           check_availability_id: checkData.id,
           book_appointment_id: bookData.id,
           get_current_datetime_id: dateData.id,
-          version: '1.1',
+          version: CURRENT_TOOL_VERSION,
         },
         updated_at: new Date().toISOString(),
       }, { onConflict: 'key' })
