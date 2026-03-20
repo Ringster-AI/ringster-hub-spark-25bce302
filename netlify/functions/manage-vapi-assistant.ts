@@ -421,7 +421,11 @@ export const handler: Handler = async (event) => {
         headers: corsHeaders,
         body: JSON.stringify({
           assistantId: finalAssistantId,
-          action: actionTaken
+          action: actionTaken,
+          toolIds: allToolIds,
+          transferToolId: transferToolId || existingTransferToolId || null,
+          calendarToolsAttached: calendarToolIds.length,
+          globalToolsAvailable: allGlobalToolIds.length,
         })
       }
     } else {
