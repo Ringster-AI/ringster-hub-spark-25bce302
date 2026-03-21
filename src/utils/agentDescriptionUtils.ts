@@ -44,9 +44,14 @@ export const appendToolInstructionsToDescription = (description: string = '', to
 };
 
 const removeExistingToolInstructions = (description: string) => {
-  // Remove common tool instruction patterns
-  return description
-    .replace(/\s*Use the transferCall tool to transfer calls to the respective departments[^.]*\./gi, '')
-    .replace(/\s*Use the (calendar booking tool|google_calendar tool) to schedule appointments[^.]*\./gi, '')
-    .trim();
+  // Remove transfer tool instructions
+  let cleaned = description.replace(/\s*Use the transferCall tool to transfer calls to the respective departments[^.]*\./gi, '');
+  
+  // Remove calendar booking instruction blocks (the full multi-step pattern)
+  cleaned = cleaned.replace(/\s*When a caller wants to schedule an appointment:[\s\S]*?(?:offer to check availability again\.)/gi, '');
+  
+  // Remove legacy single-line calendar patterns
+  cleaned = cleaned.replace(/\s*Use the (calendar booking tool|google_calendar tool) to schedule appointments[^.]*\./gi, '');
+  
+  return cleaned.trim();
 };
