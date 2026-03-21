@@ -67,9 +67,9 @@ function buildToolContext(agent: AgentConfig): string {
     );
   }
 
-  // Always add a note about date awareness
+  // Date awareness — silent usage instruction
   sections.push(
-    `\n\n## Date Awareness\nIf you need to know the current date, day of the week, or time, use the get_current_datetime tool. Never guess or assume the date.`
+    `\n\n## Date Awareness\nIf you need to know the current date, day of the week, or time, silently use the get_current_datetime tool in the background. Never announce to the caller that you are looking up the date or time — just use the information naturally in conversation. Never guess or assume the date.`
   );
 
   return sections.join('');
