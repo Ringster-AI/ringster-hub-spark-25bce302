@@ -1,9 +1,12 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { decryptToken, isEncrypted } from '../_shared/crypto.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-vapi-secret',
 }
+
+const TOKEN_ENCRYPTION_KEY = Deno.env.get('TOKEN_ENCRYPTION_KEY') || ''
 
 const GOOGLE_API_BASE = 'https://www.googleapis.com'
 
@@ -35,11 +38,22 @@ async function refreshGoogleToken(
   const expiresAt = new Date(integration.expires_at)
 
   if (expiresAt > now) {
-    return integration.access_token
+    // Decrypt if encrypted
+    let token = integration.access_token
+    if (TOKEN_ENCRYPTION_KEY && isEncrypted(token)) {
+      token = await decryptToken(token, TOKEN_ENCRYPTION_KEY)
+    }
+    return token
   }
 
   const clientId = Deno.env.get('GOOGLE_CLIENT_ID')!
   const clientSecret = Deno.env.get('GOOGLE_CLIENT_SECRET')!
+
+  // Decrypt refresh token if encrypted
+  let refreshToken = integration.refresh_token
+  if (TOKEN_ENCRYPTION_KEY && isEncrypted(refreshToken)) {
+    refreshToken = await decryptToken(refreshToken, TOKEN_ENCRYPTION_KEY)
+  }
 
   const res = await fetch('https://oauth2.googleapis.com/token', {
     method: 'POST',
@@ -47,7 +61,7 @@ async function refreshGoogleToken(
     body: new URLSearchParams({
       client_id: clientId,
       client_secret: clientSecret,
-      refresh_token: integration.refresh_token,
+      refresh_token: refreshToken,
       grant_type: 'refresh_token',
     }),
   })
