@@ -309,7 +309,7 @@ export const handler: Handler = async (event) => {
       }
       const shouldBackfillAssistantId = !agent.vapi_assistant_id
 
-      // Handle transfer directory: recreate tool if directory exists
+      // Handle transfer directory: reuse existing tool or create new one
       let transferToolId: string | null = null
       const currentConfig = agent.config && typeof agent.config === 'object' && !Array.isArray(agent.config)
         ? (agent.config as Record<string, unknown>)
@@ -317,8 +317,21 @@ export const handler: Handler = async (event) => {
       const existingTransferToolId = currentConfig.transfer_tool_id as string | null
 
       if (agent.transfer_directory && typeof agent.transfer_directory === 'object' && Object.keys(agent.transfer_directory).length > 0) {
-        console.log('Creating/updating transfer tool for directory:', agent.transfer_directory)
+        console.log('Processing transfer tool for directory:', agent.transfer_directory)
         try {
+          // Delete old transfer tool first to prevent duplicates
+          if (existingTransferToolId) {
+            console.log('Deleting old transfer tool:', existingTransferToolId)
+            try {
+              await fetch(`${VAPI_TOOL_URL}/${existingTransferToolId}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${VAPI_API_KEY}` },
+              })
+            } catch (delErr) {
+              console.warn('Failed to delete old transfer tool (may already be gone):', delErr)
+            }
+          }
+
           const toolData = await withRetry(() => vapiService.createTransferTool(agent.transfer_directory as Record<string, any>))
           transferToolId = toolData.id
           console.log('Created transfer tool:', { requestId, transferToolId })
