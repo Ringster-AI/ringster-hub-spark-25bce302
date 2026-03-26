@@ -92,7 +92,7 @@ async function refreshGoogleToken(
 async function resolveTenant(supabase: any, assistantId: string) {
   const { data: agent, error: agentError } = await supabase
     .from('agent_configs')
-    .select('id, user_id, config')
+    .select('id, user_id, agent_type, config')
     .eq('vapi_assistant_id', assistantId)
     .single()
 
@@ -124,6 +124,10 @@ async function resolveTenant(supabase: any, assistantId: string) {
   const calendarId = toolConfig.calendar_id || integration.calendar_id || 'primary'
 
   return { agent, integration, calendarTool: toolConfig, calendarId }
+}
+
+function getBookingSource(agentType?: string | null) {
+  return agentType === 'outbound' ? 'outbound_campaign' : 'inbound'
 }
 
 // Notify owner on permanent auth failure (rate limited to 1/day)
@@ -491,7 +495,7 @@ async function bookAppointment(
     booking_status: 'confirmed',
     google_event_id: googleEvent.id,
     google_integration_id: integration.id,
-    booking_source: 'agent',
+    booking_source: getBookingSource(agent.agent_type),
     idempotency_key: params.idempotency_key || null,
     notes: `Booked by agent ${agent.id}`,
   }
