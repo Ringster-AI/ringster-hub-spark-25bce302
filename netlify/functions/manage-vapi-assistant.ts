@@ -48,37 +48,227 @@ const getAssistantIdFromAgent = (agent: any): string | null => {
   return null
 };
 
-// ─── Self-healing: ensure global calendar tools exist in vapi_global_config ───
-async function ensureGlobalToolsExist(): Promise<string[]> {
-  const { data: globalConfig } = await supabase
-    .from('vapi_global_config')
-    .select('value')
-    .eq('key', 'calendar_tools')
-    .single()
+const CALENDAR_TOOL_VERSION = '2.0'
 
-  const toolConfig = globalConfig?.value as any
-  const CURRENT_TOOL_VERSION = '1.3'
-  if (
-    toolConfig?.check_availability_id &&
-    toolConfig?.book_appointment_id &&
-    toolConfig?.get_current_datetime_id &&
-    toolConfig?.version === CURRENT_TOOL_VERSION
-  ) {
-    // Tools exist and are up-to-date, return all IDs
-    return [
-      toolConfig.check_availability_id,
-      toolConfig.book_appointment_id,
-      toolConfig.get_current_datetime_id,
-    ].filter(Boolean)
+type CalendarToolConfig = {
+  version: string
+  check_availability_id?: string | null
+  book_appointment_id?: string | null
+  get_current_datetime_id?: string | null
+}
+
+function buildAssistantCalendarTools(supabaseUrl: string, calendarSecret: string, assistantId: string) {
+  const checkAvailabilityCode = `
+const { date, timezone = 'America/New_York', duration_minutes = 30 } = args;
+const { SUPABASE_URL, CALENDAR_SECRET, ASSISTANT_ID } = env;
+
+try {
+  const res = await fetch(\`${'${SUPABASE_URL}'}/functions/v1/vapi-calendar-api\`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-vapi-secret': CALENDAR_SECRET,
+    },
+    body: JSON.stringify({
+      action: 'check_availability',
+      assistant_id: ASSISTANT_ID,
+      date,
+      timezone,
+      duration_minutes,
+    }),
+  });
+
+  const payload = await res.json().catch(() => ({ error: true, message: 'Calendar service error' }));
+  if (!res.ok) return payload;
+  return payload;
+} catch (e) {
+  return { error: true, message: 'Calendar service temporarily unavailable.' };
+}`
+
+  const bookAppointmentCode = `
+const {
+  datetime,
+  attendee_name,
+  attendee_email = null,
+  duration_minutes = 30,
+  appointment_type = 'consultation',
+  timezone = 'America/New_York',
+} = args;
+const { SUPABASE_URL, CALENDAR_SECRET, ASSISTANT_ID } = env;
+
+try {
+  const idempotency_key = crypto.randomUUID();
+  const res = await fetch(\`${'${SUPABASE_URL}'}/functions/v1/vapi-calendar-api\`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-vapi-secret': CALENDAR_SECRET,
+    },
+    body: JSON.stringify({
+      action: 'book_appointment',
+      assistant_id: ASSISTANT_ID,
+      datetime,
+      attendee_name,
+      attendee_email,
+      duration_minutes,
+      appointment_type,
+      timezone,
+      idempotency_key,
+    }),
+  });
+
+  const payload = await res.json().catch(() => ({ error: true, message: 'Booking service error' }));
+  if (!res.ok) return payload;
+  return payload;
+} catch (e) {
+  return { error: true, message: 'Booking service temporarily unavailable.' };
+}`
+
+  const getCurrentDatetimeCode = `
+const { timezone = env.TIMEZONE_DEFAULT || 'America/New_York' } = args;
+
+try {
+  const now = new Date();
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: timezone,
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: true,
+  });
+
+  const parts = formatter.formatToParts(now);
+  const get = (type) => parts.find((part) => part.type === type)?.value || '';
+  const isoDate = new Intl.DateTimeFormat('sv-SE', {
+    timeZone: timezone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(now);
+
+  return {
+    current_date: isoDate,
+    day_of_week: get('weekday'),
+    current_time: \`${'${get(\'hour\')}:${get(\'minute\')}:${get(\'second\')} ${get(\'dayPeriod\')}'},
+    timezone,
+    formatted: formatter.format(now),
+  };
+} catch (e) {
+  return { error: true, message: 'Could not determine current date/time.' };
+}`
+
+  return {
+    checkAvailabilityTool: {
+      type: 'code',
+      function: {
+        name: 'check_availability',
+        description: 'Check available appointment slots on a specific date. Returns available time slots for booking. Always call get_current_datetime first.',
+        parameters: {
+          type: 'object',
+          properties: {
+            date: { type: 'string', description: 'Date in YYYY-MM-DD format' },
+            timezone: { type: 'string', description: 'Timezone' },
+            duration_minutes: { type: 'number', description: 'Duration in minutes' },
+          },
+          required: ['date'],
+        },
+      },
+      code: checkAvailabilityCode,
+      environmentVariables: [
+        { name: 'SUPABASE_URL', value: supabaseUrl },
+        { name: 'CALENDAR_SECRET', value: calendarSecret },
+        { name: 'ASSISTANT_ID', value: assistantId },
+      ],
+    },
+    bookAppointmentTool: {
+      type: 'code',
+      function: {
+        name: 'book_appointment',
+        description: 'Book an appointment at a specific date and time. Use check_availability first.',
+        parameters: {
+          type: 'object',
+          properties: {
+            datetime: { type: 'string', description: 'ISO datetime' },
+            attendee_name: { type: 'string', description: 'Attendee name' },
+            attendee_email: { type: 'string', description: 'Attendee email' },
+            duration_minutes: { type: 'number', description: 'Duration' },
+            appointment_type: { type: 'string', description: 'Type' },
+            timezone: { type: 'string', description: 'Timezone' },
+          },
+          required: ['datetime', 'attendee_name'],
+        },
+      },
+      code: bookAppointmentCode,
+      environmentVariables: [
+        { name: 'SUPABASE_URL', value: supabaseUrl },
+        { name: 'CALENDAR_SECRET', value: calendarSecret },
+        { name: 'ASSISTANT_ID', value: assistantId },
+      ],
+    },
+    getCurrentDatetimeTool: {
+      type: 'code',
+      function: {
+        name: 'get_current_datetime',
+        description: 'Get the current date, time, and day of the week. Call this whenever you need to know what day it is today.',
+        parameters: {
+          type: 'object',
+          properties: {
+            timezone: { type: 'string', description: 'Timezone' },
+          },
+          required: [],
+        },
+      },
+      code: getCurrentDatetimeCode,
+      environmentVariables: [{ name: 'TIMEZONE_DEFAULT', value: 'America/New_York' }],
+    },
+  }
+}
+
+async function deleteVapiTool(toolId?: string | null) {
+  if (!toolId) return
+
+  try {
+    const res = await fetch(`${VAPI_TOOL_URL}/${toolId}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${VAPI_API_KEY}` },
+    })
+
+    if (!res.ok) {
+      console.warn('Failed to delete Vapi tool', { toolId, status: res.status })
+    }
+  } catch (error) {
+    console.warn('Error deleting Vapi tool', { toolId, error: String(error) })
+  }
+}
+
+async function upsertVapiTool(existingToolId: string | null | undefined, tool: any): Promise<string> {
+  const isUpdate = Boolean(existingToolId)
+  const res = await fetch(isUpdate ? `${VAPI_TOOL_URL}/${existingToolId}` : VAPI_TOOL_URL, {
+    method: isUpdate ? 'PATCH' : 'POST',
+    headers: {
+      'Authorization': `Bearer ${VAPI_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(tool),
+  })
+
+  if (!res.ok) {
+    throw new Error(`Tool ${isUpdate ? 'update' : 'creation'} failed: ${await res.text()}`)
   }
 
-  if (toolConfig?.version && toolConfig.version !== CURRENT_TOOL_VERSION) {
-    console.log(`Global calendar tools version mismatch: ${toolConfig.version} → ${CURRENT_TOOL_VERSION}, recreating...`)
-  }
+  const data = await res.json()
+  return data.id
+}
 
-  // Tools missing — create them inline
-  console.log('Global calendar tools missing from vapi_global_config, creating...')
-
+async function ensureAssistantCalendarTools(
+  assistantId: string,
+  currentConfig: Record<string, unknown>,
+  includeBookingTools: boolean
+): Promise<{ toolIds: string[]; calendarToolConfig: CalendarToolConfig }> {
   const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || `https://${process.env.VITE_SUPABASE_PROJECT_ID || 'owzerqaududhfwngyqbp'}.supabase.co`
   const calendarSecret = process.env.VAPI_CALENDAR_SECRET || ''
 
@@ -94,123 +284,38 @@ async function ensureGlobalToolsExist(): Promise<string[]> {
     throw new Error(msg)
   }
 
-  const checkAvailabilityCode = `
-async function main({ params, call }) {
-  try {
-    const assistantId = call?.assistant?.id || params.assistant_id;
-    if (!assistantId) return { error: true, message: 'Could not determine assistant identity.' };
-    const res = await fetch(params.SUPABASE_URL + '/functions/v1/vapi-calendar-api', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-vapi-secret': params.CALENDAR_SECRET },
-      body: JSON.stringify({ action: 'check_availability', assistant_id: assistantId, date: params.date, timezone: params.timezone || 'America/New_York', duration_minutes: params.duration_minutes || 30 }),
-    });
-    if (!res.ok) { const err = await res.json().catch(() => ({ error: true, message: 'Calendar service error' })); return err; }
-    return await res.json();
-  } catch (e) { return { error: true, message: 'Calendar service temporarily unavailable.' }; }
-}`
+  const existingToolConfig = (currentConfig.calendar_tool_ids as CalendarToolConfig | undefined) || undefined
+  const versionMismatch = existingToolConfig?.version && existingToolConfig.version !== CALENDAR_TOOL_VERSION
 
-  const bookAppointmentCode = `
-async function main({ params, call }) {
-  try {
-    const assistantId = call?.assistant?.id || params.assistant_id;
-    if (!assistantId) return { error: true, message: 'Could not determine assistant identity.' };
-    const idempotencyKey = crypto.randomUUID();
-    const res = await fetch(params.SUPABASE_URL + '/functions/v1/vapi-calendar-api', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-vapi-secret': params.CALENDAR_SECRET },
-      body: JSON.stringify({ action: 'book_appointment', assistant_id: assistantId, datetime: params.datetime, attendee_name: params.attendee_name, attendee_email: params.attendee_email || null, duration_minutes: params.duration_minutes || 30, appointment_type: params.appointment_type || 'consultation', timezone: params.timezone || 'America/New_York', idempotency_key: idempotencyKey }),
-    });
-    if (!res.ok) { const err = await res.json().catch(() => ({ error: true, message: 'Booking service error' })); return err; }
-    return await res.json();
-  } catch (e) { return { error: true, message: 'Booking service temporarily unavailable.' }; }
-}`
+  if (versionMismatch) {
+    await Promise.all([
+      deleteVapiTool(existingToolConfig?.check_availability_id),
+      deleteVapiTool(existingToolConfig?.book_appointment_id),
+      deleteVapiTool(existingToolConfig?.get_current_datetime_id),
+    ])
+  }
 
-  const getCurrentDatetimeCode = `
-async function main({ params }) {
-  try {
-    const tz = params.timezone || 'America/New_York';
-    const now = new Date();
-    const formatter = new Intl.DateTimeFormat('en-US', { timeZone: tz, weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
-    const parts = formatter.formatToParts(now);
-    const get = (type) => parts.find(p => p.type === type)?.value || '';
-    const dateFormatter = new Intl.DateTimeFormat('sv-SE', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' });
-    const isoDate = dateFormatter.format(now);
-    return { current_date: isoDate, day_of_week: get('weekday'), current_time: get('hour') + ':' + get('minute') + ':' + get('second') + ' ' + get('dayPeriod'), timezone: tz, formatted: formatter.format(now) };
-  } catch (e) { return { error: true, message: 'Could not determine current date/time.' }; }
-}`
+  const reusableToolConfig = versionMismatch ? undefined : existingToolConfig
+  const { checkAvailabilityTool, bookAppointmentTool, getCurrentDatetimeTool } = buildAssistantCalendarTools(supabaseUrl, calendarSecret, assistantId)
 
-  const tools = [
-    {
-      type: 'code',
-      function: {
-        name: 'check_availability',
-        description: 'Check available appointment slots on a specific date. Returns available time slots for booking. Always call get_current_datetime first.',
-        parameters: { type: 'object', properties: { date: { type: 'string', description: 'Date in YYYY-MM-DD format' }, timezone: { type: 'string', description: 'Timezone' }, duration_minutes: { type: 'number', description: 'Duration in minutes' } }, required: ['date'] },
-      },
-      code: checkAvailabilityCode,
-      environmentVariables: [{ name: 'SUPABASE_URL', value: supabaseUrl }, { name: 'CALENDAR_SECRET', value: calendarSecret }],
+  const [checkAvailabilityId, bookAppointmentId, getCurrentDatetimeId] = await Promise.all([
+    includeBookingTools
+      ? upsertVapiTool(reusableToolConfig?.check_availability_id, checkAvailabilityTool)
+      : Promise.resolve(reusableToolConfig?.check_availability_id || null),
+    includeBookingTools
+      ? upsertVapiTool(reusableToolConfig?.book_appointment_id, bookAppointmentTool)
+      : Promise.resolve(reusableToolConfig?.book_appointment_id || null),
+    upsertVapiTool(reusableToolConfig?.get_current_datetime_id, getCurrentDatetimeTool),
+  ])
+
+  return {
+    toolIds: [checkAvailabilityId, bookAppointmentId, getCurrentDatetimeId].filter(Boolean) as string[],
+    calendarToolConfig: {
+      version: CALENDAR_TOOL_VERSION,
+      check_availability_id: checkAvailabilityId,
+      book_appointment_id: bookAppointmentId,
+      get_current_datetime_id: getCurrentDatetimeId,
     },
-    {
-      type: 'code',
-      function: {
-        name: 'book_appointment',
-        description: 'Book an appointment at a specific date and time. Use check_availability first.',
-        parameters: { type: 'object', properties: { datetime: { type: 'string', description: 'ISO datetime' }, attendee_name: { type: 'string', description: 'Attendee name' }, attendee_email: { type: 'string', description: 'Attendee email' }, duration_minutes: { type: 'number', description: 'Duration' }, appointment_type: { type: 'string', description: 'Type' }, timezone: { type: 'string', description: 'Timezone' } }, required: ['datetime', 'attendee_name'] },
-      },
-      code: bookAppointmentCode,
-      environmentVariables: [{ name: 'SUPABASE_URL', value: supabaseUrl }, { name: 'CALENDAR_SECRET', value: calendarSecret }],
-    },
-    {
-      type: 'code',
-      function: {
-        name: 'get_current_datetime',
-        description: 'Get the current date, time, and day of the week. Call this whenever you need to know what day it is today.',
-        parameters: { type: 'object', properties: { timezone: { type: 'string', description: 'Timezone' } }, required: [] },
-      },
-      code: getCurrentDatetimeCode,
-      environmentVariables: [{ name: 'TIMEZONE_DEFAULT', value: 'America/New_York' }],
-    },
-  ]
-
-  try {
-    const results = await Promise.all(
-      tools.map(tool =>
-        fetch(VAPI_TOOL_URL, {
-          method: 'POST',
-          headers: { 'Authorization': `Bearer ${VAPI_API_KEY}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify(tool),
-        }).then(async res => {
-          if (!res.ok) throw new Error(`Tool creation failed: ${await res.text()}`);
-          return res.json();
-        })
-      )
-    )
-
-    const [checkData, bookData, dateData] = results
-
-    await supabase
-      .from('vapi_global_config')
-      .upsert({
-        key: 'calendar_tools',
-        value: {
-          check_availability_id: checkData.id,
-          book_appointment_id: bookData.id,
-          get_current_datetime_id: dateData.id,
-          version: CURRENT_TOOL_VERSION,
-        },
-        updated_at: new Date().toISOString(),
-      }, { onConflict: 'key' })
-
-    console.log('Successfully created and stored global calendar tools:', {
-      check: checkData.id,
-      book: bookData.id,
-      date: dateData.id,
-    })
-
-    return [checkData.id, bookData.id, dateData.id]
-  } catch (err) {
-    console.error('Failed to create global calendar tools:', err)
-    return []
   }
 }
 
