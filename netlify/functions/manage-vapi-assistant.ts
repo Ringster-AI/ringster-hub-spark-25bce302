@@ -79,7 +79,7 @@ async function ensureGlobalToolsExist(): Promise<string[]> {
   // Tools missing — create them inline
   console.log('Global calendar tools missing from vapi_global_config, creating...')
 
-  const supabaseUrl = process.env.SUPABASE_URL || ''
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || `https://${process.env.VITE_SUPABASE_PROJECT_ID || 'owzerqaududhfwngyqbp'}.supabase.co`
   const calendarSecret = process.env.VAPI_CALENDAR_SECRET || ''
 
   const missingVars = [
