@@ -57,7 +57,7 @@ async function ensureGlobalToolsExist(): Promise<string[]> {
     .single()
 
   const toolConfig = globalConfig?.value as any
-  const CURRENT_TOOL_VERSION = '1.2'
+  const CURRENT_TOOL_VERSION = '1.3'
   if (
     toolConfig?.check_availability_id &&
     toolConfig?.book_appointment_id &&
