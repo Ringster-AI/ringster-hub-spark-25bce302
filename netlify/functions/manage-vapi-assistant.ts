@@ -153,7 +153,7 @@ try {
   return {
     current_date: isoDate,
     day_of_week: get('weekday'),
-    current_time: \`${'${get(\'hour\')}:${get(\'minute\')}:${get(\'second\')} ${get(\'dayPeriod\')}'},
+    current_time: get('hour') + ':' + get('minute') + ':' + get('second') + ' ' + get('dayPeriod'),
     timezone,
     formatted: formatter.format(now),
   };
@@ -372,11 +372,11 @@ export const handler: Handler = async (event) => {
       throw new Error('Failed to fetch agent details')
     }
 
-    // Always ensure global tools exist (self-healing bootstrap)
-    const allGlobalToolIds = await ensureGlobalToolsExist()
-    
+    const currentConfig = agent.config && typeof agent.config === 'object' && !Array.isArray(agent.config)
+      ? (agent.config as Record<string, unknown>)
+      : {}
+
     // Check if calendar is enabled for this agent
-    let calendarToolIds: string[] = []
     const { data: calendarTool } = await supabase
       .from('calendar_tools')
       .select('is_enabled')
@@ -385,25 +385,7 @@ export const handler: Handler = async (event) => {
       .eq('is_enabled', true)
       .single()
 
-    if (calendarTool) {
-      // Calendar enabled: attach all global tools (check_availability, book_appointment, get_current_datetime)
-      calendarToolIds = allGlobalToolIds
-      if (calendarToolIds.length === 0) {
-        console.warn('Calendar enabled but could not ensure global tools exist')
-      }
-    } else {
-      // Calendar not enabled: only attach get_current_datetime for date awareness
-      const { data: globalConfig } = await supabase
-        .from('vapi_global_config')
-        .select('value')
-        .eq('key', 'calendar_tools')
-        .single()
-
-      const toolConfig = globalConfig?.value as any
-      if (toolConfig?.get_current_datetime_id) {
-        calendarToolIds = [toolConfig.get_current_datetime_id]
-      }
-    }
+    const isCalendarEnabled = Boolean(calendarTool)
 
     const vapiService = new VapiService(VAPI_API_KEY, VAPI_API_URL)
 
@@ -416,10 +398,21 @@ export const handler: Handler = async (event) => {
 
       // Handle transfer directory: reuse existing tool or create new one
       let transferToolId: string | null = null
-      const currentConfig = agent.config && typeof agent.config === 'object' && !Array.isArray(agent.config)
-        ? (agent.config as Record<string, unknown>)
-        : {}
       const existingTransferToolId = currentConfig.transfer_tool_id as string | null
+      let calendarToolIds: string[] = []
+      let calendarToolConfig: CalendarToolConfig = {
+        version: CALENDAR_TOOL_VERSION,
+      }
+
+      const buildAllToolIds = (calendarIds: string[]) => {
+        const mergedToolIds = [...calendarIds]
+        if (transferToolId) {
+          mergedToolIds.push(transferToolId)
+        } else if (existingTransferToolId) {
+          mergedToolIds.push(existingTransferToolId)
+        }
+        return mergedToolIds
+      }
 
       if (agent.transfer_directory && typeof agent.transfer_directory === 'object' && Object.keys(agent.transfer_directory).length > 0) {
         console.log('Processing transfer tool for directory:', agent.transfer_directory)
@@ -457,15 +450,12 @@ export const handler: Handler = async (event) => {
         }
       }
 
-      const vapiConfig = createVapiAssistantConfig(agent)
+      const initialCalendarTools = await ensureAssistantCalendarTools(assistantId, currentConfig, isCalendarEnabled)
+      calendarToolIds = initialCalendarTools.toolIds
+      calendarToolConfig = initialCalendarTools.calendarToolConfig
 
-      // Merge all tool IDs: calendar/datetime tools + transfer tool
-      const allToolIds: string[] = [...calendarToolIds]
-      if (transferToolId) {
-        allToolIds.push(transferToolId)
-      } else if (existingTransferToolId) {
-        allToolIds.push(existingTransferToolId)
-      }
+      const vapiConfig = createVapiAssistantConfig(agent)
+      let allToolIds = buildAllToolIds(calendarToolIds)
 
       if (allToolIds.length > 0) {
         vapiConfig.model.toolIds = allToolIds
@@ -506,6 +496,38 @@ export const handler: Handler = async (event) => {
           actionTaken = 'recreated'
           console.log('Successfully recreated Vapi assistant:', { requestId, oldId: assistantId, newId: finalAssistantId })
 
+          const recreatedCalendarTools = await ensureAssistantCalendarTools(
+            finalAssistantId,
+            { ...currentConfig, calendar_tool_ids: calendarToolConfig },
+            isCalendarEnabled
+          )
+          calendarToolIds = recreatedCalendarTools.toolIds
+          calendarToolConfig = recreatedCalendarTools.calendarToolConfig
+          allToolIds = buildAllToolIds(calendarToolIds)
+
+          if (allToolIds.length > 0) {
+            const recreatedAssistantConfig = createVapiAssistantConfig(agent)
+            recreatedAssistantConfig.model.toolIds = allToolIds
+
+            await withRetry(async () => {
+              const res = await fetch(`${VAPI_API_URL}/${finalAssistantId}`, {
+                method: 'PATCH',
+                headers: {
+                  'Authorization': `Bearer ${VAPI_API_KEY}`,
+                  'Content-Type': 'application/json',
+                  'x-request-id': `${requestId}-tools`,
+                },
+                body: JSON.stringify(recreatedAssistantConfig),
+              })
+
+              if (!res.ok) {
+                throw new Error(`VAPI recreate tool patch failed: ${await res.text()}`)
+              }
+
+              return res.json()
+            })
+          }
+
           // Re-import Twilio number if agent has one
           if (agent.phone_number && process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN) {
             try {
@@ -534,7 +556,8 @@ export const handler: Handler = async (event) => {
             config: {
               ...currentConfig,
               vapi_assistant_id: finalAssistantId,
-              transfer_tool_id: transferToolId || existingTransferToolId || null,
+                transfer_tool_id: transferToolId || existingTransferToolId || null,
+                calendar_tool_ids: calendarToolConfig,
             }
           })
           .eq('id', agentId)
@@ -553,7 +576,7 @@ export const handler: Handler = async (event) => {
           toolIds: allToolIds,
           transferToolId: transferToolId || existingTransferToolId || null,
           calendarToolsAttached: calendarToolIds.length,
-          globalToolsAvailable: allGlobalToolIds.length,
+          globalToolsAvailable: calendarToolIds.length,
         })
       }
     } else {
@@ -572,18 +595,48 @@ export const handler: Handler = async (event) => {
         }
       }
 
-      // Create Vapi assistant with ALL tool IDs merged
+      // Create Vapi assistant first so calendar code tools can be bound to the final assistant ID
       const vapiConfig = createVapiAssistantConfig(agent)
-      const allCreateToolIds: string[] = [...calendarToolIds]
       if (transferToolId) {
-        allCreateToolIds.push(transferToolId)
-      }
-      if (allCreateToolIds.length > 0) {
-        vapiConfig.model.toolIds = allCreateToolIds
-        console.log('Setting model.toolIds on new assistant:', allCreateToolIds)
+        vapiConfig.model.toolIds = [transferToolId]
+        console.log('Setting initial model.toolIds on new assistant:', [transferToolId])
       }
       const vapiData = await withRetry(() => vapiService.createAssistant(vapiConfig))
       console.log('Successfully created Vapi assistant:', { requestId, assistantId: vapiData.id })
+
+      const { toolIds: calendarToolIds, calendarToolConfig } = await ensureAssistantCalendarTools(
+        vapiData.id,
+        currentConfig,
+        isCalendarEnabled
+      )
+
+      const allCreateToolIds = [...calendarToolIds]
+      if (transferToolId) {
+        allCreateToolIds.push(transferToolId)
+      }
+
+      if (allCreateToolIds.length > 0) {
+        const updatedAssistantConfig = createVapiAssistantConfig(agent)
+        updatedAssistantConfig.model.toolIds = allCreateToolIds
+
+        await withRetry(async () => {
+          const res = await fetch(`${VAPI_API_URL}/${vapiData.id}`, {
+            method: 'PATCH',
+            headers: {
+              'Authorization': `Bearer ${VAPI_API_KEY}`,
+              'Content-Type': 'application/json',
+              'x-request-id': `${requestId}-attach-tools`,
+            },
+            body: JSON.stringify(updatedAssistantConfig),
+          })
+
+          if (!res.ok) {
+            throw new Error(`VAPI attach tool patch failed: ${await res.text()}`)
+          }
+
+          return res.json()
+        })
+      }
 
       // Import Twilio number if provided
       if (phoneNumber && process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN) {
@@ -596,10 +649,6 @@ export const handler: Handler = async (event) => {
       }
 
       // Update agent config with assistant and tool IDs
-      const currentConfig = agent.config && typeof agent.config === 'object' && !Array.isArray(agent.config)
-        ? (agent.config as Record<string, unknown>)
-        : {}
-
       const { error: updateError } = await supabase
         .from('agent_configs')
         .update({
@@ -607,7 +656,8 @@ export const handler: Handler = async (event) => {
           config: {
             ...currentConfig,
             vapi_assistant_id: vapiData.id,
-            transfer_tool_id: transferToolId
+            transfer_tool_id: transferToolId,
+            calendar_tool_ids: calendarToolConfig,
           }
         })
         .eq('id', agentId)
