@@ -152,7 +152,7 @@ serve(async (req) => {
                 refresh_token: encryptedRefreshToken,
                 expires_at: expiresAt.toISOString(),
                 scopes: tokenData.scope
-              })
+              }, { onConflict: 'user_id' })
               .select("id");
               
             if (error) {
