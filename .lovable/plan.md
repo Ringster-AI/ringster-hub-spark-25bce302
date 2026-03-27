@@ -1,37 +1,52 @@
 
 
-## Plan: Make Email Required + Send Meeting Confirmations
+## Plan: Configurable Required Booking Fields
 
-### What changes
+### Problem
+Different service businesses need different information from callers — a plumber needs an address, a clinic may need a phone number, etc. Currently only name and email are collected.
 
-**1. Make `attendee_email` required in the Vapi tool definition**
+### Approach
+Add a **configurable "required booking fields"** setting per agent in the Calendar Booking config. Business owners toggle which fields the agent must collect before booking. The Vapi tool schema stays flexible (all fields optional at the tool level), but the edge function enforces whatever the business configured.
 
-In `supabase/functions/register-vapi-calendar-tools/index.ts`:
-- Change the `book_appointment` tool's `required` array from `['datetime', 'attendee_name']` to `['datetime', 'attendee_name', 'attendee_email']`
-- Update the description to emphasize email is required
-- Bump `TOOL_VERSION` to `'1.2'` to force tool re-registration
+### Changes
 
-**2. Validate email in the booking edge function**
+**1. Add booking fields config to CalendarBookingConfig UI**
+- `src/components/agents/CalendarBookingConfig.tsx` — add a "Required Booking Information" section with checkboxes:
+  - Phone number (toggle, default off)
+  - Address (toggle, default off)
+  - Custom fields (stretch — allow adding named free-text fields like "Insurance ID", "Vehicle make/model")
+- These get stored in `calendar_booking.required_fields` as an array, e.g. `["phone", "address"]`
 
-In `supabase/functions/vapi-calendar-api/index.ts`:
-- Add a validation check at the top of `bookAppointment` — if `attendee_email` is missing or invalid, return an error telling the agent to collect the email first
+**2. Update AgentFormData type**
+- `src/types/agents.ts` — add `required_fields?: string[]` and optionally `custom_fields?: { name: string; description: string }[]` inside `calendar_booking`
 
-**3. Send a confirmation email after successful booking**
+**3. Update Vapi tool definition to accept optional fields**
+- `supabase/functions/register-vapi-calendar-tools/index.ts` — add optional parameters to `book_appointment`:
+  - `attendee_phone` (string, optional)
+  - `attendee_address` (string, optional)
+  - `custom_fields` (object, optional — key/value pairs)
+- Update the tool description to say: "The agent's configuration determines which fields are required. Always ask the caller for all required information before booking."
 
-In `supabase/functions/vapi-calendar-api/index.ts`, after the booking is saved to the DB (around line 551):
-- Use the existing Resend API key (`RESEND_API_KEY`) to send a branded confirmation email to the attendee
-- Include: appointment date/time (formatted in their timezone), duration, appointment type, and a note from Ringster
-- This uses the same Resend pattern already in the file (lines 194-209)
+**4. Inject required-fields instructions into agent system prompt**
+- `netlify/functions/services/vapi-config.ts` — in `buildToolContext`, read `calendar_booking.required_fields` and append instructions like: "Before booking, you MUST collect the following from the caller: phone number, service address. Do not proceed with booking until all required fields are provided."
 
-**4. Deploy both edge functions**
+**5. Enforce in the edge function**
+- `supabase/functions/vapi-calendar-api/index.ts` — in `bookAppointment`:
+  - Look up the agent's `config.calendar_booking.required_fields`
+  - Validate each required field is present; return a clear error if missing
+  - Store extra fields in the `notes` column or a new `metadata` jsonb on `calendar_bookings`
 
-- Deploy `vapi-calendar-api` (confirmation email logic)
-- Deploy `register-vapi-calendar-tools` (updated tool schema)
-- User will need to re-register tools for their agents (or we trigger it)
+**6. Add metadata column to calendar_bookings** (migration)
+- Add `metadata jsonb default '{}'` to `calendar_bookings` to store phone, address, custom fields without schema changes for every new field
 
-### Technical details
+**7. Include extra fields in confirmation email**
+- Update the Resend email template in `vapi-calendar-api/index.ts` to display any collected phone/address/custom fields
 
-- No new edge functions or infrastructure needed — Resend is already configured and used in this file
-- Google Calendar already sends its own invite via `sendUpdates=all` on event creation, but this adds a branded Ringster confirmation
-- The confirmation email will be sent from `notifications@ringster.ai` (same sender as auth failure notifications)
+### Files modified
+- `src/types/agents.ts`
+- `src/components/agents/CalendarBookingConfig.tsx`
+- `netlify/functions/services/vapi-config.ts`
+- `supabase/functions/register-vapi-calendar-tools/index.ts`
+- `supabase/functions/vapi-calendar-api/index.ts`
+- New migration for `metadata` column on `calendar_bookings`
 
