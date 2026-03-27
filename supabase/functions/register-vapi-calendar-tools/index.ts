@@ -50,23 +50,27 @@ async function main({ params, call }) {
       return { error: true, message: 'Could not determine assistant identity.' };
     }
     const idempotencyKey = crypto.randomUUID();
+    const body = {
+      action: 'book_appointment',
+      assistant_id: assistantId,
+      datetime: params.datetime,
+      attendee_name: params.attendee_name,
+      attendee_email: params.attendee_email || null,
+      attendee_phone: params.attendee_phone || null,
+      attendee_address: params.attendee_address || null,
+      custom_fields: params.custom_fields || null,
+      duration_minutes: params.duration_minutes || 30,
+      appointment_type: params.appointment_type || 'consultation',
+      timezone: params.timezone || 'America/New_York',
+      idempotency_key: idempotencyKey,
+    };
     const res = await fetch(params.SUPABASE_URL + '/functions/v1/vapi-calendar-api', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'x-vapi-secret': params.CALENDAR_SECRET,
       },
-      body: JSON.stringify({
-        action: 'book_appointment',
-        assistant_id: assistantId,
-        datetime: params.datetime,
-        attendee_name: params.attendee_name,
-        attendee_email: params.attendee_email || null,
-        duration_minutes: params.duration_minutes || 30,
-        appointment_type: params.appointment_type || 'consultation',
-        timezone: params.timezone || 'America/New_York',
-        idempotency_key: idempotencyKey,
-      }),
+      body: JSON.stringify(body),
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({ error: true, message: 'Booking service error' }));
