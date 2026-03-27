@@ -412,8 +412,9 @@ async function bookAppointment(
   }
 
   // Build start/end datetime strings in the agent's timezone (NOT UTC)
-  // params.datetime is like "2026-03-27T12:00:00" — treat as local to tz
-  const rawStart = params.datetime.replace('Z', '') // strip Z if present
+  // params.datetime may arrive as "2026-03-27T12:00:00", "...Z", or "...-04:00"
+  // Strip any timezone suffix to get the naive local time
+  const rawStart = params.datetime.replace(/([+-]\d{2}:\d{2}|Z)$/, '')
   const [datePart, timePart] = rawStart.split('T')
   const [hh, mm] = (timePart || '12:00:00').split(':').map(Number)
   const endTotalMin = hh * 60 + mm + duration
