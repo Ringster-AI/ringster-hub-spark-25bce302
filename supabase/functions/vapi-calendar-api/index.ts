@@ -230,26 +230,9 @@ async function checkAvailability(
     throw e
   }
 
-  // Build timeMin/timeMax for the full day in the user's timezone
-  const dateObj = new Date(`${params.date}T00:00:00`)
-  const formatter = new Intl.DateTimeFormat('en-US', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' })
-  // Use start/end of day in the specified timezone
-  const dayStart = new Date(new Intl.DateTimeFormat('sv-SE', {
-    timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit',
-    hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
-  }).format(new Date(`${params.date}T00:00:00`)).replace(' ', 'T') + 'Z')
-
-  // Simpler approach: construct UTC bounds from the date + timezone
+  // Build timeMin/timeMax as naive datetimes — Google FreeBusy uses timeZone param
   const timeMin = `${params.date}T00:00:00`
   const timeMax = `${params.date}T23:59:59`
-
-  // Convert to UTC using timezone offset
-  const startInTz = new Date(new Date(`${timeMin}`).toLocaleString('en-US', { timeZone: tz }))
-  const endInTz = new Date(new Date(`${timeMax}`).toLocaleString('en-US', { timeZone: tz }))
-
-  // Use Intl to get proper ISO strings
-  const timeMinUTC = new Date(`${params.date}T00:00:00`).toISOString()
-  const timeMaxUTC = new Date(`${params.date}T23:59:59`).toISOString()
 
   // Call Google FreeBusy API
   const freeBusyRes = await withRetry(async () => {
@@ -260,8 +243,8 @@ async function checkAvailability(
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        timeMin: timeMinUTC,
-        timeMax: timeMaxUTC,
+        timeMin,
+        timeMax,
         timeZone: tz,
         items: [{ id: calendarId }],
       }),
@@ -410,10 +393,17 @@ async function bookAppointment(
     throw e
   }
 
-  // Re-check availability via FreeBusy
-  const startTime = new Date(params.datetime)
-  const endTime = new Date(startTime.getTime() + duration * 60000)
+  // Build start/end datetime strings in the agent's timezone (NOT UTC)
+  // params.datetime is like "2026-03-27T12:00:00" — treat as local to tz
+  const rawStart = params.datetime.replace('Z', '') // strip Z if present
+  const [datePart, timePart] = rawStart.split('T')
+  const [hh, mm] = (timePart || '12:00:00').split(':').map(Number)
+  const endTotalMin = hh * 60 + mm + duration
+  const endHH = String(Math.floor(endTotalMin / 60)).padStart(2, '0')
+  const endMM = String(endTotalMin % 60).padStart(2, '0')
+  const rawEnd = `${datePart}T${endHH}:${endMM}:00`
 
+  // For FreeBusy, Google needs RFC3339 — send with timezone and let Google interpret
   const freeBusyRes = await withRetry(async () => {
     const res = await fetch(`${GOOGLE_API_BASE}/calendar/v3/freeBusy`, {
       method: 'POST',
@@ -422,8 +412,8 @@ async function bookAppointment(
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        timeMin: startTime.toISOString(),
-        timeMax: endTime.toISOString(),
+        timeMin: rawStart,
+        timeMax: rawEnd,
         timeZone: tz,
         items: [{ id: calendarId }],
       }),
@@ -444,15 +434,16 @@ async function bookAppointment(
   }
 
   // Step 1: Create Google Calendar event FIRST (Google-first atomicity)
+  // Send naive datetime + timeZone so Google places it correctly
   const eventBody = {
     summary: `${params.appointment_type || 'Appointment'} - ${params.attendee_name}`,
     description: `Booked via Ringster AI agent`,
     start: {
-      dateTime: startTime.toISOString(),
+      dateTime: rawStart,
       timeZone: tz,
     },
     end: {
-      dateTime: endTime.toISOString(),
+      dateTime: rawEnd,
       timeZone: tz,
     },
     attendees: params.attendee_email ? [{ email: params.attendee_email }] : [],
@@ -487,7 +478,7 @@ async function bookAppointment(
 
   // Step 2: Insert into calendar_bookings
   const bookingRecord = {
-    appointment_datetime: startTime.toISOString(),
+    appointment_datetime: rawStart,
     duration_minutes: duration,
     attendee_name: params.attendee_name,
     attendee_email: params.attendee_email || null,
@@ -538,9 +529,14 @@ async function bookAppointment(
     status: 'success',
   })
 
+  // Format time for confirmation message
+  const displayTime = `${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}`
+  const ampm = hh >= 12 ? 'PM' : 'AM'
+  const displayHour = hh > 12 ? hh - 12 : (hh === 0 ? 12 : hh)
+
   return {
     error: false,
-    message: `Appointment booked successfully for ${params.attendee_name} on ${startTime.toLocaleDateString('en-US', { timeZone: tz })} at ${startTime.toLocaleTimeString('en-US', { timeZone: tz, hour: '2-digit', minute: '2-digit' })} for ${duration} minutes.`,
+    message: `Appointment booked successfully for ${params.attendee_name} on ${datePart} at ${displayHour}:${String(mm).padStart(2,'0')} ${ampm} ${tz} for ${duration} minutes.`,
     booking: {
       id: booking.id,
       datetime: params.datetime,
