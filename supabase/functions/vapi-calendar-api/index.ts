@@ -230,26 +230,9 @@ async function checkAvailability(
     throw e
   }
 
-  // Build timeMin/timeMax for the full day in the user's timezone
-  const dateObj = new Date(`${params.date}T00:00:00`)
-  const formatter = new Intl.DateTimeFormat('en-US', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' })
-  // Use start/end of day in the specified timezone
-  const dayStart = new Date(new Intl.DateTimeFormat('sv-SE', {
-    timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit',
-    hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
-  }).format(new Date(`${params.date}T00:00:00`)).replace(' ', 'T') + 'Z')
-
-  // Simpler approach: construct UTC bounds from the date + timezone
+  // Build timeMin/timeMax as naive datetimes — Google FreeBusy uses timeZone param
   const timeMin = `${params.date}T00:00:00`
   const timeMax = `${params.date}T23:59:59`
-
-  // Convert to UTC using timezone offset
-  const startInTz = new Date(new Date(`${timeMin}`).toLocaleString('en-US', { timeZone: tz }))
-  const endInTz = new Date(new Date(`${timeMax}`).toLocaleString('en-US', { timeZone: tz }))
-
-  // Use Intl to get proper ISO strings
-  const timeMinUTC = new Date(`${params.date}T00:00:00`).toISOString()
-  const timeMaxUTC = new Date(`${params.date}T23:59:59`).toISOString()
 
   // Call Google FreeBusy API
   const freeBusyRes = await withRetry(async () => {
@@ -260,8 +243,8 @@ async function checkAvailability(
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        timeMin: timeMinUTC,
-        timeMax: timeMaxUTC,
+        timeMin,
+        timeMax,
         timeZone: tz,
         items: [{ id: calendarId }],
       }),
