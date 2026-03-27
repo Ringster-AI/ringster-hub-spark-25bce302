@@ -562,10 +562,55 @@ async function bookAppointment(
   const displayTime = `${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}`
   const ampm = hh >= 12 ? 'PM' : 'AM'
   const displayHour = hh > 12 ? hh - 12 : (hh === 0 ? 12 : hh)
+  const formattedTime = `${displayHour}:${String(mm).padStart(2,'0')} ${ampm}`
+  const formattedDate = new Date(datePart + 'T12:00:00Z').toLocaleDateString('en-US', {
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC',
+  })
+
+  // Send branded confirmation email via Resend
+  if (params.attendee_email) {
+    const resendKey = Deno.env.get('RESEND_API_KEY')
+    if (resendKey) {
+      try {
+        await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${resendKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            from: 'Ringster <notifications@ringster.ai>',
+            to: [params.attendee_email],
+            subject: `Appointment Confirmed – ${formattedDate} at ${formattedTime} ${tz}`,
+            html: `
+              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                <div style="text-align: center; margin-bottom: 30px;">
+                  <h1 style="color: #1a1a1a; font-size: 24px; margin: 0;">Your Appointment is Confirmed ✅</h1>
+                </div>
+                <p style="color: #333; font-size: 16px;">Hi ${params.attendee_name},</p>
+                <p style="color: #333; font-size: 16px;">Your appointment has been successfully booked. Here are the details:</p>
+                <div style="background: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0; border-left: 4px solid #4f46e5;">
+                  <p style="margin: 8px 0; color: #333;"><strong>📅 Date:</strong> ${formattedDate}</p>
+                  <p style="margin: 8px 0; color: #333;"><strong>🕐 Time:</strong> ${formattedTime} ${tz}</p>
+                  <p style="margin: 8px 0; color: #333;"><strong>⏱ Duration:</strong> ${duration} minutes</p>
+                  <p style="margin: 8px 0; color: #333;"><strong>📋 Type:</strong> ${params.appointment_type || 'Consultation'}</p>
+                </div>
+                <p style="color: #333; font-size: 16px;">A calendar invite has also been sent to your email. If you need to make any changes, please contact us.</p>
+                <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;" />
+                <p style="color: #999; font-size: 12px; text-align: center;">Powered by Ringster AI</p>
+              </div>`,
+          }),
+        })
+        console.log('Confirmation email sent to', params.attendee_email)
+      } catch (emailErr) {
+        console.error('Failed to send confirmation email:', emailErr)
+      }
+    }
+  }
 
   return {
     error: false,
-    message: `Appointment booked successfully for ${params.attendee_name} on ${datePart} at ${displayHour}:${String(mm).padStart(2,'0')} ${ampm} ${tz} for ${duration} minutes.`,
+    message: `Appointment booked successfully for ${params.attendee_name} on ${datePart} at ${formattedTime} ${tz} for ${duration} minutes. A confirmation email has been sent to ${params.attendee_email}.`,
     booking: {
       id: booking.id,
       datetime: params.datetime,
