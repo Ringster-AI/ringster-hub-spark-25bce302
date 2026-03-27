@@ -495,7 +495,7 @@ async function bookAppointment(
 
   // Step 2: Insert into calendar_bookings
   const bookingRecord = {
-    appointment_datetime: startTime.toISOString(),
+    appointment_datetime: rawStart,
     duration_minutes: duration,
     attendee_name: params.attendee_name,
     attendee_email: params.attendee_email || null,
