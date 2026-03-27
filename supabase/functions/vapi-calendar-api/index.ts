@@ -630,6 +630,9 @@ async function bookAppointment(
                   <p style="margin: 8px 0; color: #333;"><strong>🕐 Time:</strong> ${formattedTime} ${tz}</p>
                   <p style="margin: 8px 0; color: #333;"><strong>⏱ Duration:</strong> ${duration} minutes</p>
                   <p style="margin: 8px 0; color: #333;"><strong>📋 Type:</strong> ${params.appointment_type || 'Consultation'}</p>
+                  ${params.attendee_phone ? `<p style="margin: 8px 0; color: #333;"><strong>📞 Phone:</strong> ${params.attendee_phone}</p>` : ''}
+                  ${params.attendee_address ? `<p style="margin: 8px 0; color: #333;"><strong>📍 Address:</strong> ${params.attendee_address}</p>` : ''}
+                  ${params.custom_fields ? Object.entries(params.custom_fields).map(([k, v]) => `<p style="margin: 8px 0; color: #333;"><strong>${k}:</strong> ${v}</p>`).join('') : ''}
                 </div>
                 <p style="color: #333; font-size: 16px;">A calendar invite has also been sent to your email. If you need to make any changes, please contact us.</p>
                 <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;" />
