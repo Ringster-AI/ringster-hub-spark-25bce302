@@ -422,7 +422,9 @@ async function bookAppointment(
   const endMM = String(endTotalMin % 60).padStart(2, '0')
   const rawEnd = `${datePart}T${endHH}:${endMM}:00`
 
-  // For FreeBusy, Google needs RFC3339 — send with timezone and let Google interpret
+  // FreeBusy requires RFC3339 UTC timestamps
+  const freeBusyTimeMin = localToUTCISO(rawStart, tz)
+  const freeBusyTimeMax = localToUTCISO(rawEnd, tz)
   const freeBusyRes = await withRetry(async () => {
     const res = await fetch(`${GOOGLE_API_BASE}/calendar/v3/freeBusy`, {
       method: 'POST',
@@ -431,8 +433,8 @@ async function bookAppointment(
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        timeMin: rawStart,
-        timeMax: rawEnd,
+        timeMin: freeBusyTimeMin,
+        timeMax: freeBusyTimeMax,
         timeZone: tz,
         items: [{ id: calendarId }],
       }),
