@@ -546,9 +546,14 @@ async function bookAppointment(
     status: 'success',
   })
 
+  // Format time for confirmation message
+  const displayTime = `${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}`
+  const ampm = hh >= 12 ? 'PM' : 'AM'
+  const displayHour = hh > 12 ? hh - 12 : (hh === 0 ? 12 : hh)
+
   return {
     error: false,
-    message: `Appointment booked successfully for ${params.attendee_name} on ${startTime.toLocaleDateString('en-US', { timeZone: tz })} at ${startTime.toLocaleTimeString('en-US', { timeZone: tz, hour: '2-digit', minute: '2-digit' })} for ${duration} minutes.`,
+    message: `Appointment booked successfully for ${params.attendee_name} on ${datePart} at ${displayHour}:${String(mm).padStart(2,'0')} ${ampm} ${tz} for ${duration} minutes.`,
     booking: {
       id: booking.id,
       datetime: params.datetime,
