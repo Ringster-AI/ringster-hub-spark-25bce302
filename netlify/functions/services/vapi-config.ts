@@ -62,9 +62,28 @@ function buildToolContext(agent: AgentConfig): string {
     const duration = calendarBooking.default_duration || 30;
     const leadTime = calendarBooking.booking_lead_time_hours || 2;
 
-    sections.push(
-      `\n\n## Calendar & Appointment Booking\nYou can check availability and book appointments. Always use get_current_datetime first to know today's date before checking availability.\nBusiness hours: ${businessStart} to ${businessEnd}.\nDefault appointment duration: ${duration} minutes.\nMinimum booking lead time: ${leadTime} hours from now.\nUse check_availability with a date in YYYY-MM-DD format, then offer the caller available slots. Once they choose a slot, use book_appointment to confirm.`
-    );
+    let calendarInstructions = `\n\n## Calendar & Appointment Booking\nYou can check availability and book appointments. Always use get_current_datetime first to know today's date before checking availability.\nBusiness hours: ${businessStart} to ${businessEnd}.\nDefault appointment duration: ${duration} minutes.\nMinimum booking lead time: ${leadTime} hours from now.\nUse check_availability with a date in YYYY-MM-DD format, then offer the caller available slots. Once they choose a slot, use book_appointment to confirm.`;
+
+    // Required fields instructions
+    const requiredFields = calendarBooking.required_fields as string[] || [];
+    const customFields = calendarBooking.custom_fields as Array<{ name: string; description: string }> || [];
+
+    const fieldLabels: string[] = [];
+    if (requiredFields.includes('phone')) fieldLabels.push('phone number');
+    if (requiredFields.includes('address')) fieldLabels.push('service address');
+    for (const rf of requiredFields) {
+      if (rf.startsWith('custom:')) {
+        const fieldName = rf.replace('custom:', '');
+        const customDef = customFields.find(f => f.name === fieldName);
+        fieldLabels.push(customDef?.description || fieldName);
+      }
+    }
+
+    if (fieldLabels.length > 0) {
+      calendarInstructions += `\n\nIMPORTANT: Before booking, you MUST collect the following from the caller: ${fieldLabels.join(', ')}. Do not proceed with booking until all required fields are provided.`;
+    }
+
+    sections.push(calendarInstructions);
   }
 
   // Date awareness — silent usage instruction

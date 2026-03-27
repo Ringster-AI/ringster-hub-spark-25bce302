@@ -244,6 +244,7 @@ export type Database = {
           google_integration_id_text: string | null
           id: string
           idempotency_key: string | null
+          metadata: Json | null
           notes: string | null
           updated_at: string
         }
@@ -264,6 +265,7 @@ export type Database = {
           google_integration_id_text?: string | null
           id?: string
           idempotency_key?: string | null
+          metadata?: Json | null
           notes?: string | null
           updated_at?: string
         }
@@ -284,6 +286,7 @@ export type Database = {
           google_integration_id_text?: string | null
           id?: string
           idempotency_key?: string | null
+          metadata?: Json | null
           notes?: string | null
           updated_at?: string
         }

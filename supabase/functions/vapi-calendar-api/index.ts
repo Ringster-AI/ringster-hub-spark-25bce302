@@ -389,6 +389,35 @@ async function bookAppointment(
     supabase,
     params.assistant_id
   )
+
+  // Enforce configurable required fields from agent config
+  const agentConfig = agent.config as Record<string, any> | null
+  const calendarBookingConfig = agentConfig?.calendar_booking as Record<string, any> | null
+  const requiredFields = (calendarBookingConfig?.required_fields as string[]) || []
+
+  for (const field of requiredFields) {
+    if (field === 'phone' && !params.attendee_phone) {
+      return {
+        error: true,
+        message: 'A phone number is required for this booking. Please ask the caller for their phone number.',
+      }
+    }
+    if (field === 'address' && !params.attendee_address) {
+      return {
+        error: true,
+        message: 'A service address is required for this booking. Please ask the caller for their address.',
+      }
+    }
+    if (field.startsWith('custom:')) {
+      const fieldName = field.replace('custom:', '')
+      if (!params.custom_fields || !params.custom_fields[fieldName]) {
+        return {
+          error: true,
+          message: `The "${fieldName}" is required for this booking. Please ask the caller to provide it.`,
+        }
+      }
+    }
+  }
   const duration = params.duration_minutes || calendarTool.default_duration || 30
   const tz = params.timezone || 'America/New_York'
 
@@ -506,7 +535,13 @@ async function bookAppointment(
   }
 
   // Step 2: Insert into calendar_bookings
-  const bookingRecord = {
+  // Build metadata from extra fields
+  const metadata: Record<string, any> = {}
+  if (params.attendee_phone) metadata.attendee_phone = params.attendee_phone
+  if (params.attendee_address) metadata.attendee_address = params.attendee_address
+  if (params.custom_fields) metadata.custom_fields = params.custom_fields
+
+  const bookingRecord: Record<string, any> = {
     appointment_datetime: rawStart,
     duration_minutes: duration,
     attendee_name: params.attendee_name,
@@ -518,6 +553,7 @@ async function bookAppointment(
     booking_source: getBookingSource(agent.agent_type),
     idempotency_key: params.idempotency_key || null,
     notes: `Booked by agent ${agent.id}`,
+    metadata: Object.keys(metadata).length > 0 ? metadata : {},
   }
 
   const { data: booking, error: insertError } = await supabase
@@ -594,6 +630,9 @@ async function bookAppointment(
                   <p style="margin: 8px 0; color: #333;"><strong>🕐 Time:</strong> ${formattedTime} ${tz}</p>
                   <p style="margin: 8px 0; color: #333;"><strong>⏱ Duration:</strong> ${duration} minutes</p>
                   <p style="margin: 8px 0; color: #333;"><strong>📋 Type:</strong> ${params.appointment_type || 'Consultation'}</p>
+                  ${params.attendee_phone ? `<p style="margin: 8px 0; color: #333;"><strong>📞 Phone:</strong> ${params.attendee_phone}</p>` : ''}
+                  ${params.attendee_address ? `<p style="margin: 8px 0; color: #333;"><strong>📍 Address:</strong> ${params.attendee_address}</p>` : ''}
+                  ${params.custom_fields ? Object.entries(params.custom_fields).map(([k, v]) => `<p style="margin: 8px 0; color: #333;"><strong>${k}:</strong> ${v}</p>`).join('') : ''}
                 </div>
                 <p style="color: #333; font-size: 16px;">A calendar invite has also been sent to your email. If you need to make any changes, please contact us.</p>
                 <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;" />
