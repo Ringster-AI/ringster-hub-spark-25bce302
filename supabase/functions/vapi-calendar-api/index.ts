@@ -10,6 +10,25 @@ const TOKEN_ENCRYPTION_KEY = Deno.env.get('TOKEN_ENCRYPTION_KEY') || ''
 
 const GOOGLE_API_BASE = 'https://www.googleapis.com'
 
+// Convert a naive datetime string (e.g. "2026-03-27T09:00:00") in a given
+// IANA timezone to a proper RFC3339 UTC string for Google FreeBusy API.
+function localToUTCISO(naive: string, tz: string): string {
+  // Parse naive as if UTC to get the numeric components
+  const asUTC = new Date(naive.replace('Z', '') + 'Z')
+  // Format that UTC instant in the target TZ to find the offset
+  const parts: Record<string, string> = {}
+  new Intl.DateTimeFormat('en-US', {
+    timeZone: tz,
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit',
+    hour12: false,
+  }).formatToParts(asUTC).forEach(p => parts[p.type] = p.value)
+  const tzRepr = `${parts.year}-${parts.month}-${parts.day}T${parts.hour === '24' ? '00' : parts.hour}:${parts.minute}:${parts.second}Z`
+  const offsetMs = Date.parse(tzRepr) - asUTC.getTime()
+  // naive is local time in tz; to get UTC subtract the offset
+  return new Date(asUTC.getTime() - offsetMs).toISOString()
+}
+
 // Retry helper for Google API calls (429/5xx)
 async function withRetry<T>(fn: () => Promise<T>, retries = 2, baseDelayMs = 500): Promise<T> {
   let lastError: Error
