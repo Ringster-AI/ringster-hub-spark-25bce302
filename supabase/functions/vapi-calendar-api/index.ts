@@ -249,9 +249,9 @@ async function checkAvailability(
     throw e
   }
 
-  // Build timeMin/timeMax as naive datetimes — Google FreeBusy uses timeZone param
-  const timeMin = `${params.date}T00:00:00`
-  const timeMax = `${params.date}T23:59:59`
+  // Build timeMin/timeMax as RFC3339 UTC strings (FreeBusy requires this)
+  const timeMin = localToUTCISO(`${params.date}T00:00:00`, tz)
+  const timeMax = localToUTCISO(`${params.date}T23:59:59`, tz)
 
   // Call Google FreeBusy API
   const freeBusyRes = await withRetry(async () => {
