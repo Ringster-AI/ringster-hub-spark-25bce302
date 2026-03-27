@@ -5,7 +5,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-const TOOL_VERSION = '1.1'
+const TOOL_VERSION = '1.2'
 const VAPI_API_URL = 'https://api.vapi.ai/tool'
 
 // Code tool source for check_availability
