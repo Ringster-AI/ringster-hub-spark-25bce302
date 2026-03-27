@@ -236,7 +236,7 @@ async function checkAvailability(
     supabase,
     params.assistant_id
   )
-  const tz = params.timezone || integration.availability_start ? 'America/New_York' : 'America/New_York'
+  const tz = params.timezone || 'America/New_York'
   const duration = params.duration_minutes || calendarTool.default_duration || 30
 
   let accessToken: string
