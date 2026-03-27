@@ -236,7 +236,7 @@ async function checkAvailability(
     supabase,
     params.assistant_id
   )
-  const tz = params.timezone || integration.availability_start ? 'America/New_York' : 'America/New_York'
+  const tz = params.timezone || 'America/New_York'
   const duration = params.duration_minutes || calendarTool.default_duration || 30
 
   let accessToken: string
@@ -309,14 +309,13 @@ async function checkAvailability(
     const slotEndM = slotEndMinute % 60
     const slotEnd = `${params.date}T${String(slotEndH).padStart(2, '0')}:${String(slotEndM).padStart(2, '0')}:00`
 
-    // Convert slot times to UTC for comparison with busy periods
-    // For simplicity, compare in the target timezone
-    const slotStartDate = new Date(`${slotStart}`)
-    const slotEndDate = new Date(`${slotEnd}`)
+    // Compare candidate slots in the same UTC basis Google FreeBusy returns
+    const slotStartUTC = new Date(localToUTCISO(slotStart, tz))
+    const slotEndUTC = new Date(localToUTCISO(slotEnd, tz))
 
     // Check with buffer: the slot + buffer on each side must not overlap busy periods
-    const bufferedStart = new Date(slotStartDate.getTime() - bufferMinutes * 60000)
-    const bufferedEnd = new Date(slotEndDate.getTime() + bufferMinutes * 60000)
+    const bufferedStart = new Date(slotStartUTC.getTime() - bufferMinutes * 60000)
+    const bufferedEnd = new Date(slotEndUTC.getTime() + bufferMinutes * 60000)
 
     let isFree = true
     for (const busy of busyPeriods) {
