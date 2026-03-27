@@ -389,6 +389,35 @@ async function bookAppointment(
     supabase,
     params.assistant_id
   )
+
+  // Enforce configurable required fields from agent config
+  const agentConfig = agent.config as Record<string, any> | null
+  const calendarBookingConfig = agentConfig?.calendar_booking as Record<string, any> | null
+  const requiredFields = (calendarBookingConfig?.required_fields as string[]) || []
+
+  for (const field of requiredFields) {
+    if (field === 'phone' && !params.attendee_phone) {
+      return {
+        error: true,
+        message: 'A phone number is required for this booking. Please ask the caller for their phone number.',
+      }
+    }
+    if (field === 'address' && !params.attendee_address) {
+      return {
+        error: true,
+        message: 'A service address is required for this booking. Please ask the caller for their address.',
+      }
+    }
+    if (field.startsWith('custom:')) {
+      const fieldName = field.replace('custom:', '')
+      if (!params.custom_fields || !params.custom_fields[fieldName]) {
+        return {
+          error: true,
+          message: `The "${fieldName}" is required for this booking. Please ask the caller to provide it.`,
+        }
+      }
+    }
+  }
   const duration = params.duration_minutes || calendarTool.default_duration || 30
   const tz = params.timezone || 'America/New_York'
 
