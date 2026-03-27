@@ -535,7 +535,13 @@ async function bookAppointment(
   }
 
   // Step 2: Insert into calendar_bookings
-  const bookingRecord = {
+  // Build metadata from extra fields
+  const metadata: Record<string, any> = {}
+  if (params.attendee_phone) metadata.attendee_phone = params.attendee_phone
+  if (params.attendee_address) metadata.attendee_address = params.attendee_address
+  if (params.custom_fields) metadata.custom_fields = params.custom_fields
+
+  const bookingRecord: Record<string, any> = {
     appointment_datetime: rawStart,
     duration_minutes: duration,
     attendee_name: params.attendee_name,
@@ -547,6 +553,7 @@ async function bookAppointment(
     booking_source: getBookingSource(agent.agent_type),
     idempotency_key: params.idempotency_key || null,
     notes: `Booked by agent ${agent.id}`,
+    metadata: Object.keys(metadata).length > 0 ? metadata : {},
   }
 
   const { data: booking, error: insertError } = await supabase
