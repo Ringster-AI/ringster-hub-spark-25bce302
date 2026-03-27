@@ -377,6 +377,14 @@ async function bookAppointment(
     idempotency_key?: string
   }
 ) {
+  // Validate email is provided
+  if (!params.attendee_email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(params.attendee_email)) {
+    return {
+      error: true,
+      message: 'A valid email address is required to book an appointment. Please ask the caller for their email address.',
+    }
+  }
+
   const { agent, integration, calendarTool, calendarId } = await resolveTenant(
     supabase,
     params.assistant_id
