@@ -5,7 +5,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-const TOOL_VERSION = '1.1'
+const TOOL_VERSION = '1.2'
 const VAPI_API_URL = 'https://api.vapi.ai/tool'
 
 // Code tool source for check_availability
@@ -147,18 +147,18 @@ function buildBookAppointmentTool(supabaseUrl: string, calendarSecret: string) {
     type: 'code',
     function: {
       name: 'book_appointment',
-      description: 'Book an appointment at a specific date and time. Use check_availability first to find open slots. Requires the attendee\'s name.',
+      description: 'Book an appointment at a specific date and time. Use check_availability first to find open slots. Requires the attendee\'s name and email address. Always ask for the caller\'s email before booking.',
       parameters: {
         type: 'object',
         properties: {
           datetime: { type: 'string', description: 'The appointment date and time in ISO format (e.g., "2025-03-15T10:00:00")' },
           attendee_name: { type: 'string', description: 'Full name of the person booking the appointment' },
-          attendee_email: { type: 'string', description: 'Email address of the person booking (optional but recommended)' },
+          attendee_email: { type: 'string', description: 'Email address of the person booking. This is required to send a confirmation email.' },
           duration_minutes: { type: 'number', description: 'Duration of the appointment in minutes. Default is 30.' },
           appointment_type: { type: 'string', description: 'Type of appointment (e.g., "consultation", "follow-up", "demo")' },
           timezone: { type: 'string', description: 'The caller\'s timezone (e.g., "America/New_York")' },
         },
-        required: ['datetime', 'attendee_name'],
+        required: ['datetime', 'attendee_name', 'attendee_email'],
       },
     },
     code: BOOK_APPOINTMENT_CODE,
