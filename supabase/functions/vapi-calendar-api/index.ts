@@ -410,10 +410,17 @@ async function bookAppointment(
     throw e
   }
 
-  // Re-check availability via FreeBusy
-  const startTime = new Date(params.datetime)
-  const endTime = new Date(startTime.getTime() + duration * 60000)
+  // Build start/end datetime strings in the agent's timezone (NOT UTC)
+  // params.datetime is like "2026-03-27T12:00:00" — treat as local to tz
+  const rawStart = params.datetime.replace('Z', '') // strip Z if present
+  const [datePart, timePart] = rawStart.split('T')
+  const [hh, mm] = (timePart || '12:00:00').split(':').map(Number)
+  const endTotalMin = hh * 60 + mm + duration
+  const endHH = String(Math.floor(endTotalMin / 60)).padStart(2, '0')
+  const endMM = String(endTotalMin % 60).padStart(2, '0')
+  const rawEnd = `${datePart}T${endHH}:${endMM}:00`
 
+  // For FreeBusy, Google needs RFC3339 — send with timezone and let Google interpret
   const freeBusyRes = await withRetry(async () => {
     const res = await fetch(`${GOOGLE_API_BASE}/calendar/v3/freeBusy`, {
       method: 'POST',
@@ -422,8 +429,8 @@ async function bookAppointment(
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        timeMin: startTime.toISOString(),
-        timeMax: endTime.toISOString(),
+        timeMin: rawStart,
+        timeMax: rawEnd,
         timeZone: tz,
         items: [{ id: calendarId }],
       }),
@@ -444,15 +451,16 @@ async function bookAppointment(
   }
 
   // Step 1: Create Google Calendar event FIRST (Google-first atomicity)
+  // Send naive datetime + timeZone so Google places it correctly
   const eventBody = {
     summary: `${params.appointment_type || 'Appointment'} - ${params.attendee_name}`,
     description: `Booked via Ringster AI agent`,
     start: {
-      dateTime: startTime.toISOString(),
+      dateTime: rawStart,
       timeZone: tz,
     },
     end: {
-      dateTime: endTime.toISOString(),
+      dateTime: rawEnd,
       timeZone: tz,
     },
     attendees: params.attendee_email ? [{ email: params.attendee_email }] : [],
