@@ -18,6 +18,8 @@ export interface AgentFormData {
     booking_lead_time_hours?: number;
     require_phone_verification?: boolean;
     allowed_days?: number[];
+    required_fields?: string[];
+    custom_fields?: { name: string; description: string }[];
   };
   advanced_config?: {
     voice: {
