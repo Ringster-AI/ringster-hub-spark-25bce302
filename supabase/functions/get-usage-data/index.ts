@@ -10,60 +10,52 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { 
-      headers: corsHeaders,
-      status: 200
-    })
+    return new Response(null, { headers: corsHeaders, status: 200 })
   }
 
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')
     
-    if (!supabaseUrl || !supabaseServiceKey) {
-      console.error('Missing environment variables')
+    if (!supabaseUrl || !supabaseServiceKey || !supabaseAnonKey) {
       return new Response(
         JSON.stringify({ error: 'Server configuration error' }),
-        { 
-          headers: corsHeaders,
-          status: 500
-        }
+        { headers: corsHeaders, status: 500 }
       )
     }
 
+    // Authenticate the caller
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new Response(
+        JSON.stringify({ error: 'Authentication required' }),
+        { headers: corsHeaders, status: 401 }
+      )
+    }
+
+    const anonClient = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } }
+    })
+
+    const token = authHeader.replace('Bearer ', '')
+    const { data: claimsData, error: claimsError } = await anonClient.auth.getUser(token)
+
+    if (claimsError || !claimsData?.user) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid or expired token' }),
+        { headers: corsHeaders, status: 401 }
+      )
+    }
+
+    const userId = claimsData.user.id
+
+    // Use service role client for data queries
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-    let requestBody
-    try {
-      requestBody = await req.json()
-    } catch (error) {
-      console.error('Error parsing request body:', error)
-      return new Response(
-        JSON.stringify({ error: 'Invalid request body' }),
-        { 
-          headers: corsHeaders,
-          status: 400
-        }
-      )
-    }
-
-    const { userId, timeframe } = requestBody
-    
-    if (!userId) {
-      return new Response(
-        JSON.stringify({ error: 'User ID is required' }),
-        { 
-          headers: corsHeaders,
-          status: 400
-        }
-      )
-    }
-    
     console.log('Fetching subscription data for user:', userId)
     
-    // Get user subscription data
     const { data: subscriptionData, error: subscriptionError } = await supabase
       .from('user_subscriptions')
       .select(`
@@ -88,16 +80,10 @@ serve(async (req) => {
       console.error('Subscription query error:', subscriptionError)
       return new Response(
         JSON.stringify({ error: 'Failed to fetch subscription data' }),
-        { 
-          headers: corsHeaders,
-          status: 500
-        }
+        { headers: corsHeaders, status: 500 }
       )
     }
     
-    console.log('Fetching agent data for user:', userId)
-    
-    // Get agent usage data
     const { data: agentData, error: agentError } = await supabase
       .from('agent_configs')
       .select('id, name, minutes_used, total_minutes_used')
@@ -107,16 +93,10 @@ serve(async (req) => {
       console.error('Agent query error:', agentError)
       return new Response(
         JSON.stringify({ error: 'Failed to fetch agent data' }),
-        { 
-          headers: corsHeaders,
-          status: 500
-        }
+        { headers: corsHeaders, status: 500 }
       )
     }
     
-    console.log('Fetching usage summary for user:', userId)
-    
-    // Get monthly usage summary
     const now = new Date()
     const currentYear = now.getFullYear()
     const currentMonth = now.getMonth() + 1
@@ -131,7 +111,6 @@ serve(async (req) => {
     
     if (usageError) {
       console.error('Usage summary query error:', usageError)
-      // Don't return error for usage summary as it might not exist
     }
     
     const responseData = {
@@ -144,19 +123,13 @@ serve(async (req) => {
     
     return new Response(
       JSON.stringify(responseData),
-      { 
-        headers: corsHeaders,
-        status: 200
-      }
+      { headers: corsHeaders, status: 200 }
     )
   } catch (error) {
     console.error('Unexpected error in get-usage-data:', error)
     return new Response(
       JSON.stringify({ error: 'Internal server error' }),
-      { 
-        headers: corsHeaders,
-        status: 500
-      }
+      { headers: corsHeaders, status: 500 }
     )
   }
 })
