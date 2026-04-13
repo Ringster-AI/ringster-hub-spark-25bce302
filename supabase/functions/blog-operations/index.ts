@@ -86,8 +86,19 @@ serve(async (req) => {
           .from("blog_posts")
           .update(postData)
           .eq("id", postId)
+          .eq("author_id", user.id)
           .select()
           .single());
+        
+        if (!result && !error) {
+          return new Response(
+            JSON.stringify({ error: "Post not found or you are not the author" }),
+            {
+              headers: { ...corsHeaders, "Content-Type": "application/json" },
+              status: 403,
+            }
+          );
+        }
         break;
       default:
         return new Response(
