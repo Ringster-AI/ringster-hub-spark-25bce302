@@ -2,19 +2,22 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Integration, IntegrationLog, CampaignIntegration } from "@/types/integrations/index";
 
+// Select all columns EXCEPT credentials - credentials should never be read client-side
+const SAFE_COLUMNS = 'id, user_id, integration_type, provider_name, display_name, status, configuration, metadata, capabilities, is_active, last_sync_at, expires_at, created_at, updated_at';
+
 export class IntegrationService {
   static async getUserIntegrations(): Promise<Integration[]> {
     const { data, error } = await supabase
       .from('integrations')
-      .select('*')
+      .select(SAFE_COLUMNS)
       .order('created_at', { ascending: false });
 
     if (error) throw error;
     return data.map(item => ({
       ...item,
+      credentials: {}, // Never expose credentials client-side
       status: item.status as Integration['status'],
       configuration: item.configuration as Record<string, any>,
-      credentials: item.credentials as Record<string, any>,
       metadata: item.metadata as Record<string, any>
     }));
   }
@@ -22,7 +25,7 @@ export class IntegrationService {
   static async getIntegrationById(id: string): Promise<Integration | null> {
     const { data, error } = await supabase
       .from('integrations')
-      .select('*')
+      .select(SAFE_COLUMNS)
       .eq('id', id)
       .single();
 
@@ -32,9 +35,9 @@ export class IntegrationService {
     }
     return {
       ...data,
+      credentials: {},
       status: data.status as Integration['status'],
       configuration: data.configuration as Record<string, any>,
-      credentials: data.credentials as Record<string, any>,
       metadata: data.metadata as Record<string, any>
     };
   }
@@ -42,7 +45,7 @@ export class IntegrationService {
   static async getIntegrationByType(type: string): Promise<Integration | null> {
     const { data, error } = await supabase
       .from('integrations')
-      .select('*')
+      .select(SAFE_COLUMNS)
       .eq('integration_type', type)
       .single();
 
@@ -52,42 +55,43 @@ export class IntegrationService {
     }
     return {
       ...data,
+      credentials: {},
       status: data.status as Integration['status'],
       configuration: data.configuration as Record<string, any>,
-      credentials: data.credentials as Record<string, any>,
       metadata: data.metadata as Record<string, any>
     };
   }
 
   static async createIntegration(integration: Omit<Integration, 'id' | 'created_at' | 'updated_at'>): Promise<Integration> {
+    // Strip credentials from client-side inserts - credentials should be set server-side only
+    const { credentials: _creds, ...safeData } = integration;
     const { data, error } = await supabase
       .from('integrations')
       .insert({
-        ...integration,
+        ...safeData,
+        credentials: {},
         configuration: integration.configuration as any,
-        credentials: integration.credentials as any,
         metadata: integration.metadata as any
       })
-      .select()
+      .select(SAFE_COLUMNS)
       .single();
 
     if (error) throw error;
     return {
       ...data,
+      credentials: {},
       status: data.status as Integration['status'],
       configuration: data.configuration as Record<string, any>,
-      credentials: data.credentials as Record<string, any>,
       metadata: data.metadata as Record<string, any>
     };
   }
 
   static async updateIntegration(id: string, updates: Partial<Integration>): Promise<Integration> {
-    const updateData: any = { ...updates };
+    // Strip credentials from client-side updates
+    const { credentials: _creds, ...safeUpdates } = updates;
+    const updateData: any = { ...safeUpdates };
     if (updateData.configuration) {
       updateData.configuration = updateData.configuration as any;
-    }
-    if (updateData.credentials) {
-      updateData.credentials = updateData.credentials as any;
     }
     if (updateData.metadata) {
       updateData.metadata = updateData.metadata as any;
@@ -97,15 +101,15 @@ export class IntegrationService {
       .from('integrations')
       .update(updateData)
       .eq('id', id)
-      .select()
+      .select(SAFE_COLUMNS)
       .single();
 
     if (error) throw error;
     return {
       ...data,
+      credentials: {},
       status: data.status as Integration['status'],
       configuration: data.configuration as Record<string, any>,
-      credentials: data.credentials as Record<string, any>,
       metadata: data.metadata as Record<string, any>
     };
   }
@@ -124,7 +128,7 @@ export class IntegrationService {
       .from('campaign_integrations')
       .select(`
         *,
-        integration:integrations(*)
+        integration:integrations(${SAFE_COLUMNS})
       `)
       .eq('campaign_id', campaignId);
 
@@ -134,9 +138,9 @@ export class IntegrationService {
       configuration: item.configuration as Record<string, any>,
       integration: item.integration ? {
         ...item.integration,
+        credentials: {},
         status: item.integration.status as Integration['status'],
         configuration: item.integration.configuration as Record<string, any>,
-        credentials: item.integration.credentials as Record<string, any>,
         metadata: item.integration.metadata as Record<string, any>
       } : undefined
     }));
