@@ -53,6 +53,8 @@ serve(async (req) => {
       }
     }
 
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+
     // Fetch all integrations with credentials
     const { data: integrations, error: fetchError } = await supabaseAdmin
       .from("integrations")
