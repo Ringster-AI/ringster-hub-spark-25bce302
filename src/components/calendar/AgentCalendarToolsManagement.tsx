@@ -120,6 +120,11 @@ export function AgentCalendarToolsManagement({ agentId }: AgentCalendarToolsMana
         <CardTitle className="flex items-center gap-2">
           <Calendar className="h-5 w-5" />
           Calendar Booking for {agent?.name}
+          {connectedCalendarProvider && (
+            <Badge variant="secondary" className="ml-2">
+              {providerLabels[connectedCalendarProvider.integration_type] || connectedCalendarProvider.display_name}
+            </Badge>
+          )}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
