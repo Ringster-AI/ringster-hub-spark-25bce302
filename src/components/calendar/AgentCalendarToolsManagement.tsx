@@ -2,11 +2,13 @@
 import { useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { useForm } from "react-hook-form";
 import { AgentFormData } from "@/types/agents";
 import { useAgentCalendarData } from "./hooks/useAgentCalendarData";
 import { CalendarBookingToggle } from "./CalendarBookingToggle";
 import { CalendarConfigurationSection } from "./CalendarConfigurationSection";
+import { useIntegrations } from "@/hooks/useIntegrations";
 
 interface AgentCalendarToolsManagementProps {
   agentId: string;
