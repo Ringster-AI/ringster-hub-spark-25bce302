@@ -24,24 +24,26 @@ serve(async (req) => {
       );
     }
 
-    // Authenticate caller - accept service role key or user JWT
+    // For migration: accept TOKEN_ENCRYPTION_KEY as auth or service role key
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
-      return new Response(
-        JSON.stringify({ error: "Authentication required" }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
-      );
-    }
-
-    const token = authHeader.replace("Bearer ", "");
-    const isServiceRole = token === supabaseServiceKey;
-
-    if (!isServiceRole) {
-      // Validate as user JWT
+    const body = await req.json().catch(() => ({}));
+    const migrationKey = body.migration_key;
+    
+    const isServiceRole = authHeader?.replace("Bearer ", "") === supabaseServiceKey;
+    const isMigrationKey = migrationKey === encryptionKey;
+    
+    if (!isServiceRole && !isMigrationKey) {
+      if (!authHeader?.startsWith("Bearer ")) {
+        return new Response(
+          JSON.stringify({ error: "Authentication required" }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
+        );
+      }
       const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
       const anonClient = createClient(supabaseUrl, anonKey, {
         global: { headers: { Authorization: authHeader } },
       });
+      const token = authHeader.replace("Bearer ", "");
       const { data: userData, error: userError } = await anonClient.auth.getUser(token);
       if (userError || !userData?.user) {
         return new Response(
@@ -51,7 +53,7 @@ serve(async (req) => {
       }
     }
 
-    // Fetch all integrations with credentials (service role = all, user = theirs)
+    // Fetch all integrations with credentials
     const { data: integrations, error: fetchError } = await supabaseAdmin
       .from("integrations")
       .select("id, credentials");
