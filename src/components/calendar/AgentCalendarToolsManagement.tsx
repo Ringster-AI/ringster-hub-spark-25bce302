@@ -2,11 +2,13 @@
 import { useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { useForm } from "react-hook-form";
 import { AgentFormData } from "@/types/agents";
 import { useAgentCalendarData } from "./hooks/useAgentCalendarData";
 import { CalendarBookingToggle } from "./CalendarBookingToggle";
 import { CalendarConfigurationSection } from "./CalendarConfigurationSection";
+import { useIntegrations } from "@/hooks/useIntegrations";
 
 interface AgentCalendarToolsManagementProps {
   agentId: string;
@@ -14,6 +16,18 @@ interface AgentCalendarToolsManagementProps {
 
 export function AgentCalendarToolsManagement({ agentId }: AgentCalendarToolsManagementProps) {
   const { agent, calendarTool, isLoading, toggleMutation, saveMutation } = useAgentCalendarData(agentId);
+  const { integrations } = useIntegrations();
+
+  // Determine which calendar provider is connected
+  const connectedCalendarProvider = integrations.find(
+    i => ['google_calendar', 'cal_com', 'calendly'].includes(i.integration_type) && i.status === 'connected' && i.is_active
+  );
+
+  const providerLabels: Record<string, string> = {
+    google_calendar: 'Google Calendar',
+    cal_com: 'Cal.com',
+    calendly: 'Calendly',
+  };
 
   const form = useForm<AgentFormData>({
     defaultValues: {
@@ -106,6 +120,11 @@ export function AgentCalendarToolsManagement({ agentId }: AgentCalendarToolsMana
         <CardTitle className="flex items-center gap-2">
           <Calendar className="h-5 w-5" />
           Calendar Booking for {agent?.name}
+          {connectedCalendarProvider && (
+            <Badge variant="secondary" className="ml-2">
+              {providerLabels[connectedCalendarProvider.integration_type] || connectedCalendarProvider.display_name}
+            </Badge>
+          )}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">

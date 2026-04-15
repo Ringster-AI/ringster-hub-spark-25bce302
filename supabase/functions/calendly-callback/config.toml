@@ -1,0 +1,2 @@
+[functions.calendly-callback]
+verify_jwt = false
