@@ -24,41 +24,35 @@ serve(async (req) => {
       );
     }
 
-    // For migration: accept TOKEN_ENCRYPTION_KEY as auth or service role key
+    // Authenticate caller via JWT
     const authHeader = req.headers.get("Authorization");
-    const body = await req.json().catch(() => ({}));
-    const migrationKey = body.migration_key;
-    
-    const isServiceRole = authHeader?.replace("Bearer ", "") === supabaseServiceKey;
-    const isMigrationKey = migrationKey === encryptionKey;
-    
-    if (!isServiceRole && !isMigrationKey) {
-      if (!authHeader?.startsWith("Bearer ")) {
-        return new Response(
-          JSON.stringify({ error: "Authentication required" }),
-          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
-        );
-      }
-      const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-      const anonClient = createClient(supabaseUrl, anonKey, {
-        global: { headers: { Authorization: authHeader } },
-      });
-      const token = authHeader.replace("Bearer ", "");
-      const { data: userData, error: userError } = await anonClient.auth.getUser(token);
-      if (userError || !userData?.user) {
-        return new Response(
-          JSON.stringify({ error: "Invalid token" }),
-          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
-        );
-      }
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(
+        JSON.stringify({ error: "Authentication required" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
+      );
+    }
+
+    const token = authHeader.replace("Bearer ", "");
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const anonClient = createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const { data: userData, error: userError } = await anonClient.auth.getUser(token);
+    if (userError || !userData?.user) {
+      return new Response(
+        JSON.stringify({ error: "Invalid token" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
+      );
     }
 
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Fetch all integrations with credentials
+    // Fetch integrations for this user
     const { data: integrations, error: fetchError } = await supabaseAdmin
       .from("integrations")
-      .select("id, credentials");
+      .select("id, credentials")
+      .eq("user_id", userData.user.id);
 
     if (fetchError) {
       return new Response(
@@ -77,13 +71,11 @@ serve(async (req) => {
         continue;
       }
 
-      // Check if credentials are already encrypted (stored as { encrypted: "base64..." })
       if (creds.encrypted && typeof creds.encrypted === "string") {
         skipped++;
         continue;
       }
 
-      // Encrypt the entire credentials object as a single encrypted blob
       const encryptedBlob = await encryptToken(JSON.stringify(creds), encryptionKey);
       
       const { error: updateError } = await supabaseAdmin
