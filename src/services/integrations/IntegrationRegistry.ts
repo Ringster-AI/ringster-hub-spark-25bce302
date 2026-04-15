@@ -1,6 +1,8 @@
 
 import { IntegrationType, IntegrationProvider } from "@/types/integrations/index";
 import { GoogleCalendarProvider } from "./providers/GoogleCalendarProvider";
+import { CalComProvider } from "./providers/CalComProvider";
+import { CalendlyProvider } from "./providers/CalendlyProvider";
 import { Calendar, Mail, Phone, Users, FileText, BarChart } from "lucide-react";
 
 export class IntegrationRegistry {
@@ -13,6 +15,26 @@ export class IntegrationRegistry {
       description: 'Schedule appointments and manage availability through Google Calendar',
       icon: Calendar,
       capabilities: ['calendar', 'scheduling', 'events'],
+      configurationSchema: {},
+      isAvailable: true
+    },
+    {
+      type: 'cal_com',
+      provider: 'cal_com',
+      name: 'Cal.com',
+      description: 'Schedule appointments via Cal.com using your API key',
+      icon: Calendar,
+      capabilities: ['calendar', 'scheduling'],
+      configurationSchema: {},
+      isAvailable: true
+    },
+    {
+      type: 'calendly',
+      provider: 'calendly',
+      name: 'Calendly',
+      description: 'Schedule appointments and manage availability through Calendly',
+      icon: Calendar,
+      capabilities: ['calendar', 'scheduling'],
       configurationSchema: {},
       isAvailable: true
     },
@@ -81,6 +103,8 @@ export class IntegrationRegistry {
   static {
     // Register providers
     this.providers.set('google_calendar', new GoogleCalendarProvider());
+    this.providers.set('cal_com', new CalComProvider());
+    this.providers.set('calendly', new CalendlyProvider());
   }
 
   static getAvailableTypes(): IntegrationType[] {
@@ -102,7 +126,6 @@ export class IntegrationRegistry {
   static registerProvider(type: string, provider: IntegrationProvider): void {
     this.providers.set(type, provider);
     
-    // Update the type to be available
     const typeIndex = this.types.findIndex(t => t.type === type);
     if (typeIndex !== -1) {
       this.types[typeIndex].isAvailable = true;
