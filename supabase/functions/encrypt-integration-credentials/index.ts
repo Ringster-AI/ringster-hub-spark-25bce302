@@ -24,7 +24,7 @@ serve(async (req) => {
       );
     }
 
-    // Authenticate caller
+    // Authenticate caller - accept service role key or user JWT
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return new Response(
@@ -33,26 +33,28 @@ serve(async (req) => {
       );
     }
 
-    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
-    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-    const anonClient = createClient(supabaseUrl, anonKey, {
-      global: { headers: { Authorization: authHeader } },
-    });
-
     const token = authHeader.replace("Bearer ", "");
-    const { data: userData, error: userError } = await anonClient.auth.getUser(token);
-    if (userError || !userData?.user) {
-      return new Response(
-        JSON.stringify({ error: "Invalid token" }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
-      );
+    const isServiceRole = token === supabaseServiceKey;
+
+    if (!isServiceRole) {
+      // Validate as user JWT
+      const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+      const anonClient = createClient(supabaseUrl, anonKey, {
+        global: { headers: { Authorization: authHeader } },
+      });
+      const { data: userData, error: userError } = await anonClient.auth.getUser(token);
+      if (userError || !userData?.user) {
+        return new Response(
+          JSON.stringify({ error: "Invalid token" }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
+        );
+      }
     }
 
-    // Fetch integrations with plaintext credentials for this user
+    // Fetch all integrations with credentials (service role = all, user = theirs)
     const { data: integrations, error: fetchError } = await supabaseAdmin
       .from("integrations")
-      .select("id, credentials")
-      .eq("user_id", userData.user.id);
+      .select("id, credentials");
 
     if (fetchError) {
       return new Response(
