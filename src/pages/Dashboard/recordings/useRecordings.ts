@@ -15,7 +15,7 @@ export const useRecordings = () => {
           recording_url,
           transcript_url,
           created_at,
-          call_log:call_log_id (
+          call_log:call_recordings_call_log_id_fkey (
             call_sid,
             from_number,
             to_number,
