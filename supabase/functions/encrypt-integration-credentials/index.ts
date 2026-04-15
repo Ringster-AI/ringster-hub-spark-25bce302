@@ -24,7 +24,7 @@ serve(async (req) => {
       );
     }
 
-    // Authenticate caller
+    // Authenticate caller via JWT
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return new Response(
@@ -33,13 +33,11 @@ serve(async (req) => {
       );
     }
 
-    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+    const token = authHeader.replace("Bearer ", "");
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const anonClient = createClient(supabaseUrl, anonKey, {
       global: { headers: { Authorization: authHeader } },
     });
-
-    const token = authHeader.replace("Bearer ", "");
     const { data: userData, error: userError } = await anonClient.auth.getUser(token);
     if (userError || !userData?.user) {
       return new Response(
@@ -48,7 +46,9 @@ serve(async (req) => {
       );
     }
 
-    // Fetch integrations with plaintext credentials for this user
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Fetch integrations for this user
     const { data: integrations, error: fetchError } = await supabaseAdmin
       .from("integrations")
       .select("id, credentials")
@@ -71,13 +71,11 @@ serve(async (req) => {
         continue;
       }
 
-      // Check if credentials are already encrypted (stored as { encrypted: "base64..." })
       if (creds.encrypted && typeof creds.encrypted === "string") {
         skipped++;
         continue;
       }
 
-      // Encrypt the entire credentials object as a single encrypted blob
       const encryptedBlob = await encryptToken(JSON.stringify(creds), encryptionKey);
       
       const { error: updateError } = await supabaseAdmin
