@@ -16,6 +16,18 @@ interface AgentCalendarToolsManagementProps {
 
 export function AgentCalendarToolsManagement({ agentId }: AgentCalendarToolsManagementProps) {
   const { agent, calendarTool, isLoading, toggleMutation, saveMutation } = useAgentCalendarData(agentId);
+  const { integrations } = useIntegrations();
+
+  // Determine which calendar provider is connected
+  const connectedCalendarProvider = integrations.find(
+    i => ['google_calendar', 'cal_com', 'calendly'].includes(i.integration_type) && i.status === 'connected' && i.is_active
+  );
+
+  const providerLabels: Record<string, string> = {
+    google_calendar: 'Google Calendar',
+    cal_com: 'Cal.com',
+    calendly: 'Calendly',
+  };
 
   const form = useForm<AgentFormData>({
     defaultValues: {
