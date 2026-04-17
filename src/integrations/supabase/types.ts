@@ -239,13 +239,16 @@ export type Database = {
           contact_id: string | null
           created_at: string
           duration_minutes: number
+          external_booking_id: string | null
           google_event_id: string | null
           google_integration_id: string | null
           google_integration_id_text: string | null
           id: string
           idempotency_key: string | null
+          integration_id: string | null
           metadata: Json | null
           notes: string | null
+          provider: string | null
           updated_at: string
         }
         Insert: {
@@ -260,13 +263,16 @@ export type Database = {
           contact_id?: string | null
           created_at?: string
           duration_minutes?: number
+          external_booking_id?: string | null
           google_event_id?: string | null
           google_integration_id?: string | null
           google_integration_id_text?: string | null
           id?: string
           idempotency_key?: string | null
+          integration_id?: string | null
           metadata?: Json | null
           notes?: string | null
+          provider?: string | null
           updated_at?: string
         }
         Update: {
@@ -281,13 +287,16 @@ export type Database = {
           contact_id?: string | null
           created_at?: string
           duration_minutes?: number
+          external_booking_id?: string | null
           google_event_id?: string | null
           google_integration_id?: string | null
           google_integration_id_text?: string | null
           id?: string
           idempotency_key?: string | null
+          integration_id?: string | null
           metadata?: Json | null
           notes?: string | null
+          provider?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -317,6 +326,13 @@ export type Database = {
             columns: ["google_integration_id"]
             isOneToOne: false
             referencedRelation: "google_integrations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "calendar_bookings_integration_id_fkey"
+            columns: ["integration_id"]
+            isOneToOne: false
+            referencedRelation: "integrations"
             referencedColumns: ["id"]
           },
         ]
