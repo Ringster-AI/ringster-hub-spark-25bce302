@@ -18,5 +18,16 @@ allow_public_network_access = true
 verify_jwt = false
 allow_public_network_access = true
 
+[calendly-webhook]
+verify_jwt = false
+allow_public_network_access = true
+
+[calcom-webhook]
+verify_jwt = false
+allow_public_network_access = true
+
+[process-campaigns]
+verify_jwt = false
+
 [shared_schema]
 migrations_dir = "migrations"
