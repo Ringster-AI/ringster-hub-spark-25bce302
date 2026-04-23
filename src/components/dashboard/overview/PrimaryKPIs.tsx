@@ -48,7 +48,7 @@ const KPICard = ({ title, value, subtitle, icon, accentColor, loading }: KPICard
   }
 
   return (
-    <div className="bg-card rounded-2xl p-6 space-y-4 transition-all duration-200 hover:shadow-lg">
+    <div className="bg-card rounded-2xl p-4 sm:p-6 space-y-3 sm:space-y-4 transition-all duration-200 hover:shadow-lg">
       <div className="flex items-center justify-between">
         <span className="text-sm font-medium text-muted-foreground">{title}</span>
         <div className={cn("p-2.5 rounded-xl", accentStyles[accentColor])}>
@@ -56,7 +56,7 @@ const KPICard = ({ title, value, subtitle, icon, accentColor, loading }: KPICard
         </div>
       </div>
       <div className="space-y-1">
-        <div className="text-4xl font-semibold tracking-tight text-foreground">
+        <div className="text-3xl sm:text-4xl font-semibold tracking-tight text-foreground">
           {value}
         </div>
         <p className="text-sm text-muted-foreground">
@@ -113,7 +113,7 @@ export const PrimaryKPIs = ({ stats, isLoading, hasAgents }: PrimaryKPIsProps) =
   const missedInfo = getMissedCallsInfo();
 
   return (
-    <div className="grid gap-6 md:grid-cols-3">
+    <div className="grid gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
       <KPICard
         title="Calls Handled"
         value={hasAgents ? (stats?.callsThisWeek || 0) : "—"}

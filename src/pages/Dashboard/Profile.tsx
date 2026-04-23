@@ -79,8 +79,8 @@ const Profile = () => {
   };
 
   return (
-    <div className="p-6">
-      <h1 className="text-3xl font-bold mb-6">Profile</h1>
+    <div className="p-4 md:p-6">
+      <h1 className="text-2xl md:text-3xl font-bold mb-4 md:mb-6">Profile</h1>
       <div className="max-w-2xl">
         <ProfileForm
           defaultValues={defaultValues}
