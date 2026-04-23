@@ -217,11 +217,13 @@ const Analytics = () => {
       </div>
 
       <Tabs defaultValue="volume" className="w-full">
-        <TabsList>
-          <TabsTrigger value="volume">Call Volume</TabsTrigger>
-          <TabsTrigger value="status">Outcomes</TabsTrigger>
-          <TabsTrigger value="agents">By Agent</TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
+          <TabsList className="w-max md:w-auto">
+            <TabsTrigger value="volume">Call Volume</TabsTrigger>
+            <TabsTrigger value="status">Outcomes</TabsTrigger>
+            <TabsTrigger value="agents">By Agent</TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value="volume">
           <Card>

@@ -76,12 +76,14 @@ export default function Calendar() {
       </div>
 
       <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="booking-requests">Booking Requests</TabsTrigger>
-          <TabsTrigger value="calendar-bookings">Confirmed Bookings</TabsTrigger>
-          <TabsTrigger value="agent-settings">Agent Settings</TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
+          <TabsList className="w-max md:w-auto">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="booking-requests">Booking Requests</TabsTrigger>
+            <TabsTrigger value="calendar-bookings">Confirmed Bookings</TabsTrigger>
+            <TabsTrigger value="agent-settings">Agent Settings</TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value="overview" className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

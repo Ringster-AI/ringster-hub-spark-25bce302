@@ -11,20 +11,20 @@ export const SystemStatus = ({ activeAgents }: SystemStatusProps) => {
   return (
     <div className="flex items-center gap-3 text-sm">
       <div className={cn(
-        "flex items-center gap-2 px-3 py-1.5 rounded-full",
+        "flex items-center gap-2 px-3 py-1.5 rounded-full max-w-full",
         isActive 
           ? "bg-success/8 text-success" 
           : "bg-muted text-muted-foreground"
       )}>
         {isActive ? (
           <>
-            <Radio className="h-3.5 w-3.5 animate-pulse" />
-            <span>Your agents are live and answering calls 24/7</span>
+            <Radio className="h-3.5 w-3.5 animate-pulse shrink-0" />
+            <span className="truncate">Your agents are live and answering calls 24/7</span>
           </>
         ) : (
           <>
-            <CheckCircle2 className="h-3.5 w-3.5" />
-            <span>All systems operational</span>
+            <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
+            <span className="truncate">All systems operational</span>
           </>
         )}
       </div>
