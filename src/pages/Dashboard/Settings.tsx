@@ -34,16 +34,18 @@ const Settings = () => {
   }, [tabParam]);
 
   return (
-    <div className="p-6">
-      <h1 className="text-3xl font-bold mb-6">Settings</h1>
+    <div className="p-4 md:p-6">
+      <h1 className="text-2xl md:text-3xl font-bold mb-4 md:mb-6">Settings</h1>
       <div className="max-w-3xl space-y-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="mb-4">
-            <TabsTrigger value="security">Security</TabsTrigger>
-            <TabsTrigger value="integrations">Integrations</TabsTrigger>
-            <TabsTrigger value="calendar">Calendar</TabsTrigger>
-            <TabsTrigger value="account">Account</TabsTrigger>
-          </TabsList>
+          <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0 mb-4">
+            <TabsList className="w-max md:w-auto">
+              <TabsTrigger value="security">Security</TabsTrigger>
+              <TabsTrigger value="integrations">Integrations</TabsTrigger>
+              <TabsTrigger value="calendar">Calendar</TabsTrigger>
+              <TabsTrigger value="account">Account</TabsTrigger>
+            </TabsList>
+          </div>
           
           <TabsContent value="security" className="space-y-6">
             <Card>

@@ -140,11 +140,11 @@ export const RecordingsTable = ({ recordings, isLoading, error, onSelectRecordin
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-4 p-4 bg-card rounded-lg border">
-        <div className="flex items-center gap-2">
-          <label className="text-sm font-medium">Status:</label>
+      <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 sm:gap-4 p-3 sm:p-4 bg-card rounded-lg border">
+        <div className="flex items-center gap-2 flex-1 min-w-0">
+          <label className="text-sm font-medium shrink-0">Status:</label>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-32">
+            <SelectTrigger className="w-full sm:w-32">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -157,10 +157,10 @@ export const RecordingsTable = ({ recordings, isLoading, error, onSelectRecordin
           </Select>
         </div>
         
-        <div className="flex items-center gap-2">
-          <label className="text-sm font-medium">Type:</label>
+        <div className="flex items-center gap-2 flex-1 min-w-0">
+          <label className="text-sm font-medium shrink-0">Type:</label>
           <Select value={callTypeFilter} onValueChange={setCallTypeFilter}>
-            <SelectTrigger className="w-32">
+            <SelectTrigger className="w-full sm:w-32">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -171,13 +171,13 @@ export const RecordingsTable = ({ recordings, isLoading, error, onSelectRecordin
           </Select>
         </div>
 
-        <div className="flex items-center gap-2">
-          <label className="text-sm font-medium">Search:</label>
+        <div className="flex items-center gap-2 flex-1 min-w-0">
+          <label className="text-sm font-medium shrink-0">Search:</label>
           <Input
             placeholder="Search calls..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-48"
+            className="w-full sm:w-48"
           />
         </div>
       </div>
@@ -188,7 +188,7 @@ export const RecordingsTable = ({ recordings, isLoading, error, onSelectRecordin
         </div>
       )}
 
-      <div className="border rounded-lg">
+      <div className="border rounded-lg overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>

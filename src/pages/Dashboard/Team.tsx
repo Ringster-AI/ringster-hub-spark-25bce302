@@ -1,8 +1,8 @@
 
 const Team = () => {
   return (
-    <div className="p-6">
-      <h1 className="text-3xl font-bold mb-6">Team Management</h1>
+    <div className="p-4 md:p-6">
+      <h1 className="text-2xl md:text-3xl font-bold mb-4 md:mb-6">Team Management</h1>
       <div className="max-w-2xl">
         <p className="text-muted-foreground">
           Team management features coming soon.
