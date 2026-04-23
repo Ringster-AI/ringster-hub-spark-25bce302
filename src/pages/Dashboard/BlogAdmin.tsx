@@ -31,10 +31,10 @@ const BlogAdmin = () => {
   });
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-semibold">Blog Posts</h1>
-        <Button asChild>
+    <div className="p-4 md:p-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4 md:mb-6">
+        <h1 className="text-2xl md:text-3xl font-semibold">Blog Posts</h1>
+        <Button asChild className="w-full sm:w-auto">
           <Link to="/dashboard/blog/new">
             <PlusCircle className="mr-2 h-4 w-4" />
             New Post
@@ -42,7 +42,7 @@ const BlogAdmin = () => {
         </Button>
       </div>
 
-      <div className="rounded-md border">
+      <div className="rounded-md border overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
