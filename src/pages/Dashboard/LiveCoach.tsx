@@ -9,6 +9,7 @@ import { useLiveCoachAccess } from "@/hooks/useLiveCoachAccess";
 import { useToast } from "@/hooks/use-toast";
 
 const LIVE_COACH_URL = "https://livecoach.ringster.ai/mic-coach.html";
+const LIVE_COACH_BACKEND = "https://call-coach-production.up.railway.app";
 
 const LiveCoach = () => {
   const navigate = useNavigate();
@@ -150,7 +151,7 @@ const LiveCoach = () => {
           </div>
         ) : (
           <iframe
-            src={`${LIVE_COACH_URL}?token=${sessionToken}`}
+            src={`${LIVE_COACH_URL}?token=${sessionToken}&backend=${encodeURIComponent(LIVE_COACH_BACKEND)}`}
             allow="microphone; camera; autoplay; clipboard-read; clipboard-write"
             className="w-full h-full min-h-[600px] border-0"
             title="Live Call Coach"
