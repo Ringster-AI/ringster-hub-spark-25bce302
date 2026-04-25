@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useLiveCoachAccess } from "@/hooks/useLiveCoachAccess";
 import { useToast } from "@/hooks/use-toast";
 
-const LIVE_COACH_URL = "https://livecoach.ringster.ai";
+const LIVE_COACH_URL = "https://livecoach.ringster.ai/mic-coach.html";
 
 const LiveCoach = () => {
   const navigate = useNavigate();
