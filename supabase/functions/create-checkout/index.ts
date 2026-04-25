@@ -13,10 +13,11 @@ serve(async (req) => {
   }
 
   try {
-    const { priceId } = await req.json();
+    const { priceId, mode: requestedMode } = await req.json();
     if (!priceId) {
       throw new Error('Price ID is required');
     }
+    const mode: 'subscription' | 'payment' = requestedMode === 'payment' ? 'payment' : 'subscription';
 
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
