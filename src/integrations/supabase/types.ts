@@ -1045,6 +1045,39 @@ export type Database = {
         }
         Relationships: []
       }
+      live_coach_sessions: {
+        Row: {
+          created_at: string
+          ended_at: string | null
+          expires_at: string
+          id: string
+          metadata: Json
+          session_token: string
+          started_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          ended_at?: string | null
+          expires_at?: string
+          id?: string
+          metadata?: Json
+          session_token?: string
+          started_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          ended_at?: string | null
+          expires_at?: string
+          id?: string
+          metadata?: Json
+          session_token?: string
+          started_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       oauth_states: {
         Row: {
           code_verifier: string
@@ -1628,6 +1661,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      has_live_coach_access: { Args: { p_user_id: string }; Returns: Json }
       has_role: {
         Args: { role_name: string; user_id: string }
         Returns: boolean
