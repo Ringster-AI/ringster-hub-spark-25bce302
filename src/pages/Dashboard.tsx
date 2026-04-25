@@ -17,6 +17,7 @@ import Settings from "./Dashboard/Settings";
 import Subscription from "./Dashboard/Subscription";
 import Profile from "./Dashboard/Profile";
 import Calendar from "./Dashboard/Calendar";
+import LiveCoach from "./Dashboard/LiveCoach";
 import { FeedbackDialog } from "@/components/dashboard/FeedbackDialog";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -53,6 +54,7 @@ const Dashboard = () => {
               <Route path="/campaigns/:campaignId/dashboard" element={<CampaignDashboard />} />
               <Route path="/recordings" element={<Recordings />} />
               <Route path="/calendar" element={<Calendar />} />
+              <Route path="/live-coach" element={<LiveCoach />} />
               <Route path="/analytics" element={<Analytics />} />
               <Route path="/team" element={<Team />} />
               <Route path="/settings" element={<Settings />} />
