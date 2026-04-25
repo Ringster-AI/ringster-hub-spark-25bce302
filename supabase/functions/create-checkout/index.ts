@@ -64,14 +64,30 @@ serve(async (req) => {
           quantity: 1,
         },
       ],
-      mode: 'subscription',
+      mode,
       success_url: `${req.headers.get('origin')}/dashboard?checkout=success`,
       cancel_url: `${req.headers.get('origin')}/dashboard?checkout=cancelled`,
-      subscription_data: {
-        metadata: {
-          supabaseUid: user.id,
-        },
-      },
+      ...(mode === 'subscription'
+        ? {
+            subscription_data: {
+              metadata: {
+                supabaseUid: user.id,
+              },
+            },
+          }
+        : {
+            payment_intent_data: {
+              metadata: {
+                supabaseUid: user.id,
+                priceId,
+              },
+            },
+            metadata: {
+              supabaseUid: user.id,
+              priceId,
+              type: 'credit_addon',
+            },
+          }),
     });
 
     return new Response(
