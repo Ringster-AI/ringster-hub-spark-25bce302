@@ -106,6 +106,9 @@ export const CreditDisplay = ({ onUpgrade, onTopUp, compact = false }: CreditDis
                 Resets {new Date(resetDate).toLocaleDateString()}
               </span>
             </div>
+            <p className="text-xs text-muted-foreground mt-2 italic">
+              1 credit = 1 minute of talk time
+            </p>
           </div>
 
           {isOutOfCredits && (
