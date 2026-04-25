@@ -9,6 +9,7 @@ import { useLiveCoachAccess } from "@/hooks/useLiveCoachAccess";
 import { useToast } from "@/hooks/use-toast";
 
 const LIVE_COACH_URL = "https://livecoach.ringster.ai/mic-coach.html";
+const LIVE_COACH_BACKEND = "https://call-coach-production.up.railway.app";
 
 const LiveCoach = () => {
   const navigate = useNavigate();
