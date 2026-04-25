@@ -55,7 +55,23 @@ export const AgentForm = ({ form, onSubmit, onCancel, canCustomizeVoice, disable
         <BasicAgentInfo form={form} disabled={disabled} />
         <AgentMessages form={form} disabled={disabled} />
         
-        <CalendarBookingConfig form={form} disabled={disabled} />
+        {features.isPaid ? (
+          <CalendarBookingConfig form={form} disabled={disabled} />
+        ) : (
+          <div className="rounded-lg border p-4 bg-muted/30">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h3 className="text-lg font-medium">Calendar Booking</h3>
+                <p className="text-sm text-muted-foreground">
+                  Let your agent book appointments during calls. Available on paid plans.
+                </p>
+              </div>
+              <span className="text-xs font-medium px-2 py-1 rounded-md bg-primary/10 text-primary whitespace-nowrap">
+                Upgrade required
+              </span>
+            </div>
+          </div>
+        )}
         
         {features.isPaid && (
           <div className="flex items-center justify-between rounded-lg border p-4">
