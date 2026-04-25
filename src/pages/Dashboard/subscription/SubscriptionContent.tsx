@@ -8,13 +8,55 @@ import { MonthlySummary } from "./MonthlySummary";
 import { PricingPlans } from "@/components/subscription/PricingPlans";
 import { CreditDisplay } from "@/components/credits/CreditDisplay";
 import { CreditTransactionHistory } from "@/components/credits/CreditTransactionHistory";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 export const SubscriptionContent = () => {
   const { features, isLoading } = useSubscriptionFeatures();
   const { billingData, isLoadingBilling } = useBillingData();
+  const { toast } = useToast();
 
   const usagePercentage = features.limits.minutesAllowance > 0 ? 
     Math.round(((features.limits.minutesAllowance - features.limits.remainingMinutes) / features.limits.minutesAllowance) * 100) : 0;
+
+  const handleTopUp = async () => {
+    try {
+      const { data: addonPlan, error: planError } = await supabase
+        .from("subscription_plans")
+        .select("stripe_price_id")
+        .eq("billing_interval", "one_time")
+        .eq("is_active", true)
+        .order("price", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+
+      if (planError) throw planError;
+      if (!addonPlan?.stripe_price_id) {
+        toast({
+          title: "Add-on unavailable",
+          description: "The credit add-on isn't configured yet. Please contact support.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke("create-checkout", {
+        body: { priceId: addonPlan.stripe_price_id, mode: "payment" },
+      });
+
+      if (error) throw error;
+      if (data?.url) {
+        window.location.href = data.url;
+      }
+    } catch (err: any) {
+      console.error("Error starting credit top-up checkout:", err);
+      toast({
+        title: "Error",
+        description: "Failed to start checkout. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <div className="w-full">
@@ -31,10 +73,7 @@ export const SubscriptionContent = () => {
             onUpgrade={() => {
               document.getElementById('pricing-section')?.scrollIntoView({ behavior: 'smooth' });
             }}
-            onTopUp={() => {
-              // TODO: Implement credit top-up functionality
-              console.log('Top up credits');
-            }}
+            onTopUp={handleTopUp}
           />
           <CreditTransactionHistory />
         </div>
