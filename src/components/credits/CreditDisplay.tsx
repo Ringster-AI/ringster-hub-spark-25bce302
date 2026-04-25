@@ -106,6 +106,9 @@ export const CreditDisplay = ({ onUpgrade, onTopUp, compact = false }: CreditDis
                 Resets {new Date(resetDate).toLocaleDateString()}
               </span>
             </div>
+            <p className="text-xs text-muted-foreground mt-2 italic">
+              1 credit = 1 minute of talk time
+            </p>
           </div>
 
           {isOutOfCredits && (
@@ -129,7 +132,7 @@ export const CreditDisplay = ({ onUpgrade, onTopUp, compact = false }: CreditDis
           <div className="flex gap-2">
             {onTopUp && (
               <Button variant="outline" onClick={onTopUp} className="flex-1">
-                Buy 500 Credits - $99
+                Buy 500 Credits - $149
               </Button>
             )}
             {onUpgrade && (

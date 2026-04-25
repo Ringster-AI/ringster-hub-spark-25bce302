@@ -21,6 +21,11 @@ export const SubscriptionContent = () => {
       <div className="p-4 md:p-6">
         <SubscriptionHeader />
 
+        <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 mb-6 text-sm text-foreground">
+          <span className="font-medium">How credits work:</span>{" "}
+          <span className="text-muted-foreground">1 credit = 1 minute of talk time.</span>
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           <CreditDisplay 
             onUpgrade={() => {

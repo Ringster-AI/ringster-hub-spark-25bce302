@@ -70,9 +70,12 @@ const { data: plans, isLoading } = useQuery({
   };
 
   // Filter plans based on billing interval
-  // For pay-as-you-go plans, show them regardless of billing interval
+  // Hide credit add-ons (one-time purchases) from main plan listing
   const filteredPlans = plans?.filter(
-    (plan) => (plan.is_pay_as_you_go || plan.billing_interval === billingInterval) && plan.is_active
+    (plan) =>
+      plan.billing_interval !== 'one_time' &&
+      (plan.is_pay_as_you_go || plan.billing_interval === billingInterval) &&
+      plan.is_active
   );
 
   if (isLoading) {

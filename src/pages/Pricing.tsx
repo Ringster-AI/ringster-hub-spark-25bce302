@@ -15,6 +15,7 @@ const Pricing = () => {
         .from("subscription_plans")
         .select("*")
         .eq("is_active", true)
+        .neq("billing_interval", "one_time")
         .order("price", { ascending: true });
       if (error) throw error;
       return data;

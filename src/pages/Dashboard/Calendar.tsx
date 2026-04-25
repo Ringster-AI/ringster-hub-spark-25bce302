@@ -1,18 +1,21 @@
 
 import { useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 import { CalendarToolsManagement } from "@/components/calendar/CalendarToolsManagement";
 import { BookingRequestsDashboard } from "@/components/calendar/BookingRequestsDashboard";
 import { CalendarBookings } from "@/components/campaigns/CalendarBookings";
 import { AgentCalendarToolsManagement } from "@/components/calendar/AgentCalendarToolsManagement";
-import { Calendar as CalendarIcon, Settings, Clock, Users } from "lucide-react";
+import { Calendar as CalendarIcon, Settings, Clock, Users, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useSubscriptionFeatures } from "@/hooks/useSubscriptionFeatures";
 
 export default function Calendar() {
   const { agentId } = useParams();
+  const { features, isLoading: featuresLoading } = useSubscriptionFeatures();
 
   const { data: agents, isLoading: agentsLoading } = useQuery({
     queryKey: ["agents"],
@@ -60,10 +63,39 @@ export default function Calendar() {
     },
   });
 
-  if (agentsLoading) {
+  if (agentsLoading || featuresLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-pulse">Loading calendar settings...</div>
+      </div>
+    );
+  }
+
+  if (!features.isPaid) {
+    return (
+      <div className="space-y-6 p-4 md:p-6">
+        <div className="flex items-center gap-2">
+          <CalendarIcon className="h-6 w-6" />
+          <h1 className="text-2xl md:text-3xl font-bold">Calendar Management</h1>
+        </div>
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Lock className="h-5 w-5 text-primary" />
+              <CardTitle>Upgrade to use Calendar Booking</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-muted-foreground">
+              Calendar integration and appointment booking are available on paid plans
+              (Starter and above). Upgrade to let your AI agents schedule appointments
+              directly into your calendar during calls.
+            </p>
+            <Button asChild>
+              <Link to="/dashboard/subscription">View Plans</Link>
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
