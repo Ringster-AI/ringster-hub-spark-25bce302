@@ -27,6 +27,28 @@ import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { CreditsService } from "@/services/creditsService";
+
+type CheckoutOutcome = "success" | "cancelled";
+
+const trackCheckoutEvent = (
+  outcome: CheckoutOutcome,
+  extra: Record<string, unknown> = {}
+) => {
+  const payload = { outcome, ...extra, timestamp: new Date().toISOString() };
+  try {
+    if (typeof window !== "undefined") {
+      const w = window as any;
+      w.dataLayer = w.dataLayer || [];
+      w.dataLayer.push({ event: "stripe_checkout_return", ...payload });
+      if (typeof w.fbq === "function") {
+        w.fbq("trackCustom", "StripeCheckoutReturn", payload);
+      }
+    }
+  } catch (err) {
+    console.warn("Analytics tracking failed:", err);
+  }
+};
 
 const Dashboard = () => {
   const isMobile = useIsMobile();
@@ -41,14 +63,52 @@ const Dashboard = () => {
     if (!checkoutStatus) return;
 
     if (checkoutStatus === "success") {
-      // Refresh credit balance immediately and keep polling briefly
-      // in case the Stripe webhook hasn't finalized yet.
-      const refresh = () => {
+      // Capture the pre-refresh balance to detect whether the webhook
+      // actually credited the account within the polling window.
+      let baselineCredits: number | null = null;
+      let refreshSucceeded = false;
+
+      const captureBaseline = async () => {
+        try {
+          const status = await CreditsService.getCreditStatus();
+          baselineCredits = status?.totalCredits ?? null;
+        } catch {
+          baselineCredits = null;
+        }
+      };
+
+      const refresh = async () => {
         queryClient.invalidateQueries({ queryKey: ["credits"] });
         window.dispatchEvent(new CustomEvent("credits:refresh"));
+        if (refreshSucceeded) return;
+        try {
+          const status = await CreditsService.getCreditStatus();
+          if (
+            status &&
+            baselineCredits !== null &&
+            status.totalCredits > baselineCredits
+          ) {
+            refreshSucceeded = true;
+          }
+        } catch {
+          /* ignore — final outcome reported in cleanup */
+        }
       };
-      refresh();
-      const timers = [1500, 4000, 8000].map((ms) => setTimeout(refresh, ms));
+
+      const timers: ReturnType<typeof setTimeout>[] = [];
+      captureBaseline().then(() => {
+        refresh();
+        [1500, 4000, 8000].forEach((ms) => timers.push(setTimeout(refresh, ms)));
+      });
+
+      // Report the final refresh result after the polling window.
+      const reportTimer = setTimeout(() => {
+        trackCheckoutEvent("success", {
+          credit_refresh: refreshSucceeded ? "succeeded" : "pending",
+          baseline_credits: baselineCredits,
+        });
+      }, 9000);
+      timers.push(reportTimer);
 
       toast({
         title: "Payment successful",
@@ -66,6 +126,7 @@ const Dashboard = () => {
     }
 
     if (checkoutStatus === "cancelled" || checkoutStatus === "canceled") {
+      trackCheckoutEvent("cancelled");
       toast({
         title: "Checkout cancelled",
         description: "No changes were made to your account.",
