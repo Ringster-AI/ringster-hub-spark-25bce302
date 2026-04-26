@@ -19,22 +19,34 @@ export const CreditDisplay = ({ onUpgrade, onTopUp, compact = false }: CreditDis
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
+
     const fetchCredits = async () => {
       try {
         const status = await CreditsService.getCreditStatus();
-        setCreditStatus(status);
+        if (!cancelled) setCreditStatus(status);
       } catch (error) {
         console.error('Error fetching credit status:', error);
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
 
     fetchCredits();
-    
+
     // Refresh credits every 30 seconds
     const interval = setInterval(fetchCredits, 30000);
-    return () => clearInterval(interval);
+
+    // Refresh immediately when a global refresh event fires
+    // (e.g. after returning from Stripe checkout).
+    const handleRefresh = () => fetchCredits();
+    window.addEventListener("credits:refresh", handleRefresh);
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+      window.removeEventListener("credits:refresh", handleRefresh);
+    };
   }, []);
 
   if (loading) {

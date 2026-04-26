@@ -23,10 +23,61 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
 
 const Dashboard = () => {
   const isMobile = useIsMobile();
-  
+  const location = useLocation();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const checkoutStatus = params.get("checkout");
+    if (!checkoutStatus) return;
+
+    if (checkoutStatus === "success") {
+      // Refresh credit balance immediately and keep polling briefly
+      // in case the Stripe webhook hasn't finalized yet.
+      const refresh = () => {
+        queryClient.invalidateQueries({ queryKey: ["credits"] });
+        window.dispatchEvent(new CustomEvent("credits:refresh"));
+      };
+      refresh();
+      const timers = [1500, 4000, 8000].map((ms) => setTimeout(refresh, ms));
+
+      toast({
+        title: "Payment successful",
+        description: "Your credits will appear shortly.",
+      });
+
+      // Clean the URL so refreshes don't retrigger the toast.
+      params.delete("checkout");
+      navigate(
+        { pathname: location.pathname, search: params.toString() ? `?${params.toString()}` : "" },
+        { replace: true }
+      );
+
+      return () => timers.forEach(clearTimeout);
+    }
+
+    if (checkoutStatus === "cancelled" || checkoutStatus === "canceled") {
+      toast({
+        title: "Checkout cancelled",
+        description: "No changes were made to your account.",
+      });
+      params.delete("checkout");
+      navigate(
+        { pathname: location.pathname, search: params.toString() ? `?${params.toString()}` : "" },
+        { replace: true }
+      );
+    }
+  }, [location.search, location.pathname, navigate, queryClient, toast]);
+
   return (
     <SidebarProvider>
       <div className="flex h-screen overflow-hidden">
