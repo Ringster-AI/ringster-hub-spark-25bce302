@@ -1211,7 +1211,7 @@ export type Database = {
           id: string
           phone_number: string
           updated_at: string | null
-          verification_code: string
+          verification_code_hash: string
           verified: boolean | null
         }
         Insert: {
@@ -1221,7 +1221,7 @@ export type Database = {
           id?: string
           phone_number: string
           updated_at?: string | null
-          verification_code: string
+          verification_code_hash: string
           verified?: boolean | null
         }
         Update: {
@@ -1231,7 +1231,7 @@ export type Database = {
           id?: string
           phone_number?: string
           updated_at?: string | null
-          verification_code?: string
+          verification_code_hash?: string
           verified?: boolean | null
         }
         Relationships: []
@@ -1699,6 +1699,10 @@ export type Database = {
         Args: { duration_min: number; start_time: string }
         Returns: unknown
       }
+      create_phone_verification: {
+        Args: { p_code: string; p_phone_number: string; p_ttl_minutes?: number }
+        Returns: string
+      }
       deduct_credits: {
         Args: {
           p_call_log_id?: string
@@ -1734,6 +1738,13 @@ export type Database = {
       update_minutes_used: {
         Args: { p_minutes: number; p_user_id: string }
         Returns: undefined
+      }
+      verify_phone_code: {
+        Args: { p_code: string; p_phone_number: string }
+        Returns: {
+          status: string
+          verification_id: string
+        }[]
       }
     }
     Enums: {
