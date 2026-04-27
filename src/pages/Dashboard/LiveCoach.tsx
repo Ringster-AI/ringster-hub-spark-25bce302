@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useLiveCoachAccess } from "@/hooks/useLiveCoachAccess";
 import { useToast } from "@/hooks/use-toast";
+import { useSidebar } from "@/components/ui/sidebar";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const LIVE_COACH_URL = "https://livecoach.ringster.ai/mic-coach.html";
 const LIVE_COACH_BACKEND = "https://call-coach-production.up.railway.app";
@@ -18,6 +20,9 @@ const LiveCoach = () => {
   const [sessionToken, setSessionToken] = useState<string | null>(null);
   const [starting, setStarting] = useState(false);
   const [startError, setStartError] = useState<string | null>(null);
+  const { state: sidebarState } = useSidebar();
+  const isMobile = useIsMobile();
+  const sidebarOffset = isMobile ? 0 : sidebarState === "collapsed" ? 48 : 256; // 3rem / 16rem
 
   const startSession = async () => {
     setStarting(true);
@@ -57,7 +62,10 @@ const LiveCoach = () => {
   const isLocked = access && !access.allowed;
 
   return (
-    <div className="flex flex-col h-full w-full">
+    <div
+      className="fixed inset-0 z-40 flex flex-col bg-background overflow-hidden"
+      style={{ left: sidebarOffset, top: isMobile ? 49 : 0 }}
+    >
       {/* Header */}
       <div className="border-b bg-background px-4 sm:px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="flex items-center gap-3">
