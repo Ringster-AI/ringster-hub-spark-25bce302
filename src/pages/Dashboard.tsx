@@ -60,6 +60,7 @@ const Dashboard = () => {
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const checkoutStatus = params.get("checkout");
+    const sessionId = params.get("session_id");
     if (!checkoutStatus) return;
 
     if (checkoutStatus === "success") {
@@ -106,6 +107,7 @@ const Dashboard = () => {
         trackCheckoutEvent("success", {
           credit_refresh: refreshSucceeded ? "succeeded" : "pending",
           baseline_credits: baselineCredits,
+          session_id: sessionId,
         });
       }, 9000);
       timers.push(reportTimer);
@@ -117,6 +119,7 @@ const Dashboard = () => {
 
       // Clean the URL so refreshes don't retrigger the toast.
       params.delete("checkout");
+      params.delete("session_id");
       navigate(
         { pathname: location.pathname, search: params.toString() ? `?${params.toString()}` : "" },
         { replace: true }
@@ -126,12 +129,13 @@ const Dashboard = () => {
     }
 
     if (checkoutStatus === "cancelled" || checkoutStatus === "canceled") {
-      trackCheckoutEvent("cancelled");
+      trackCheckoutEvent("cancelled", { session_id: sessionId });
       toast({
         title: "Checkout cancelled",
         description: "No changes were made to your account.",
       });
       params.delete("checkout");
+      params.delete("session_id");
       navigate(
         { pathname: location.pathname, search: params.toString() ? `?${params.toString()}` : "" },
         { replace: true }
