@@ -57,7 +57,7 @@ const LiveCoach = () => {
   const isLocked = access && !access.allowed;
 
   return (
-    <div className="flex flex-col h-full w-full">
+    <div className="fixed inset-0 z-40 flex flex-col bg-background overflow-hidden md:left-[var(--sidebar-width,16rem)] peer-data-[state=collapsed]:md:left-[var(--sidebar-width-icon,3rem)]">
       {/* Header */}
       <div className="border-b bg-background px-4 sm:px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="flex items-center gap-3">
