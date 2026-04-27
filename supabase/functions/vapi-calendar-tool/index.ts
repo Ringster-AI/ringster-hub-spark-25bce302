@@ -212,30 +212,27 @@ async function sendVerificationSMS(supabase: any, phoneNumber: string) {
     // Generate 6-digit verification code
     const code = Math.floor(100000 + Math.random() * 900000).toString();
 
-    // Store verification code
-    const { data: verification, error } = await supabase
-      .from('phone_verifications')
-      .insert({
-        phone_number: phoneNumber,
-        verification_code: code
-      })
-      .select()
-      .single();
+    // Store the code as a bcrypt hash via the secure DB function
+    const { data: verificationId, error } = await supabase.rpc(
+      'create_phone_verification',
+      { p_phone_number: phoneNumber, p_code: code, p_ttl_minutes: 10 }
+    );
 
-    if (error) {
-      console.error('Error storing verification:', error);
+    if (error || !verificationId) {
+      console.error('Error storing verification');
       return { success: false };
     }
 
-    // In a real implementation, integrate with Twilio or another SMS service
-    console.log(`Verification code for ${phoneNumber}: ${code}`);
+    // In a real implementation, integrate with Twilio or another SMS service.
+    // The plaintext code is only known here long enough to send the SMS — never persisted.
+    console.log(`Verification code dispatched for ${phoneNumber}`);
 
     return {
       success: true,
-      verification_id: verification.id
+      verification_id: verificationId,
     };
   } catch (error) {
-    console.error('Error sending verification SMS:', error);
+    console.error('Error sending verification SMS');
     return { success: false };
   }
 }
