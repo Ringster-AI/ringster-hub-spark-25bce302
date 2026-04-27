@@ -57,7 +57,7 @@ const LiveCoach = () => {
   const isLocked = access && !access.allowed;
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-screen max-h-screen w-full">
       {/* Header */}
       <div className="border-b bg-background px-4 sm:px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="flex items-center gap-3">
@@ -66,7 +66,7 @@ const LiveCoach = () => {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-lg sm:text-xl font-semibold">Live Call Coach</h1>
+              <h1 className="text-lg sm:text-xl font-semibold">Live Call Assist</h1>
               <Badge variant="secondary" className="text-xs">BETA</Badge>
             </div>
             <p className="text-xs sm:text-sm text-muted-foreground">
@@ -83,7 +83,7 @@ const LiveCoach = () => {
       </div>
 
       {/* Body */}
-      <div className="flex-1 overflow-auto">
+      <div className="flex-1 min-h-0 overflow-hidden">
         {isLocked ? (
           <div className="flex items-center justify-center min-h-[60vh] p-4">
             <Card className="max-w-md w-full">
@@ -93,7 +93,7 @@ const LiveCoach = () => {
                 </div>
                 <CardTitle>
                   {access?.limit === 0
-                    ? "Live Call Coach is a paid feature"
+                    ? "Live Call Assist is a paid feature"
                     : "Monthly session limit reached"}
                 </CardTitle>
                 <CardDescription>
@@ -153,8 +153,8 @@ const LiveCoach = () => {
           <iframe
             src={`${LIVE_COACH_URL}?token=${sessionToken}&backend=${encodeURIComponent(LIVE_COACH_BACKEND)}`}
             allow="microphone; camera; autoplay; clipboard-read; clipboard-write"
-            className="w-full h-full min-h-[600px] border-0"
-            title="Live Call Coach"
+            className="block w-full h-full border-0"
+            title="Live Call Assist"
           />
         )}
       </div>
