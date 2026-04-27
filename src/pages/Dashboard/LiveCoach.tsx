@@ -93,7 +93,7 @@ const LiveCoach = () => {
                 </div>
                 <CardTitle>
                   {access?.limit === 0
-                    ? "Live Call Coach is a paid feature"
+                    ? "Live Call Assist is a paid feature"
                     : "Monthly session limit reached"}
                 </CardTitle>
                 <CardDescription>
