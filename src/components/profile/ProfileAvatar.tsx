@@ -25,7 +25,8 @@ export const ProfileAvatar = ({ avatarUrl, fullName, username, onAvatarUpdate }:
       if (!session?.user) throw new Error("No user found");
 
       const fileExt = file.name.split(".").pop();
-      const filePath = `${session.user.id}-${Math.random()}.${fileExt}`;
+      // Path MUST start with the user's UID so storage RLS can enforce ownership
+      const filePath = `${session.user.id}/${crypto.randomUUID()}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
         .from("avatars")
