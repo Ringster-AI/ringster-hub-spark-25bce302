@@ -1,4 +1,3 @@
-
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
 const corsHeaders = {
@@ -19,65 +18,65 @@ Deno.serve(async (req) => {
 
     const { phone_number, verification_code, booking_request_id } = await req.json();
 
-    console.log('Phone verification request:', { phone_number, booking_request_id });
+    if (!phone_number || !verification_code) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Missing phone_number or verification_code.' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
-    // Check rate limiting for verification attempts
+    // Rate limit verification attempts per phone number
     const rateLimitCheck = await checkRateLimit(supabase, phone_number, 'verification_attempt');
     if (!rateLimitCheck.allowed) {
       return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: 'Too many verification attempts. Please try again later.' 
+        JSON.stringify({
+          success: false,
+          error: 'Too many verification attempts. Please try again later.',
         }),
         { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Find the verification record
-    const { data: verification, error: verifyError } = await supabase
-      .from('phone_verifications')
-      .select('*')
-      .eq('phone_number', phone_number)
-      .eq('verification_code', verification_code)
-      .eq('verified', false)
-      .gte('expires_at', new Date().toISOString())
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single();
+    // Verify the code via the secure DB function (compares bcrypt hashes server-side)
+    const { data: verifyResult, error: verifyError } = await supabase.rpc(
+      'verify_phone_code',
+      { p_phone_number: phone_number, p_code: verification_code }
+    );
 
-    if (verifyError || !verification) {
-      // Increment attempt counter
-      await supabase
-        .from('phone_verifications')
-        .update({ attempts: supabase.raw('attempts + 1') })
-        .eq('phone_number', phone_number)
-        .eq('verification_code', verification_code);
-
+    if (verifyError) {
+      console.error('verify_phone_code error');
       return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: 'Invalid or expired verification code.' 
+        JSON.stringify({ success: false, error: 'Verification failed.' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const row = Array.isArray(verifyResult) ? verifyResult[0] : verifyResult;
+    const status = row?.status as string | undefined;
+
+    if (status === 'too_many_attempts') {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Too many failed attempts. Please request a new code.',
         }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Check if too many attempts
-    if (verification.attempts >= 3) {
+    if (status === 'expired') {
       return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: 'Too many failed attempts. Please request a new code.' 
-        }),
+        JSON.stringify({ success: false, error: 'Verification code expired. Please request a new code.' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Mark verification as verified
-    await supabase
-      .from('phone_verifications')
-      .update({ verified: true })
-      .eq('id', verification.id);
+    if (status !== 'verified') {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Invalid or expired verification code.' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     // Update booking request status if provided
     if (booking_request_id) {
@@ -90,14 +89,11 @@ Deno.serve(async (req) => {
         .single();
 
       if (!bookingError && bookingRequest) {
-        // Here you would typically create the actual calendar booking
-        // For now, we'll just mark it as booked
         await supabase
           .from('booking_requests')
           .update({ status: 'booked' })
           .eq('id', booking_request_id);
 
-        // Create calendar booking record
         await supabase
           .from('calendar_bookings')
           .insert({
@@ -110,26 +106,19 @@ Deno.serve(async (req) => {
             attendee_email: bookingRequest.attendee_email,
             attendee_name: bookingRequest.attendee_name,
             appointment_type: bookingRequest.appointment_type,
-            notes: bookingRequest.notes
+            notes: bookingRequest.notes,
           });
       }
     }
 
     return new Response(
-      JSON.stringify({ 
-        success: true, 
-        message: 'Phone number verified successfully!' 
-      }),
+      JSON.stringify({ success: true, message: 'Phone number verified successfully!' }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
-
   } catch (error) {
-    console.error('Verification error:', error);
+    console.error('Verification error');
     return new Response(
-      JSON.stringify({ 
-        success: false, 
-        error: 'Internal server error' 
-      }),
+      JSON.stringify({ success: false, error: 'Internal server error' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
@@ -158,11 +147,7 @@ async function checkRateLimit(supabase: any, identifier: string, actionType: str
   } else {
     await supabase
       .from('rate_limits')
-      .insert({
-        identifier,
-        action_type: actionType,
-        count: 1
-      });
+      .insert({ identifier, action_type: actionType, count: 1 });
   }
 
   return { allowed: true };
