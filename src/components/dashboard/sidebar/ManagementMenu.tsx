@@ -63,9 +63,9 @@ export const ManagementMenu = ({ onLinkClick }: ManagementMenuProps) => {
             </SidebarMenuItem>
           ))}
 
-          {/* Live Call Coach (Beta) */}
+          {/* Live Call Assist (Beta) */}
           <SidebarMenuItem>
-            <SidebarMenuButton asChild tooltip="Live Call Coach (Beta)">
+            <SidebarMenuButton asChild tooltip="Live Call Assist (Beta)">
               <Link
                 to="/dashboard/live-coach"
                 className={cn(
