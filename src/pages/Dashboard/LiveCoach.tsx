@@ -20,6 +20,9 @@ const LiveCoach = () => {
   const [sessionToken, setSessionToken] = useState<string | null>(null);
   const [starting, setStarting] = useState(false);
   const [startError, setStartError] = useState<string | null>(null);
+  const { state: sidebarState } = useSidebar();
+  const isMobile = useIsMobile();
+  const sidebarOffset = isMobile ? 0 : sidebarState === "collapsed" ? 48 : 256; // 3rem / 16rem
 
   const startSession = async () => {
     setStarting(true);
