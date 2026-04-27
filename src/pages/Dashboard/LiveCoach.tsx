@@ -66,7 +66,7 @@ const LiveCoach = () => {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-lg sm:text-xl font-semibold">Live Call Coach</h1>
+              <h1 className="text-lg sm:text-xl font-semibold">Live Call Assist</h1>
               <Badge variant="secondary" className="text-xs">BETA</Badge>
             </div>
             <p className="text-xs sm:text-sm text-muted-foreground">
@@ -83,7 +83,7 @@ const LiveCoach = () => {
       </div>
 
       {/* Body */}
-      <div className="flex-1 overflow-auto">
+      <div className="flex-1 min-h-0 overflow-hidden">
         {isLocked ? (
           <div className="flex items-center justify-center min-h-[60vh] p-4">
             <Card className="max-w-md w-full">
