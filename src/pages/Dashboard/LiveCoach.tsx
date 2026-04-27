@@ -57,7 +57,7 @@ const LiveCoach = () => {
   const isLocked = access && !access.allowed;
 
   return (
-    <div className="flex flex-col h-screen max-h-screen w-full">
+    <div className="flex flex-col h-full w-full">
       {/* Header */}
       <div className="border-b bg-background px-4 sm:px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="flex items-center gap-3">
