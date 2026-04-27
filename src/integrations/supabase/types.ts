@@ -1078,6 +1078,63 @@ export type Database = {
         }
         Relationships: []
       }
+      microsoft_integrations: {
+        Row: {
+          access_token: string
+          availability_days: number[] | null
+          availability_end: string | null
+          availability_start: string | null
+          buffer_time: number | null
+          calendar_id: string | null
+          calendar_name: string | null
+          created_at: string
+          default_duration: number | null
+          email: string
+          expires_at: string
+          id: string
+          refresh_token: string | null
+          scopes: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_token: string
+          availability_days?: number[] | null
+          availability_end?: string | null
+          availability_start?: string | null
+          buffer_time?: number | null
+          calendar_id?: string | null
+          calendar_name?: string | null
+          created_at?: string
+          default_duration?: number | null
+          email: string
+          expires_at: string
+          id?: string
+          refresh_token?: string | null
+          scopes: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_token?: string
+          availability_days?: number[] | null
+          availability_end?: string | null
+          availability_start?: string | null
+          buffer_time?: number | null
+          calendar_id?: string | null
+          calendar_name?: string | null
+          created_at?: string
+          default_duration?: number | null
+          email?: string
+          expires_at?: string
+          id?: string
+          refresh_token?: string | null
+          scopes?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       oauth_states: {
         Row: {
           code_verifier: string
