@@ -64,7 +64,7 @@ const LiveCoach = () => {
   return (
     <div
       className="fixed inset-0 z-40 flex flex-col bg-background overflow-hidden"
-      style={{ left: sidebarOffset }}
+      style={{ left: sidebarOffset, top: isMobile ? 49 : 0 }}
     >
       {/* Header */}
       <div className="border-b bg-background px-4 sm:px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
