@@ -24,7 +24,7 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen h-screen flex w-full">
+      <div className="min-h-screen flex w-full">
         {/* Desktop Sidebar */}
         <div className="hidden md:block">
           <DashboardSidebar />
