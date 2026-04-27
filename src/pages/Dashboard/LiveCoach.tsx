@@ -153,8 +153,8 @@ const LiveCoach = () => {
           <iframe
             src={`${LIVE_COACH_URL}?token=${sessionToken}&backend=${encodeURIComponent(LIVE_COACH_BACKEND)}`}
             allow="microphone; camera; autoplay; clipboard-read; clipboard-write"
-            className="w-full h-full min-h-[600px] border-0"
-            title="Live Call Coach"
+            className="block w-full h-full border-0"
+            title="Live Call Assist"
           />
         )}
       </div>
