@@ -1,0 +1,2 @@
+[functions.microsoft-calendar-list]
+verify_jwt = true

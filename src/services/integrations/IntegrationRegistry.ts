@@ -3,6 +3,7 @@ import { IntegrationType, IntegrationProvider } from "@/types/integrations/index
 import { GoogleCalendarProvider } from "./providers/GoogleCalendarProvider";
 import { CalComProvider } from "./providers/CalComProvider";
 import { CalendlyProvider } from "./providers/CalendlyProvider";
+import { MicrosoftCalendarProvider } from "./providers/MicrosoftCalendarProvider";
 import { Calendar, Mail, Phone, Users, FileText, BarChart } from "lucide-react";
 
 export class IntegrationRegistry {
@@ -35,6 +36,16 @@ export class IntegrationRegistry {
       description: 'Schedule appointments and manage availability through Calendly',
       icon: Calendar,
       capabilities: ['calendar', 'scheduling'],
+      configurationSchema: {},
+      isAvailable: true
+    },
+    {
+      type: 'microsoft_calendar',
+      provider: 'microsoft',
+      name: 'Outlook Calendar',
+      description: 'Schedule appointments and manage availability through Microsoft Outlook Calendar',
+      icon: Calendar,
+      capabilities: ['calendar', 'scheduling', 'events'],
       configurationSchema: {},
       isAvailable: true
     },
@@ -105,6 +116,7 @@ export class IntegrationRegistry {
     this.providers.set('google_calendar', new GoogleCalendarProvider());
     this.providers.set('cal_com', new CalComProvider());
     this.providers.set('calendly', new CalendlyProvider());
+    this.providers.set('microsoft_calendar', new MicrosoftCalendarProvider());
   }
 
   static getAvailableTypes(): IntegrationType[] {
