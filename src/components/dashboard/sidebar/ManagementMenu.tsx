@@ -83,7 +83,7 @@ export const ManagementMenu = ({ onLinkClick }: ManagementMenuProps) => {
                     "h-4.5 w-4.5 flex-shrink-0 transition-colors",
                     isActive("/dashboard/live-coach") ? "text-primary" : "text-muted-foreground"
                   )} />
-                  <span className="font-medium truncate">Live Call Coach</span>
+                  <span className="font-medium truncate">Live Call Assist</span>
                 </div>
                 <div className="flex items-center gap-1.5 flex-shrink-0">
                   {liveCoachLocked && (
