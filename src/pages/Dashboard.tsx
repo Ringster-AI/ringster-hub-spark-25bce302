@@ -161,7 +161,7 @@ const Dashboard = () => {
               <div className="w-5"></div> {/* Empty div for flex spacing */}
             </div>
           )}
-          <div className="flex-1 overflow-auto">
+          <div className="flex-1 min-h-0 overflow-auto">
             <Routes>
               <Route path="/" element={<Overview />} />
               <Route path="/agents" element={<Agents />} />
