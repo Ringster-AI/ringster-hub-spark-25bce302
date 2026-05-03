@@ -7,19 +7,52 @@ const SAFE_COLUMNS = 'id, user_id, integration_type, provider_name, display_name
 
 export class IntegrationService {
   static async getUserIntegrations(): Promise<Integration[]> {
-    const { data, error } = await supabase
-      .from('integrations')
-      .select(SAFE_COLUMNS)
-      .order('created_at', { ascending: false });
+    const [{ data, error }, googleRes] = await Promise.all([
+      supabase
+        .from('integrations')
+        .select(SAFE_COLUMNS)
+        .order('created_at', { ascending: false }),
+      supabase
+        .from('google_integrations')
+        .select('id, user_id, email, created_at, updated_at, scopes, expires_at'),
+    ]);
 
     if (error) throw error;
-    return data.map(item => ({
+
+    const base: Integration[] = data.map(item => ({
       ...item,
-      credentials: {}, // Never expose credentials client-side
+      credentials: {},
       status: item.status as Integration['status'],
       configuration: item.configuration as Record<string, any>,
       metadata: item.metadata as Record<string, any>
     }));
+
+    // Merge in google_integrations rows as synthetic 'google_calendar' integrations
+    // so the UI reflects the connection that was made via the dedicated google OAuth flow.
+    if (!googleRes.error && googleRes.data) {
+      for (const g of googleRes.data) {
+        if (base.some(b => b.integration_type === 'google_calendar')) continue;
+        base.unshift({
+          id: g.id,
+          user_id: g.user_id,
+          integration_type: 'google_calendar',
+          provider_name: 'google',
+          display_name: g.email || 'Google Calendar',
+          status: 'connected',
+          configuration: {},
+          metadata: { email: g.email, scopes: g.scopes },
+          capabilities: ['calendar', 'scheduling', 'events'],
+          is_active: true,
+          last_sync_at: null as any,
+          expires_at: g.expires_at,
+          created_at: g.created_at,
+          updated_at: g.updated_at,
+          credentials: {},
+        } as Integration);
+      }
+    }
+
+    return base;
   }
 
   static async getIntegrationById(id: string): Promise<Integration | null> {
