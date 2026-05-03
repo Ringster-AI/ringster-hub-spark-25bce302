@@ -50,10 +50,10 @@ serve(async (req) => {
     // Get the user's Google integration
     const { data: integrationData, error: integrationError } = await supabase
       .from("google_integrations")
-      .select("refresh_token")
+      .select("id, refresh_token")
       .eq("user_id", userId)
       .single();
-      
+
     if (integrationError && integrationError.code !== "PGRST116") {
       console.error("Error fetching integration:", integrationError);
       throw integrationError;
@@ -103,12 +103,24 @@ serve(async (req) => {
       console.log("No refresh token found for user:", userId);
     }
     
+    // Null out FK references in calendar_bookings to allow deletion
+    if (integrationData?.id) {
+      const { error: unlinkError } = await supabase
+        .from("calendar_bookings")
+        .update({ google_integration_id: null })
+        .eq("google_integration_id", integrationData.id);
+
+      if (unlinkError) {
+        console.error("Error unlinking calendar_bookings (continuing):", unlinkError);
+      }
+    }
+
     // Delete the integration from database
     const { error: deleteError } = await supabase
       .from("google_integrations")
       .delete()
       .eq("user_id", userId);
-      
+
     if (deleteError) {
       console.error("Error deleting integration:", deleteError);
       throw deleteError;
