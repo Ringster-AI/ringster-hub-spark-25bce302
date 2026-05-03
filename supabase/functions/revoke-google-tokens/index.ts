@@ -103,12 +103,22 @@ serve(async (req) => {
       console.log("No refresh token found for user:", userId);
     }
     
+    // Null out FK references in calendar_bookings to allow deletion
+    const { error: unlinkError } = await supabase
+      .from("calendar_bookings")
+      .update({ google_integration_id: null })
+      .eq("user_id", userId);
+
+    if (unlinkError) {
+      console.error("Error unlinking calendar_bookings (continuing):", unlinkError);
+    }
+
     // Delete the integration from database
     const { error: deleteError } = await supabase
       .from("google_integrations")
       .delete()
       .eq("user_id", userId);
-      
+
     if (deleteError) {
       console.error("Error deleting integration:", deleteError);
       throw deleteError;
