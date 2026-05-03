@@ -153,6 +153,80 @@ const Privacy = () => {
               </p>
             </section>
 
+            <section id="google-limited-use">
+              <h2 className="text-2xl font-semibold text-foreground mt-8 mb-4">
+                7a. Google API Services User Data Policy (Limited Use Disclosure)
+              </h2>
+              <p className="text-muted-foreground">
+                Ringster's use and transfer to any other app of information received from Google APIs
+                will adhere to the{" "}
+                <a
+                  href="https://developers.google.com/terms/api-services-user-data-policy"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  Google API Services User Data Policy
+                </a>
+                , including the Limited Use requirements.
+              </p>
+              <p className="text-muted-foreground mt-4">
+                Specifically, when you connect your Google account to Ringster, we request only the
+                minimum scopes required to provide calendar booking functionality:
+              </p>
+              <ul className="list-disc pl-6 mt-2 space-y-2 text-muted-foreground">
+                <li>
+                  <code>openid</code>, <code>userinfo.email</code>, <code>userinfo.profile</code> —
+                  to identify your Google account and link it to your Ringster account.
+                </li>
+                <li>
+                  <code>calendar.events.owned</code> — to read and write events on calendars you
+                  own, so your AI receptionist can check availability and book appointments.
+                </li>
+                <li>
+                  <code>calendar.freebusy</code> — to determine your free/busy times when offering
+                  appointment slots to callers.
+                </li>
+              </ul>
+              <p className="text-muted-foreground mt-4">
+                Google user data accessed through these scopes is used solely to provide the
+                appointment scheduling feature you have configured. We do <strong>not</strong>:
+              </p>
+              <ul className="list-disc pl-6 mt-2 space-y-2 text-muted-foreground">
+                <li>Use Google user data for advertising or to serve ads.</li>
+                <li>
+                  Transfer Google user data to third parties except as necessary to provide or
+                  improve user-facing features that are prominent in the application's UI, to comply
+                  with applicable law, or as part of a merger, acquisition, or sale of assets with
+                  prior notice to users.
+                </li>
+                <li>
+                  Allow humans to read Google user data, except with your explicit consent for
+                  specific messages, where necessary for security purposes (such as investigating
+                  abuse), to comply with applicable law, or where the data has been aggregated and
+                  anonymized.
+                </li>
+                <li>
+                  Use Google user data to develop, improve, or train generalized or non-personalized
+                  AI and/or machine learning models. Google user data is never sent to OpenAI,
+                  Vapi, ElevenLabs, Deepgram, or any other AI/LLM provider.
+                </li>
+              </ul>
+              <p className="text-muted-foreground mt-4">
+                You can revoke Ringster's access to your Google account at any time from your
+                Ringster integrations settings or via your{" "}
+                <a
+                  href="https://myaccount.google.com/permissions"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  Google Account permissions page
+                </a>
+                .
+              </p>
+            </section>
+
             <section>
               <h2 className="text-2xl font-semibold text-foreground mt-8 mb-4">8. Data Retention</h2>
               <p className="text-muted-foreground">
