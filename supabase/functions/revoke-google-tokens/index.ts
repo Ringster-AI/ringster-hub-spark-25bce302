@@ -104,13 +104,15 @@ serve(async (req) => {
     }
     
     // Null out FK references in calendar_bookings to allow deletion
-    const { error: unlinkError } = await supabase
-      .from("calendar_bookings")
-      .update({ google_integration_id: null })
-      .eq("user_id", userId);
+    if (integrationData?.id) {
+      const { error: unlinkError } = await supabase
+        .from("calendar_bookings")
+        .update({ google_integration_id: null })
+        .eq("google_integration_id", integrationData.id);
 
-    if (unlinkError) {
-      console.error("Error unlinking calendar_bookings (continuing):", unlinkError);
+      if (unlinkError) {
+        console.error("Error unlinking calendar_bookings (continuing):", unlinkError);
+      }
     }
 
     // Delete the integration from database
