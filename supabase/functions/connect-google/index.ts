@@ -90,11 +90,14 @@ serve(async (req) => {
       );
     }
 
-    // Generate OAuth URL with limited scopes - calendar only
+    // Request only the minimum scopes required and aligned with Google Cloud
+    // Console verification (Limited Use compliant).
     const scopes = [
+      "openid",
       "https://www.googleapis.com/auth/userinfo.email",
       "https://www.googleapis.com/auth/userinfo.profile",
-      "https://www.googleapis.com/auth/calendar", // Only keeping Calendar scope
+      "https://www.googleapis.com/auth/calendar.events.owned",
+      "https://www.googleapis.com/auth/calendar.freebusy",
     ];
 
     // Get the return URL from the request if provided
