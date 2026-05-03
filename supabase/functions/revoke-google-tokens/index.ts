@@ -50,10 +50,10 @@ serve(async (req) => {
     // Get the user's Google integration
     const { data: integrationData, error: integrationError } = await supabase
       .from("google_integrations")
-      .select("refresh_token")
+      .select("id, refresh_token")
       .eq("user_id", userId)
       .single();
-      
+
     if (integrationError && integrationError.code !== "PGRST116") {
       console.error("Error fetching integration:", integrationError);
       throw integrationError;
