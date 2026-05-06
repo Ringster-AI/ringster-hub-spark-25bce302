@@ -82,7 +82,7 @@ const Overview = () => {
   });
 
   return (
-    <div className="p-4 md:p-10 space-y-6 md:space-y-10 max-w-7xl mx-auto">
+    <div className="p-4 md:p-10 space-y-6 md:space-y-10 w-full">
       {/* Header */}
       <div className="space-y-2">
         <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-foreground">
