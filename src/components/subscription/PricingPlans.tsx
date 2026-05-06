@@ -83,7 +83,7 @@ const { data: plans, isLoading } = useQuery({
   }
 
   return (
-    <div className="container mx-auto py-8">
+    <div className="w-full py-8">
       <PricingHeader 
         billingInterval={billingInterval} 
         setBillingInterval={setBillingInterval} 
