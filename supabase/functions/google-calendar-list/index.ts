@@ -180,34 +180,43 @@ serve(async (req) => {
       }
     }
     
-    // Call Google Calendar API to get the user's calendars
-    console.log(`[${requestId}] Fetching calendar list...`);
-    const calendarResponse = await fetch("https://www.googleapis.com/calendar/v3/users/me/calendarList", {
+    // The Limited Use scopes (calendar.events.owned + calendar.freebusy) do not
+    // permit listing all of the user's calendars (that requires calendar.readonly).
+    // Verify the token is valid by hitting the freebusy endpoint, then return the
+    // primary calendar as the only selectable calendar.
+    console.log(`[${requestId}] Verifying token via freebusy...`);
+    const verify = await fetch("https://www.googleapis.com/calendar/v3/freeBusy", {
+      method: "POST",
       headers: {
         "Authorization": `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
       },
+      body: JSON.stringify({
+        timeMin: new Date().toISOString(),
+        timeMax: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+        items: [{ id: "primary" }],
+      }),
     });
-    
-    if (!calendarResponse.ok) {
-      const errorData = await calendarResponse.json();
-      console.error(`[${requestId}] Calendar API error:`, errorData);
+
+    if (!verify.ok) {
+      const errorData = await verify.json().catch(() => ({}));
+      console.error(`[${requestId}] Freebusy verification failed:`, errorData);
       return new Response(
-        JSON.stringify({ error: "Failed to fetch calendars", details: errorData }),
-        { status: calendarResponse.status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ error: "Failed to verify Google Calendar access", details: errorData }),
+        { status: verify.status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
-    
-    const calendarData = await calendarResponse.json();
-    console.log(`[${requestId}] Retrieved ${calendarData.items?.length || 0} calendars`);
-    
-    // Format the response to include only necessary data
-    const calendars = (calendarData.items || []).map((calendar: any) => ({
-      id: calendar.id,
-      summary: calendar.summary,
-      primary: calendar.primary || false,
-      accessRole: calendar.accessRole,
-      backgroundColor: calendar.backgroundColor,
-    }));
+
+    const calendars = [
+      {
+        id: "primary",
+        summary: integration.email || "Primary Calendar",
+        primary: true,
+        accessRole: "owner",
+        backgroundColor: "#4285F4",
+      },
+    ];
+    console.log(`[${requestId}] Returning primary calendar only (Limited Use scopes)`);
     
     return new Response(
       JSON.stringify({ calendars }),
