@@ -37,9 +37,9 @@ export const PlanCard = ({ plan, billingInterval, onUpgrade, isCurrentPlan }: Pl
             ${Math.round(monthlyPrice)}
             <span className="text-lg font-normal text-muted-foreground">/mo</span>
           </div>
-          {billingInterval === 'year' && (
+          {isYearly && (
             <div className="text-sm text-muted-foreground">
-              ${Math.round(displayPrice)}/year (Save 20%)
+              ${Math.round(annualPrice).toLocaleString()} billed annually
             </div>
           )}
         </div>
