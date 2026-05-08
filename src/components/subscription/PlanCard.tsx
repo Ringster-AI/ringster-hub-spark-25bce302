@@ -16,8 +16,11 @@ export const PlanCard = ({ plan, billingInterval, onUpgrade, isCurrentPlan }: Pl
   const isPopular = plan.name === 'Professional';
   const features = Array.isArray(plan.features?.features) ? plan.features.features : [];
 
-  const displayPrice = billingInterval === 'year' ? plan.price * 12 * 0.8 : plan.price;
-  const monthlyPrice = billingInterval === 'year' ? displayPrice / 12 : displayPrice;
+  // Yearly plans store the annual total in `price`; monthly plans store the monthly price.
+  const isYearly = billingInterval === 'year';
+  const annualPrice = isYearly ? plan.price : plan.price * 12;
+  const monthlyPrice = isYearly ? plan.price / 12 : plan.price;
+  const displayPrice = isYearly ? annualPrice : monthlyPrice;
 
   return (
     <Card className={`relative ${isPopular ? 'ring-2 ring-primary shadow-lg' : ''}`}>
