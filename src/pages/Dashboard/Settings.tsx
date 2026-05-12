@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { PasswordResetForm } from "@/components/settings/PasswordResetForm";
 import { Integrations } from "@/components/settings/Integrations";
-import { CalendarSettings } from "@/components/settings/CalendarSettings";
 import { DeleteAccountSection } from "@/components/settings/DeleteAccountSection";
 import {
   Card,
@@ -13,22 +12,31 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSearchParams, useNavigate } from "react-router-dom";
 
+const VALID_TABS = ["security", "integrations", "account"] as const;
+
 const Settings = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const tabParam = searchParams.get("tab");
-  const [activeTab, setActiveTab] = useState<string>(tabParam || "security");
+  // Redirect deprecated "calendar" tab to integrations
+  const initialTab =
+    tabParam === "calendar"
+      ? "integrations"
+      : VALID_TABS.includes(tabParam as any)
+      ? (tabParam as string)
+      : "security";
+  const [activeTab, setActiveTab] = useState<string>(initialTab);
 
-  // Update URL when tab changes
   useEffect(() => {
     if (tabParam !== activeTab) {
       navigate(`/dashboard/settings?tab=${activeTab}`, { replace: true });
     }
   }, [activeTab, navigate, tabParam]);
 
-  // Update active tab when URL changes
   useEffect(() => {
-    if (tabParam && ["security", "integrations", "calendar", "account"].includes(tabParam)) {
+    if (tabParam === "calendar") {
+      setActiveTab("integrations");
+    } else if (tabParam && VALID_TABS.includes(tabParam as any)) {
       setActiveTab(tabParam);
     }
   }, [tabParam]);
@@ -42,11 +50,10 @@ const Settings = () => {
             <TabsList className="w-max md:w-auto">
               <TabsTrigger value="security">Security</TabsTrigger>
               <TabsTrigger value="integrations">Integrations</TabsTrigger>
-              <TabsTrigger value="calendar">Calendar</TabsTrigger>
               <TabsTrigger value="account">Account</TabsTrigger>
             </TabsList>
           </div>
-          
+
           <TabsContent value="security" className="space-y-6">
             <Card>
               <CardHeader>
@@ -60,15 +67,11 @@ const Settings = () => {
               </CardContent>
             </Card>
           </TabsContent>
-          
+
           <TabsContent value="integrations" className="space-y-6">
             <Integrations />
           </TabsContent>
-          
-          <TabsContent value="calendar" className="space-y-6">
-            <CalendarSettings />
-          </TabsContent>
-          
+
           <TabsContent value="account" className="space-y-6">
             <DeleteAccountSection />
           </TabsContent>
