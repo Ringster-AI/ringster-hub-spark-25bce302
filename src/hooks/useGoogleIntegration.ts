@@ -242,6 +242,7 @@ export function useGoogleIntegration() {
     error,
     connectGoogle,
     disconnectGoogle,
-    handleGoogleRedirectData
+    handleGoogleRedirectData,
+    refetch: fetchIntegrations,
   };
 }
