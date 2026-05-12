@@ -7,7 +7,8 @@ import { CalendarConfigModal } from "./CalendarConfigModal";
 import { CalendarSettingsType } from "@/types/calendar";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Calendar } from "lucide-react";
+import { Calendar, RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export function CalendarSettings() {
   const { 
@@ -15,7 +16,8 @@ export function CalendarSettings() {
     isConnecting, 
     isLoading, 
     connectGoogle, 
-    disconnectGoogle 
+    disconnectGoogle,
+    refetch,
   } = useGoogleIntegration();
   
   const { toast } = useToast();
@@ -59,10 +61,18 @@ export function CalendarSettings() {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold tracking-tight">Calendar Settings</h2>
-      <p className="text-muted-foreground">
-        Connect your calendar to manage appointments and availability.
-      </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">Calendar Settings</h2>
+          <p className="text-muted-foreground">
+            Connect your calendar to manage appointments and availability.
+          </p>
+        </div>
+        <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isLoading}>
+          <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
+          Refresh
+        </Button>
+      </div>
 
       <IntegrationServiceCard
         title="Google Calendar"
