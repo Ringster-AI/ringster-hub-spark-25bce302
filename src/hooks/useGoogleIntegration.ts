@@ -13,50 +13,43 @@ export function useGoogleIntegration() {
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  // Fetch existing integrations on component mount
-  useEffect(() => {
-    async function fetchIntegrations() {
-      try {
-        setIsLoading(true);
-        
-        // Check if user is authenticated
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) {
-          console.log("No active session, skipping integration fetch");
-          setIsLoading(false);
-          return;
-        }
-        
-        console.log("Fetching Google integrations for user:", session.user.id);
-        
-        // Use type assertion to work around TypeScript checking
-        // Only fetch limited data - never fetch tokens directly in the browser
-        const { data, error } = await (supabase
-          .from('google_integrations')
-          .select('id, user_id, email, created_at, updated_at, scopes')
-          .eq('user_id', session.user.id)
-          .single() as any);
-        
-        if (error && error.code !== 'PGRST116') { // PGRST116 is "no rows returned"
-          console.error("Error fetching integrations:", error);
-          throw error;
-        }
-        
-        if (data) {
-          console.log("Google integration found:", data);
-          setGoogleIntegration(data as GoogleIntegration);
-        } else {
-          console.log("No Google integration found for user");
-        }
-      } catch (err: any) {
-        console.error('Error fetching integrations:', err);
-        setError(err.message);
-      } finally {
+  // Fetch existing integrations on component mount + on window focus
+  const fetchIntegrations = async () => {
+    try {
+      setIsLoading(true);
+
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        setGoogleIntegration(null);
         setIsLoading(false);
+        return;
       }
+
+      const { data, error } = await (supabase
+        .from('google_integrations')
+        .select('id, user_id, email, created_at, updated_at, scopes')
+        .eq('user_id', session.user.id)
+        .maybeSingle() as any);
+
+      if (error && error.code !== 'PGRST116') {
+        console.error("Error fetching integrations:", error);
+        throw error;
+      }
+
+      setGoogleIntegration(data ? (data as GoogleIntegration) : null);
+    } catch (err: any) {
+      console.error('Error fetching integrations:', err);
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
     }
-    
+  };
+
+  useEffect(() => {
     fetchIntegrations();
+    const onFocus = () => fetchIntegrations();
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
   }, []);
 
   // Function to initiate Google OAuth flow
