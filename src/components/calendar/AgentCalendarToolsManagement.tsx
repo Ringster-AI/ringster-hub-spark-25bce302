@@ -86,7 +86,10 @@ export function AgentCalendarToolsManagement({ agentId }: AgentCalendarToolsMana
           business_hours_start: parsedConfiguration.business_hours_start || "09:00",
           business_hours_end: parsedConfiguration.business_hours_end || "17:00",
           booking_lead_time_hours: parsedConfiguration.booking_lead_time_hours || 2,
-          require_phone_verification: parsedConfiguration.require_phone_verification ?? true
+          require_phone_verification: parsedConfiguration.require_phone_verification ?? true,
+          calendar_id: parsedConfiguration.calendar_id || undefined,
+          calendar_name: parsedConfiguration.calendar_name || undefined,
+          calendar_provider: parsedConfiguration.calendar_provider || undefined
         }
       });
     }

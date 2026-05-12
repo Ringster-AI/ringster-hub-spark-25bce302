@@ -90,7 +90,10 @@ export const useAgentCalendarData = (agentId: string) => {
             business_hours_start: formData.calendar_booking?.business_hours_start || "09:00",
             business_hours_end: formData.calendar_booking?.business_hours_end || "17:00",
             booking_lead_time_hours: formData.calendar_booking?.booking_lead_time_hours || 2,
-            require_phone_verification: formData.calendar_booking?.require_phone_verification ?? true
+            require_phone_verification: formData.calendar_booking?.require_phone_verification ?? true,
+            calendar_id: formData.calendar_booking?.calendar_id || null,
+            calendar_name: formData.calendar_booking?.calendar_name || null,
+            calendar_provider: formData.calendar_booking?.calendar_provider || null
           }
         };
 
@@ -184,7 +187,10 @@ export const useAgentCalendarData = (agentId: string) => {
             business_hours_start: data.calendar_booking?.business_hours_start || "09:00",
             business_hours_end: data.calendar_booking?.business_hours_end || "17:00",
             booking_lead_time_hours: data.calendar_booking?.booking_lead_time_hours || 2,
-            require_phone_verification: data.calendar_booking?.require_phone_verification ?? true
+            require_phone_verification: data.calendar_booking?.require_phone_verification ?? true,
+            calendar_id: data.calendar_booking?.calendar_id || null,
+            calendar_name: data.calendar_booking?.calendar_name || null,
+            calendar_provider: data.calendar_booking?.calendar_provider || null
           }
         })
         .eq("agent_id", agentId)

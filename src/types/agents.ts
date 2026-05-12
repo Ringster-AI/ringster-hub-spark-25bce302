@@ -20,6 +20,9 @@ export interface AgentFormData {
     allowed_days?: number[];
     required_fields?: string[];
     custom_fields?: { name: string; description: string }[];
+    calendar_id?: string;
+    calendar_name?: string;
+    calendar_provider?: string;
   };
   advanced_config?: {
     voice: {
