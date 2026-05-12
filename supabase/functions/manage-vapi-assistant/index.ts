@@ -24,7 +24,27 @@ serve(async (req) => {
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Authenticate caller
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized', success: false }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    const token = authHeader.replace('Bearer ', '');
+    const authClient = createClient(supabaseUrl, supabaseAnonKey);
+    const { data: userData, error: userError } = await authClient.auth.getUser(token);
+    if (userError || !userData?.user) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized', success: false }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    const callerUserId = userData.user.id;
 
     // Get agent configuration
     const { data: agent, error: agentError } = await supabase
@@ -35,6 +55,14 @@ serve(async (req) => {
 
     if (agentError || !agent) {
       throw new Error(`Failed to fetch agent: ${agentError?.message}`);
+    }
+
+    // Verify ownership
+    if (agent.user_id !== callerUserId) {
+      return new Response(
+        JSON.stringify({ error: 'Forbidden: you do not own this agent', success: false }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     const vapiApiKey = Deno.env.get('VAPI_API_KEY');
