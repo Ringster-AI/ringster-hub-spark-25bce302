@@ -9,6 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Calendar, Clock, Shield, Phone, MapPin, Plus, X } from "lucide-react";
 import { AgentFormData } from "@/types/agents";
+import { CalendarPicker } from "@/components/calendar/CalendarPicker";
 
 interface CalendarBookingConfigProps {
   form: UseFormReturn<AgentFormData>;
@@ -57,6 +58,7 @@ export const CalendarBookingConfig = ({ form, disabled }: CalendarBookingConfigP
 
         {calendarEnabled && (
           <div className="space-y-4 mt-4 border-t pt-4">
+            <CalendarPicker form={form} disabled={disabled} />
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="default-duration">Default Duration (minutes)</Label>
