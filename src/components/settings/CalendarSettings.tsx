@@ -61,10 +61,18 @@ export function CalendarSettings() {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold tracking-tight">Calendar Settings</h2>
-      <p className="text-muted-foreground">
-        Connect your calendar to manage appointments and availability.
-      </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">Calendar Settings</h2>
+          <p className="text-muted-foreground">
+            Connect your calendar to manage appointments and availability.
+          </p>
+        </div>
+        <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isLoading}>
+          <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
+          Refresh
+        </Button>
+      </div>
 
       <IntegrationServiceCard
         title="Google Calendar"
