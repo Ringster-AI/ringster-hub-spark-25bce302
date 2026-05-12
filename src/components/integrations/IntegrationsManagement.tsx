@@ -63,10 +63,18 @@ export function IntegrationsManagement() {
   };
 
   const handleConnect = async (type: string) => {
+    if (type === "google_calendar") {
+      await connectGoogle();
+      return;
+    }
     await connectIntegration(type, window.location.href);
   };
 
   const handleDisconnect = async (integration: Integration) => {
+    if (integration.integration_type === "google_calendar" && googleIntegration) {
+      await disconnectGoogle();
+      return;
+    }
     await disconnectIntegration(integration);
   };
 
