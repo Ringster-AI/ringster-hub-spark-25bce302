@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Integration } from "@/types/integrations/index";
 import { IntegrationRegistry } from "@/services/integrations/IntegrationRegistry";
 import { useIntegrations } from "@/hooks/useIntegrations";
+import { useGoogleIntegration } from "@/hooks/useGoogleIntegration";
 import { IntegrationCard } from "./IntegrationCard";
 import { IntegrationConfigModal } from "./IntegrationConfigModal";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,21 +19,62 @@ export function IntegrationsManagement() {
     updateIntegration
   } = useIntegrations();
 
+  const {
+    googleIntegration,
+    isConnecting: isGoogleBusy,
+    connectGoogle,
+    disconnectGoogle,
+  } = useGoogleIntegration();
+
   const [configIntegration, setConfigIntegration] = useState<Integration | null>(null);
 
   const availableTypes = IntegrationRegistry.getAvailableTypes();
   const allTypes = IntegrationRegistry.getAllTypes();
   const upcomingTypes = allTypes.filter(type => !type.isAvailable);
 
+  // Build a virtual Integration row for Google Calendar based on the
+  // legacy google_integrations table so the card reflects real status
+  // even if the unified `integrations` row is missing.
+  const googleVirtual: Integration | undefined = googleIntegration
+    ? {
+        id: googleIntegration.id,
+        user_id: googleIntegration.user_id,
+        integration_type: "google_calendar",
+        provider_name: "google",
+        display_name: googleIntegration.email || "Google Calendar",
+        status: "connected",
+        configuration: {},
+        credentials: {},
+        metadata: {},
+        capabilities: [],
+        is_active: true,
+        last_sync_at: null,
+        expires_at: googleIntegration.expires_at || null,
+        created_at: googleIntegration.created_at || new Date().toISOString(),
+        updated_at: googleIntegration.updated_at || new Date().toISOString(),
+      }
+    : undefined;
+
   const getIntegrationForType = (type: string) => {
-    return integrations.find(integration => integration.integration_type === type);
+    if (type === "google_calendar") {
+      return integrations.find((i) => i.integration_type === type) || googleVirtual;
+    }
+    return integrations.find((integration) => integration.integration_type === type);
   };
 
   const handleConnect = async (type: string) => {
+    if (type === "google_calendar") {
+      await connectGoogle();
+      return;
+    }
     await connectIntegration(type, window.location.href);
   };
 
   const handleDisconnect = async (integration: Integration) => {
+    if (integration.integration_type === "google_calendar" && googleIntegration) {
+      await disconnectGoogle();
+      return;
+    }
     await disconnectIntegration(integration);
   };
 
