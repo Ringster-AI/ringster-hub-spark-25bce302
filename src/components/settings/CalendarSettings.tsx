@@ -7,7 +7,8 @@ import { CalendarConfigModal } from "./CalendarConfigModal";
 import { CalendarSettingsType } from "@/types/calendar";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Calendar } from "lucide-react";
+import { Calendar, RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export function CalendarSettings() {
   const { 
@@ -15,7 +16,8 @@ export function CalendarSettings() {
     isConnecting, 
     isLoading, 
     connectGoogle, 
-    disconnectGoogle 
+    disconnectGoogle,
+    refetch,
   } = useGoogleIntegration();
   
   const { toast } = useToast();
