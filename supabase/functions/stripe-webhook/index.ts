@@ -167,6 +167,7 @@ serve(async (req) => {
         else console.log(`✅ Added ${addonPlan.credits_allowance} add-on credits to ${userId}`);
         break;
       }
+    }
 
     return new Response(JSON.stringify({ received: true }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
