@@ -1715,6 +1715,21 @@ export type Database = {
         }
         Returns: boolean
       }
+      finalize_call: {
+        Args: {
+          p_agent_id: string
+          p_duration_seconds: number
+          p_ended_at?: string
+          p_from_number?: string
+          p_recording_url?: string
+          p_started_at?: string
+          p_to_number?: string
+          p_transcript_url?: string
+          p_user_id: string
+          p_vapi_call_id: string
+        }
+        Returns: string
+      }
       handle_subscription_update: {
         Args: {
           new_period_end: string
