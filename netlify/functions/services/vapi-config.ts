@@ -111,6 +111,16 @@ export const createVapiAssistantConfig = (
   const toolContext = buildToolContext(agent);
   const fullSystemPrompt = baseDescription + toolContext;
 
+  // Server webhook for end-of-call deduction (Supabase edge function)
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+  const vapiServerSecret = process.env.VAPI_SERVER_SECRET;
+  const server = supabaseUrl
+    ? {
+        url: `${supabaseUrl}/functions/v1/vapi-webhook`,
+        ...(vapiServerSecret ? { secret: vapiServerSecret } : {}),
+      }
+    : undefined;
+
   return {
     name: agent.name,
     firstMessage: agent.greeting || "Hello! How can I help you today?",
@@ -136,6 +146,11 @@ export const createVapiAssistantConfig = (
     },
     endCallMessage: agent.goodbye || "Thank you for calling. Goodbye!",
     silenceTimeoutSeconds: 30,
-    maxDurationSeconds: 600
+    maxDurationSeconds: 600,
+    ...(server ? { server, serverMessages: ["end-of-call-report"] } : {}),
+    metadata: {
+      agent_id: agent.id,
+      user_id: agent.user_id,
+    },
   };
 };
