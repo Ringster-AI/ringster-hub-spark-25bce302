@@ -25,6 +25,12 @@ export interface VapiAssistantConfig {
   endCallMessage: string;
   silenceTimeoutSeconds: number;
   maxDurationSeconds: number;
+  server?: {
+    url: string;
+    secret?: string;
+  };
+  serverMessages?: string[];
+  metadata?: Record<string, unknown>;
 }
 
 /**
