@@ -1537,6 +1537,7 @@ export type Database = {
       user_credits: {
         Row: {
           add_on_credits: number
+          add_on_credits_used: number
           created_at: string
           credits_used: number
           id: string
@@ -1547,6 +1548,7 @@ export type Database = {
         }
         Insert: {
           add_on_credits?: number
+          add_on_credits_used?: number
           created_at?: string
           credits_used?: number
           id?: string
@@ -1557,6 +1559,7 @@ export type Database = {
         }
         Update: {
           add_on_credits?: number
+          add_on_credits_used?: number
           created_at?: string
           credits_used?: number
           id?: string
@@ -1725,6 +1728,10 @@ export type Database = {
       has_live_coach_access: { Args: { p_user_id: string }; Returns: Json }
       has_role: {
         Args: { role_name: string; user_id: string }
+        Returns: boolean
+      }
+      has_unused_addon_credits: {
+        Args: { p_user_id: string }
         Returns: boolean
       }
       is_admin: { Args: { user_id: string }; Returns: boolean }
