@@ -26,9 +26,15 @@ export class CreditsService {
         return null;
       }
 
-      const totalCredits = credits.plan_credits + credits.add_on_credits;
-      const usedCredits = credits.credits_used;
-      const remainingCredits = Math.max(0, totalCredits - usedCredits);
+      const planCredits = credits.plan_credits ?? 0;
+      const addOnCredits = credits.add_on_credits ?? 0;
+      const planUsed = credits.credits_used ?? 0;
+      const addOnUsed = (credits as any).add_on_credits_used ?? 0;
+      const planRemaining = Math.max(0, planCredits - planUsed);
+      const addOnRemaining = Math.max(0, addOnCredits - addOnUsed);
+      const totalCredits = planCredits + addOnCredits;
+      const usedCredits = planUsed + addOnUsed;
+      const remainingCredits = planRemaining + addOnRemaining;
       const usagePercentage = totalCredits > 0 ? Math.round((usedCredits / totalCredits) * 100) : 0;
 
       return {
@@ -37,8 +43,15 @@ export class CreditsService {
         remainingCredits,
         usagePercentage,
         resetDate: credits.reset_date,
-        isLowCredits: remainingCredits / totalCredits < 0.1 && totalCredits > 0,
-        isOutOfCredits: remainingCredits <= 0
+        isLowCredits: totalCredits > 0 && remainingCredits / totalCredits < 0.1,
+        isOutOfCredits: remainingCredits <= 0,
+        planCredits,
+        planUsed,
+        planRemaining,
+        addOnCredits,
+        addOnUsed,
+        addOnRemaining,
+        hasUnusedAddOn: addOnRemaining > 0,
       };
     } catch (error) {
       console.error('Error in getCreditStatus:', error);

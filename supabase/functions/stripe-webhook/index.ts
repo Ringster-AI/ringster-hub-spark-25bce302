@@ -116,6 +116,57 @@ serve(async (req) => {
         console.log(`✅ Successfully processed ${event.type} for ${customer.email}`);
         break;
       }
+
+      case 'invoice.payment_succeeded': {
+        const invoice: any = event.data.object;
+        // Only refresh credits on recurring renewals (not the first invoice — that's handled by initialize_user_credits)
+        if (invoice.billing_reason !== 'subscription_cycle') {
+          console.log(`Skipping invoice.payment_succeeded with billing_reason=${invoice.billing_reason}`);
+          break;
+        }
+        const customerId = invoice.customer as string;
+        const customer = await stripe.customers.retrieve(customerId);
+        if (!customer || !('email' in customer)) break;
+        const { data: u } = await supabase
+          .from('profiles').select('id').eq('email', customer.email).single();
+        if (!u) break;
+        const { error: resetErr } = await supabase.rpc('reset_monthly_credits', { p_user_id: u.id });
+        if (resetErr) console.error('reset_monthly_credits error:', resetErr);
+        else console.log(`✅ Reset plan credits for ${customer.email}`);
+        break;
+      }
+
+      case 'checkout.session.completed': {
+        const session: any = event.data.object;
+        if (session.mode !== 'payment' || session.metadata?.type !== 'credit_addon') {
+          console.log('Skipping non-addon checkout.session.completed');
+          break;
+        }
+        const userId = session.metadata?.supabaseUid;
+        const priceId = session.metadata?.priceId;
+        if (!userId || !priceId) {
+          console.error('Missing supabaseUid or priceId in addon session metadata');
+          break;
+        }
+        const { data: addonPlan, error: planErr } = await supabase
+          .from('subscription_plans')
+          .select('credits_allowance, name')
+          .eq('stripe_price_id', priceId)
+          .single();
+        if (planErr || !addonPlan?.credits_allowance) {
+          console.error('Add-on plan lookup error:', planErr);
+          break;
+        }
+        const { error: addErr } = await supabase.rpc('add_credits', {
+          p_user_id: userId,
+          p_credits_amount: addonPlan.credits_allowance,
+          p_credit_type: 'add_on',
+          p_description: `Add-on minute pack: ${addonPlan.name}`,
+        });
+        if (addErr) console.error('add_credits error:', addErr);
+        else console.log(`✅ Added ${addonPlan.credits_allowance} add-on credits to ${userId}`);
+        break;
+      }
     }
 
     return new Response(JSON.stringify({ received: true }), {

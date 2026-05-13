@@ -74,7 +74,19 @@ export const CreditDisplay = ({ onUpgrade, onTopUp, compact = false }: CreditDis
     );
   }
 
-  const { remainingCredits, totalCredits, usagePercentage, resetDate, isLowCredits, isOutOfCredits } = creditStatus;
+  const {
+    remainingCredits,
+    totalCredits,
+    usagePercentage,
+    resetDate,
+    isLowCredits,
+    isOutOfCredits,
+    planRemaining,
+    planCredits,
+    addOnRemaining,
+    addOnCredits,
+    hasUnusedAddOn,
+  } = creditStatus;
 
   if (compact) {
     return (
@@ -115,12 +127,29 @@ export const CreditDisplay = ({ onUpgrade, onTopUp, compact = false }: CreditDis
                 {usagePercentage}% used this month
               </span>
               <span className="text-xs text-muted-foreground">
-                Resets {new Date(resetDate).toLocaleDateString()}
+                Plan resets {new Date(resetDate).toLocaleDateString()}
               </span>
             </div>
             <p className="text-xs text-muted-foreground mt-2 italic">
               1 credit = 1 minute of talk time
             </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 text-sm">
+            <div className="rounded-md border bg-muted/30 p-2">
+              <div className="text-xs text-muted-foreground">Plan minutes</div>
+              <div className="font-semibold">
+                {planRemaining.toLocaleString()} / {planCredits.toLocaleString()}
+              </div>
+              <div className="text-[10px] text-muted-foreground">Resets monthly</div>
+            </div>
+            <div className="rounded-md border bg-muted/30 p-2">
+              <div className="text-xs text-muted-foreground">Add-on minutes</div>
+              <div className="font-semibold">
+                {addOnRemaining.toLocaleString()} / {addOnCredits.toLocaleString()}
+              </div>
+              <div className="text-[10px] text-muted-foreground">Never expire</div>
+            </div>
           </div>
 
           {isOutOfCredits && (
@@ -141,9 +170,23 @@ export const CreditDisplay = ({ onUpgrade, onTopUp, compact = false }: CreditDis
             </Alert>
           )}
 
+          {hasUnusedAddOn && onTopUp && (
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                You still have unused add-on minutes. Use them up before purchasing another add-on pack.
+              </AlertDescription>
+            </Alert>
+          )}
+
           <div className="flex gap-2">
             {onTopUp && (
-              <Button variant="outline" onClick={onTopUp} className="flex-1">
+              <Button
+                variant="outline"
+                onClick={onTopUp}
+                className="flex-1"
+                disabled={hasUnusedAddOn}
+              >
                 Buy 500 Credits - $149
               </Button>
             )}

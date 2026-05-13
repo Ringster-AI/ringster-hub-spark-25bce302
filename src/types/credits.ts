@@ -4,6 +4,7 @@ export interface UserCredits {
   plan_credits: number;
   add_on_credits: number;
   credits_used: number;
+  add_on_credits_used: number;
   reset_date: string;
   created_at: string;
   updated_at: string;
@@ -40,8 +41,16 @@ export interface CreditStatus {
   remainingCredits: number;
   usagePercentage: number;
   resetDate: string;
-  isLowCredits: boolean; // < 10% remaining
-  isOutOfCredits: boolean; // 0 credits remaining
+  isLowCredits: boolean;
+  isOutOfCredits: boolean;
+  // Breakdown
+  planCredits: number;
+  planUsed: number;
+  planRemaining: number;
+  addOnCredits: number;
+  addOnUsed: number;
+  addOnRemaining: number;
+  hasUnusedAddOn: boolean;
 }
 
 export interface FeatureAccess {

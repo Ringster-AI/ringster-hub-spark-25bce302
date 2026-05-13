@@ -32,6 +32,31 @@ serve(async (req) => {
       throw new Error('User email not found');
     }
 
+    // Block add-on repurchase while existing add-on credits remain unused
+    if (mode === 'payment') {
+      const adminClient = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      );
+      const { data: hasUnused, error: rpcError } = await adminClient.rpc(
+        'has_unused_addon_credits',
+        { p_user_id: user.id }
+      );
+      if (rpcError) {
+        console.error('has_unused_addon_credits error:', rpcError);
+      }
+      if (hasUnused === true) {
+        return new Response(
+          JSON.stringify({
+            error:
+              'You still have unused add-on minutes. Use them up before purchasing another add-on pack.',
+            code: 'addon_balance_remaining',
+          }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
     const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
       apiVersion: '2023-10-16',
     });
