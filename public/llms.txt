@@ -1,0 +1,35 @@
+# Ringster
+
+> AI-powered 24/7 phone agents that help small businesses, freelancers, and entrepreneurs never miss a customer call again.
+
+Ringster provides AI receptionists that answer, qualify, and book calls around the clock. Built for solo founders and service businesses who need control without interruption.
+
+## Pages
+
+- [Home](/): Overview of Ringster's AI phone agents.
+- [AI Receptionist](/ai-receptionist): How the AI receptionist handles inbound calls 24/7.
+- [How It Works](/how-it-works): Step-by-step walkthrough of setup and call flow.
+- [Pricing](/pricing): Credit-based plans from Free to Enterprise.
+- [FAQ](/faq): Common questions about features, pricing, and integrations.
+- [ROI Calculator](/roi-calculator): Estimate revenue recovered from missed calls.
+- [About](/about): Our mission and team.
+- [Contact](/contact): Get in touch with the Ringster team.
+- [Blog](/blog): Articles on AI call handling and small business growth.
+- [Ebook](/ebook): Free guide to AI phone assistants.
+- [Offer](/offer): Current promotional offer.
+
+## Industry pages
+
+- [AI Receptionist for Plumbers](/ai-receptionist-for-plumbers): Tailored for plumbing businesses.
+- [AI Receptionist for HVAC](/ai-receptionist-for-hvac): Tailored for HVAC contractors.
+- [AI Receptionist for Electricians](/ai-receptionist-for-electricians): Tailored for electrical contractors.
+
+## Account
+
+- [Login](/login): Sign in to your Ringster dashboard.
+- [Signup](/signup): Create a free Ringster account.
+
+## Optional
+
+- [Privacy Policy](/privacy): How we handle your data.
+- [Terms of Service](/terms): Terms of using Ringster.
