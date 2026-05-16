@@ -1702,6 +1702,7 @@ export type Database = {
         Args: { duration_min: number; start_time: string }
         Returns: unknown
       }
+      cleanup_expired_oauth_states: { Args: never; Returns: undefined }
       create_phone_verification: {
         Args: { p_code: string; p_phone_number: string; p_ttl_minutes?: number }
         Returns: string
