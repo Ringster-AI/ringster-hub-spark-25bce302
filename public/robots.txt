@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://getringster.com/sitemap.xml
