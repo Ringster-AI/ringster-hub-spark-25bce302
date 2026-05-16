@@ -21,8 +21,8 @@ const Index = () => {
   return (
     <main className="overflow-x-hidden">
       <Seo 
-        title="Ringster — Never Miss a Customer Call Again" 
-        description="AI receptionist that answers calls, qualifies leads, and books appointments 24/7. Built for plumbers, electricians, clinics, realtors, and small business owners who hate missing calls."
+        title="Ringster — AI Scheduling Assistant & AI Voice Receptionist" 
+        description="Ringster is an AI scheduling assistant and AI voice receptionist that answers calls, qualifies leads, and books appointments 24/7 for small businesses."
         jsonLd={[
           {
             "@context": "https://schema.org",

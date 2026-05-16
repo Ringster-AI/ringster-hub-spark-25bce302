@@ -52,10 +52,10 @@ export const FeaturesAndBenefits = () => {
         {/* Section header */}
         <div className="max-w-3xl mx-auto text-center mb-16">
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-4">
-            Why <span className="text-primary">voicemail is killing</span> your business
+            The <span className="text-primary">AI scheduling assistant</span> and AI voice receptionist that never misses a call
           </h2>
           <p className="text-lg text-muted-foreground">
-            62% of callers won't leave a voicemail. They'll just call your competitor instead.
+            62% of callers won't leave a voicemail. Ringster answers, qualifies, and books appointments 24/7 — so you don't lose another lead.
           </p>
         </div>
 
