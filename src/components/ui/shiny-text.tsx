@@ -19,7 +19,7 @@ export const ShinyText = ({
   return (
     <div
       className={cn(
-        "text-[#b5b5b5a4] bg-clip-text inline-block",
+        "text-foreground/80 bg-clip-text inline-block",
         disabled ? "" : "animate-shine",
         className
       )}
